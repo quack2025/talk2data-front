@@ -7,6 +7,7 @@ import { ProjectFilters } from '@/components/projects/ProjectFilters';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectDialog } from '@/components/projects/CreateProjectDialog';
 import { useProjects } from '@/hooks/useProjects';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function Projects() {
   const { projects, isLoading } = useProjects();
@@ -14,6 +15,7 @@ export default function Projects() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [view, setView] = useState<'list' | 'grid'>('list');
+  const { t } = useLanguage();
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
@@ -31,14 +33,14 @@ export default function Projects() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Proyectos</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t.projects.title}</h1>
             <p className="text-muted-foreground">
-              Gestiona tus proyectos de investigación
+              {t.projects.subtitle}
             </p>
           </div>
           <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Nuevo proyecto
+            {t.projects.newProject}
           </Button>
         </div>
 
@@ -66,7 +68,7 @@ export default function Projects() {
               ))
             ) : filteredProjects.length === 0 ? (
               <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground">No se encontraron proyectos</p>
+                <p className="text-muted-foreground">{t.projects.noProjectsFound}</p>
               </div>
             ) : (
               filteredProjects.map((project) => (

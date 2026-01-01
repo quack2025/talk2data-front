@@ -23,19 +23,22 @@ import {
   Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import type { Project, ProjectFile } from '@/types/database';
-
-const statusConfig = {
-  active: { label: 'Activo', variant: 'default' as const },
-  processing: { label: 'Procesando', variant: 'secondary' as const },
-  completed: { label: 'Completado', variant: 'outline' as const },
-  archived: { label: 'Archivado', variant: 'outline' as const },
-};
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
+  const dateLocale = language === 'es' ? es : enUS;
+
+  const statusConfig = {
+    active: { label: t.projects.active, variant: 'default' as const },
+    processing: { label: t.projects.processing, variant: 'secondary' as const },
+    completed: { label: t.projects.completed, variant: 'outline' as const },
+    archived: { label: t.projects.archived, variant: 'outline' as const },
+  };
 
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['project', projectId],
@@ -81,13 +84,13 @@ export default function ProjectDetail() {
     return (
       <AppLayout>
         <div className="p-6 lg:p-8 text-center">
-          <h1 className="text-2xl font-bold">Proyecto no encontrado</h1>
+          <h1 className="text-2xl font-bold">{t.projectDetail.notFound}</h1>
           <Button
             variant="link"
             onClick={() => navigate('/projects')}
             className="mt-4"
           >
-            Volver a proyectos
+            {t.projectDetail.backToProjects}
           </Button>
         </div>
       </AppLayout>
@@ -104,7 +107,7 @@ export default function ProjectDetail() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/projects">Proyectos</BreadcrumbLink>
+              <BreadcrumbLink href="/projects">{t.projects.title}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -126,9 +129,9 @@ export default function ProjectDetail() {
               <p className="text-muted-foreground mt-1">{project.description}</p>
             )}
             <p className="text-sm text-muted-foreground mt-2">
-              Creado el{' '}
-              {format(new Date(project.created_at), "d 'de' MMMM, yyyy", {
-                locale: es,
+              {t.projectDetail.createdOn}{' '}
+              {format(new Date(project.created_at), language === 'es' ? "d 'de' MMMM, yyyy" : "MMMM d, yyyy", {
+                locale: dateLocale,
               })}
             </p>
           </div>
@@ -139,7 +142,7 @@ export default function ProjectDetail() {
               onClick={() => navigate(`/project/${projectId}/upload`)}
             >
               <Upload className="h-4 w-4 mr-2" />
-              Subir archivos
+              {t.projectDetail.uploadFiles}
             </Button>
             <Button
               size="sm"
@@ -147,7 +150,7 @@ export default function ProjectDetail() {
               disabled={!hasReadyFiles}
             >
               <MessageSquare className="h-4 w-4 mr-2" />
-              Abrir chat
+              {t.projectDetail.openChat}
             </Button>
           </div>
         </div>
@@ -164,8 +167,8 @@ export default function ProjectDetail() {
               </div>
             </CardHeader>
             <CardContent>
-              <CardTitle className="text-base">Subir archivos</CardTitle>
-              <CardDescription>Añade datos SPSS al proyecto</CardDescription>
+              <CardTitle className="text-base">{t.projectDetail.uploadCard}</CardTitle>
+              <CardDescription>{t.projectDetail.uploadCardDescription}</CardDescription>
             </CardContent>
           </Card>
 
@@ -181,9 +184,9 @@ export default function ProjectDetail() {
               </div>
             </CardHeader>
             <CardContent>
-              <CardTitle className="text-base">Chat con datos</CardTitle>
+              <CardTitle className="text-base">{t.projectDetail.chatCard}</CardTitle>
               <CardDescription>
-                {hasReadyFiles ? 'Analiza con IA' : 'Sube archivos primero'}
+                {hasReadyFiles ? t.projectDetail.chatCardDescription : t.projectDetail.chatCardDisabled}
               </CardDescription>
             </CardContent>
           </Card>
@@ -200,8 +203,8 @@ export default function ProjectDetail() {
               </div>
             </CardHeader>
             <CardContent>
-              <CardTitle className="text-base">Exportar</CardTitle>
-              <CardDescription>Genera reportes PDF</CardDescription>
+              <CardTitle className="text-base">{t.projectDetail.exportCard}</CardTitle>
+              <CardDescription>{t.projectDetail.exportCardDescription}</CardDescription>
             </CardContent>
           </Card>
 
@@ -212,8 +215,8 @@ export default function ProjectDetail() {
               </div>
             </CardHeader>
             <CardContent>
-              <CardTitle className="text-base">Configuración</CardTitle>
-              <CardDescription>Ajustes del proyecto</CardDescription>
+              <CardTitle className="text-base">{t.projectDetail.settingsCard}</CardTitle>
+              <CardDescription>{t.projectDetail.settingsCardDescription}</CardDescription>
             </CardContent>
           </Card>
         </div>
@@ -222,8 +225,8 @@ export default function ProjectDetail() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Archivos</CardTitle>
-              <CardDescription>Datos cargados en el proyecto</CardDescription>
+              <CardTitle>{t.projectDetail.filesSection}</CardTitle>
+              <CardDescription>{t.projectDetail.filesSectionDescription}</CardDescription>
             </div>
             <Button
               variant="outline"
@@ -231,7 +234,7 @@ export default function ProjectDetail() {
               onClick={() => navigate(`/project/${projectId}/upload`)}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Añadir
+              {t.common.add}
             </Button>
           </CardHeader>
           <CardContent>
@@ -242,13 +245,13 @@ export default function ProjectDetail() {
             ) : !hasFiles ? (
               <div className="text-center py-8">
                 <FileSpreadsheet className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-                <p className="text-muted-foreground">No hay archivos aún</p>
+                <p className="text-muted-foreground">{t.projectDetail.noFilesYet}</p>
                 <Button
                   variant="link"
                   onClick={() => navigate(`/project/${projectId}/upload`)}
                   className="mt-2"
                 >
-                  Subir primer archivo
+                  {t.projectDetail.uploadFirstFile}
                 </Button>
               </div>
             ) : (
@@ -265,7 +268,7 @@ export default function ProjectDetail() {
                       <p className="font-medium truncate">{file.file_name}</p>
                       <p className="text-sm text-muted-foreground">
                         {(file.file_size / 1024 / 1024).toFixed(2)} MB •{' '}
-                        {format(new Date(file.created_at), "d MMM yyyy", { locale: es })}
+                        {format(new Date(file.created_at), "d MMM yyyy", { locale: dateLocale })}
                       </p>
                     </div>
                     <Badge
@@ -278,10 +281,10 @@ export default function ProjectDetail() {
                       }
                     >
                       {file.status === 'ready'
-                        ? 'Listo'
+                        ? t.projectDetail.ready
                         : file.status === 'error'
-                        ? 'Error'
-                        : 'Procesando'}
+                        ? t.projectDetail.error
+                        : t.projects.processing}
                     </Badge>
                   </div>
                 ))}

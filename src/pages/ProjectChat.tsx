@@ -8,12 +8,14 @@ import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function ProjectChat() {
   const { projectId } = useParams<{ projectId: string }>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   const { sessions, isLoading: sessionsLoading, createSession } = useChat(projectId!);
   const { messages, isLoading: messagesLoading, isThinking, sendMessage } = useChatMessages(activeSessionId);

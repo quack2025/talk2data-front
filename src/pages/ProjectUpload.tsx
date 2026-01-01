@@ -14,6 +14,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function ProjectUpload() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -21,6 +22,7 @@ export default function ProjectUpload() {
   const [spssFile, setSpssFile] = useState<File | null>(null);
   const [questionnaireFile, setQuestionnaireFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { t } = useLanguage();
 
   const handleUpload = () => {
     if (!spssFile) return;
@@ -39,24 +41,24 @@ export default function ProjectUpload() {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/projects">Proyectos</BreadcrumbLink>
+              <BreadcrumbLink href="/projects">{t.projects.title}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href={`/project/${projectId}`}>Proyecto</BreadcrumbLink>
+              <BreadcrumbLink href={`/project/${projectId}`}>{t.projectUpload.project}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Subir archivos</BreadcrumbPage>
+              <BreadcrumbPage>{t.projectUpload.title}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Subir archivos</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t.projectUpload.title}</h1>
           <p className="text-muted-foreground mt-1">
-            Sube tu archivo SPSS para comenzar a analizar los datos
+            {t.projectUpload.subtitle}
           </p>
         </div>
 
@@ -66,14 +68,14 @@ export default function ProjectUpload() {
             <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
               1
             </div>
-            <span className="font-medium">Subir archivos</span>
+            <span className="font-medium">{t.projectUpload.step1}</span>
           </div>
           <div className="h-px flex-1 bg-border" />
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-medium">
               2
             </div>
-            <span className="text-muted-foreground">Analizar datos</span>
+            <span className="text-muted-foreground">{t.projectUpload.step2}</span>
           </div>
         </div>
 
@@ -87,16 +89,16 @@ export default function ProjectUpload() {
                   <FileSpreadsheet className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Archivo SPSS</CardTitle>
-                  <CardDescription>Requerido - Archivo .sav con los datos de la encuesta</CardDescription>
+                  <CardTitle className="text-lg">{t.projectUpload.spssFile}</CardTitle>
+                  <CardDescription>{t.projectUpload.spssRequired}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <FileDropZone
                 accept={{ 'application/x-spss-sav': ['.sav'] }}
-                title="Arrastra tu archivo SPSS aquí"
-                description="Formatos soportados: .sav (máx. 100MB)"
+                title={t.projectUpload.dropSpss}
+                description={t.projectUpload.spssFormats}
                 icon="spss"
                 onFileSelect={setSpssFile}
                 selectedFile={spssFile}
@@ -113,8 +115,8 @@ export default function ProjectUpload() {
                   <FileText className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">Cuestionario</CardTitle>
-                  <CardDescription>Opcional - PDF o Word con el cuestionario original</CardDescription>
+                  <CardTitle className="text-lg">{t.projectUpload.questionnaire}</CardTitle>
+                  <CardDescription>{t.projectUpload.questionnaireOptional}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -125,8 +127,8 @@ export default function ProjectUpload() {
                   'application/msword': ['.doc'],
                   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
                 }}
-                title="Arrastra tu cuestionario aquí"
-                description="Formatos soportados: .pdf, .doc, .docx"
+                title={t.projectUpload.dropQuestionnaire}
+                description={t.projectUpload.questionnaireFormats}
                 icon="document"
                 onFileSelect={setQuestionnaireFile}
                 selectedFile={questionnaireFile}
@@ -144,14 +146,14 @@ export default function ProjectUpload() {
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver
+            {t.projectUpload.back}
           </Button>
           <Button
             onClick={handleUpload}
             disabled={!spssFile}
             className="gap-2"
           >
-            Continuar
+            {t.projectUpload.continue}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

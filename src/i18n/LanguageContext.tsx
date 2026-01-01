@@ -26,7 +26,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const value: LanguageContextType = {
     language,
     setLanguage,
-    t: translations[language],
+    t: translations[language] as TranslationKeys,
   };
 
   return (
