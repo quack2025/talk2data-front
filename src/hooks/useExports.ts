@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Export } from '@/types/database';
+import type { Json } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
 
@@ -44,14 +45,14 @@ export function useExports(projectId?: string) {
       // Create export record
       const { data: exportRecord, error: insertError } = await supabase
         .from('exports')
-        .insert({
+        .insert([{
           project_id: projectId,
           user_id: user.id,
           title,
           format,
-          options: options || {},
-          status: 'generating',
-        })
+          options: (options || {}) as Json,
+          status: 'generating' as const,
+        }])
         .select()
         .single();
 
@@ -59,7 +60,7 @@ export function useExports(projectId?: string) {
 
       // Trigger export generation on backend
       try {
-        const response = await api.post(`/exports/${projectId}`, {
+        const response = await api.post<{ s3_key: string }>(`/exports/${projectId}`, {
           export_id: exportRecord.id,
           format,
           options
