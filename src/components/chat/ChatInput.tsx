@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Loader2 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -12,6 +13,7 @@ interface ChatInputProps {
 export function ChatInput({ onSend, disabled, isThinking }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { t } = useLanguage();
 
   const handleSubmit = () => {
     if (!message.trim() || disabled) return;
@@ -43,7 +45,7 @@ export function ChatInput({ onSend, disabled, isThinking }: ChatInputProps) {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Escribe tu pregunta sobre los datos..."
+            placeholder={t.chat.placeholder}
             className="resize-none min-h-[48px] max-h-[200px] pr-12"
             rows={1}
             disabled={disabled || isThinking}
@@ -64,7 +66,7 @@ export function ChatInput({ onSend, disabled, isThinking }: ChatInputProps) {
       </div>
       {isThinking && (
         <p className="text-xs text-muted-foreground text-center mt-2 animate-pulse">
-          Analizando tus datos...
+          {t.chat.analyzing}
         </p>
       )}
     </div>

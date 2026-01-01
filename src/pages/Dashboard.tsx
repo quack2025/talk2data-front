@@ -2,22 +2,25 @@ import { Plus, FolderOpen, BarChart3, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AppLayout } from "@/components/layout";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export default function Dashboard() {
+  const { t } = useLanguage();
+
   return (
     <AppLayout>
       <div className="p-6 space-y-6">
         {/* Header Section */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-heading text-2xl font-bold">Mis Proyectos</h1>
+            <h1 className="font-heading text-2xl font-bold">{t.dashboard.title}</h1>
             <p className="text-muted-foreground">
-              Gestiona tus estudios de investigación de mercados
+              {t.dashboard.subtitle}
             </p>
           </div>
           <Button className="bg-gradient-primary hover:opacity-90 shadow-glow transition-smooth">
             <Plus className="mr-2 h-4 w-4" />
-            Nuevo Proyecto
+            {t.dashboard.newProject}
           </Button>
         </div>
 
@@ -30,7 +33,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">0</p>
-                <p className="text-sm text-muted-foreground">Proyectos activos</p>
+                <p className="text-sm text-muted-foreground">{t.dashboard.activeProjects}</p>
               </div>
             </CardContent>
           </Card>
@@ -41,7 +44,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">0</p>
-                <p className="text-sm text-muted-foreground">Análisis realizados</p>
+                <p className="text-sm text-muted-foreground">{t.dashboard.analysisCompleted}</p>
               </div>
             </CardContent>
           </Card>
@@ -52,7 +55,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">0h</p>
-                <p className="text-sm text-muted-foreground">Tiempo ahorrado</p>
+                <p className="text-sm text-muted-foreground">{t.dashboard.timeSaved}</p>
               </div>
             </CardContent>
           </Card>
@@ -65,15 +68,14 @@ export default function Dashboard() {
               <FolderOpen className="h-8 w-8 text-primary-foreground" />
             </div>
             <h3 className="font-heading text-lg font-semibold mb-2">
-              No tienes proyectos aún
+              {t.dashboard.noProjects}
             </h3>
             <p className="text-muted-foreground max-w-md mb-6">
-              Crea tu primer proyecto para comenzar a analizar datos SPSS con
-              inteligencia artificial. Es rápido y fácil.
+              {t.dashboard.noProjectsDescription}
             </p>
             <Button className="bg-gradient-primary hover:opacity-90 shadow-glow transition-smooth">
               <Plus className="mr-2 h-4 w-4" />
-              Crear primer proyecto
+              {t.dashboard.createFirstProject}
             </Button>
           </CardContent>
         </Card>

@@ -2,6 +2,24 @@ export type Language = 'es' | 'en';
 
 export const translations = {
   es: {
+    // Common
+    common: {
+      loading: 'Cargando...',
+      save: 'Guardar',
+      cancel: 'Cancelar',
+      delete: 'Eliminar',
+      edit: 'Editar',
+      create: 'Crear',
+      back: 'Volver',
+      continue: 'Continuar',
+      search: 'Buscar',
+      noResults: 'No se encontraron resultados',
+      add: 'Añadir',
+      close: 'Cerrar',
+      confirm: 'Confirmar',
+      yes: 'Sí',
+      no: 'No',
+    },
     // Auth page
     auth: {
       welcomeBack: 'Bienvenido de vuelta',
@@ -34,8 +52,169 @@ export const translations = {
       description: 'Sube tus archivos SPSS y conversa con tus datos usando inteligencia artificial. Obtén análisis estadísticos y reportes profesionales en segundos.',
       features: ['Análisis con IA', 'Exporta PDFs', 'Chat Natural', 'SPSS nativo'],
     },
+    // Header
+    header: {
+      searchProjects: 'Buscar proyectos...',
+      settings: 'Configuración',
+      documentation: 'Documentación',
+      signOut: 'Cerrar sesión',
+      proPlan: 'Plan Profesional',
+      user: 'Usuario',
+    },
+    // Sidebar
+    sidebar: {
+      dashboard: 'Dashboard',
+      projects: 'Proyectos',
+      exports: 'Exportaciones',
+      settings: 'Configuración',
+    },
+    // Dashboard
+    dashboard: {
+      title: 'Mis Proyectos',
+      subtitle: 'Gestiona tus estudios de investigación de mercados',
+      newProject: 'Nuevo Proyecto',
+      activeProjects: 'Proyectos activos',
+      analysisCompleted: 'Análisis realizados',
+      timeSaved: 'Tiempo ahorrado',
+      noProjects: 'No tienes proyectos aún',
+      noProjectsDescription: 'Crea tu primer proyecto para comenzar a analizar datos SPSS con inteligencia artificial. Es rápido y fácil.',
+      createFirstProject: 'Crear primer proyecto',
+    },
+    // Projects
+    projects: {
+      title: 'Proyectos',
+      subtitle: 'Gestiona tus proyectos de investigación',
+      newProject: 'Nuevo proyecto',
+      searchPlaceholder: 'Buscar proyectos...',
+      noProjectsFound: 'No se encontraron proyectos',
+      all: 'Todos',
+      active: 'Activo',
+      processing: 'Procesando',
+      completed: 'Completado',
+      archived: 'Archivado',
+      status: 'Estado',
+      listView: 'Vista lista',
+      gridView: 'Vista grid',
+      files: 'archivos',
+      lastActivity: 'Última actividad',
+      openChat: 'Abrir chat',
+      archive: 'Archivar',
+      unarchive: 'Desarchivar',
+      deleteConfirmTitle: '¿Eliminar proyecto?',
+      deleteConfirmDescription: 'Esta acción no se puede deshacer. Se eliminarán todos los archivos y datos asociados.',
+    },
+    // Project Detail
+    projectDetail: {
+      notFound: 'Proyecto no encontrado',
+      backToProjects: 'Volver a proyectos',
+      createdOn: 'Creado el',
+      uploadFiles: 'Subir archivos',
+      openChat: 'Abrir chat',
+      uploadCard: 'Subir archivos',
+      uploadCardDescription: 'Añade datos SPSS al proyecto',
+      chatCard: 'Chat con datos',
+      chatCardDescription: 'Analiza con IA',
+      chatCardDisabled: 'Sube archivos primero',
+      exportCard: 'Exportar',
+      exportCardDescription: 'Genera reportes PDF',
+      settingsCard: 'Configuración',
+      settingsCardDescription: 'Ajustes del proyecto',
+      filesSection: 'Archivos',
+      filesSectionDescription: 'Datos cargados en el proyecto',
+      noFilesYet: 'No hay archivos aún',
+      uploadFirstFile: 'Subir primer archivo',
+      ready: 'Listo',
+      error: 'Error',
+    },
+    // Project Upload
+    projectUpload: {
+      title: 'Subir archivos',
+      subtitle: 'Sube tu archivo SPSS para comenzar a analizar los datos',
+      step1: 'Subir archivos',
+      step2: 'Analizar datos',
+      spssFile: 'Archivo SPSS',
+      spssRequired: 'Requerido - Archivo .sav con los datos de la encuesta',
+      dropSpss: 'Arrastra tu archivo SPSS aquí',
+      spssFormats: 'Formatos soportados: .sav (máx. 100MB)',
+      questionnaire: 'Cuestionario',
+      questionnaireOptional: 'Opcional - PDF o Word con el cuestionario original',
+      dropQuestionnaire: 'Arrastra tu cuestionario aquí',
+      questionnaireFormats: 'Formatos soportados: .pdf, .doc, .docx',
+      back: 'Volver',
+      continue: 'Continuar',
+      project: 'Proyecto',
+    },
+    // Project Chat
+    chat: {
+      newChat: 'Nuevo chat',
+      noSessions: 'No hay conversaciones',
+      whatToKnow: '¿Qué quieres saber?',
+      askAnything: 'Pregunta lo que quieras sobre tus datos. Puedo ayudarte a analizar, comparar y visualizar la información.',
+      placeholder: 'Escribe tu pregunta sobre los datos...',
+      analyzing: 'Analizando tus datos...',
+      suggestions: [
+        '¿Cuál es el perfil demográfico de los encuestados?',
+        '¿Hay diferencias significativas por género?',
+        '¿Cuáles son las variables con mayor correlación?',
+        'Muéstrame un resumen de las respuestas principales',
+        '¿Cuál es el NPS de la encuesta?',
+        'Haz un análisis de sentimiento de las respuestas abiertas',
+      ],
+      result: 'Resultado',
+      table: 'Tabla',
+      variables: 'Variables',
+      noResultsYet: 'Los resultados aparecerán aquí',
+      sendQuestion: 'Envía una pregunta para ver análisis, gráficos y tablas.',
+    },
+    // Exports
+    exports: {
+      title: 'Exportaciones',
+      subtitle: 'Gestiona y descarga tus reportes generados',
+      newExport: 'Nueva exportación',
+      noExports: 'No hay exportaciones',
+      noExportsDescription: 'Genera tu primer reporte para comenzar.',
+      download: 'Descargar',
+      preview: 'Previsualizar',
+      delete: 'Eliminar',
+      ready: 'Listo',
+      generating: 'Generando',
+      error: 'Error',
+      pdf: 'PDF',
+      excel: 'Excel',
+      pptx: 'PowerPoint',
+    },
+    // Create Project Dialog
+    createProject: {
+      title: 'Nuevo proyecto',
+      description: 'Crea un nuevo proyecto para organizar tu investigación',
+      nameLabel: 'Nombre del proyecto',
+      namePlaceholder: 'Ej: Estudio de satisfacción Q4',
+      descriptionLabel: 'Descripción',
+      descriptionPlaceholder: 'Breve descripción del proyecto...',
+      cancel: 'Cancelar',
+      create: 'Crear proyecto',
+      creating: 'Creando...',
+    },
   },
   en: {
+    // Common
+    common: {
+      loading: 'Loading...',
+      save: 'Save',
+      cancel: 'Cancel',
+      delete: 'Delete',
+      edit: 'Edit',
+      create: 'Create',
+      back: 'Back',
+      continue: 'Continue',
+      search: 'Search',
+      noResults: 'No results found',
+      add: 'Add',
+      close: 'Close',
+      confirm: 'Confirm',
+      yes: 'Yes',
+      no: 'No',
+    },
     // Auth page
     auth: {
       welcomeBack: 'Welcome back',
@@ -68,39 +247,157 @@ export const translations = {
       description: 'Upload your SPSS files and chat with your data using artificial intelligence. Get statistical analysis and professional reports in seconds.',
       features: ['AI Analysis', 'Export PDFs', 'Natural Chat', 'Native SPSS'],
     },
+    // Header
+    header: {
+      searchProjects: 'Search projects...',
+      settings: 'Settings',
+      documentation: 'Documentation',
+      signOut: 'Sign out',
+      proPlan: 'Pro Plan',
+      user: 'User',
+    },
+    // Sidebar
+    sidebar: {
+      dashboard: 'Dashboard',
+      projects: 'Projects',
+      exports: 'Exports',
+      settings: 'Settings',
+    },
+    // Dashboard
+    dashboard: {
+      title: 'My Projects',
+      subtitle: 'Manage your market research studies',
+      newProject: 'New Project',
+      activeProjects: 'Active projects',
+      analysisCompleted: 'Analysis completed',
+      timeSaved: 'Time saved',
+      noProjects: 'No projects yet',
+      noProjectsDescription: 'Create your first project to start analyzing SPSS data with artificial intelligence. It\'s quick and easy.',
+      createFirstProject: 'Create first project',
+    },
+    // Projects
+    projects: {
+      title: 'Projects',
+      subtitle: 'Manage your research projects',
+      newProject: 'New project',
+      searchPlaceholder: 'Search projects...',
+      noProjectsFound: 'No projects found',
+      all: 'All',
+      active: 'Active',
+      processing: 'Processing',
+      completed: 'Completed',
+      archived: 'Archived',
+      status: 'Status',
+      listView: 'List view',
+      gridView: 'Grid view',
+      files: 'files',
+      lastActivity: 'Last activity',
+      openChat: 'Open chat',
+      archive: 'Archive',
+      unarchive: 'Unarchive',
+      deleteConfirmTitle: 'Delete project?',
+      deleteConfirmDescription: 'This action cannot be undone. All files and associated data will be deleted.',
+    },
+    // Project Detail
+    projectDetail: {
+      notFound: 'Project not found',
+      backToProjects: 'Back to projects',
+      createdOn: 'Created on',
+      uploadFiles: 'Upload files',
+      openChat: 'Open chat',
+      uploadCard: 'Upload files',
+      uploadCardDescription: 'Add SPSS data to project',
+      chatCard: 'Chat with data',
+      chatCardDescription: 'Analyze with AI',
+      chatCardDisabled: 'Upload files first',
+      exportCard: 'Export',
+      exportCardDescription: 'Generate PDF reports',
+      settingsCard: 'Settings',
+      settingsCardDescription: 'Project settings',
+      filesSection: 'Files',
+      filesSectionDescription: 'Data loaded in the project',
+      noFilesYet: 'No files yet',
+      uploadFirstFile: 'Upload first file',
+      ready: 'Ready',
+      error: 'Error',
+    },
+    // Project Upload
+    projectUpload: {
+      title: 'Upload files',
+      subtitle: 'Upload your SPSS file to start analyzing data',
+      step1: 'Upload files',
+      step2: 'Analyze data',
+      spssFile: 'SPSS File',
+      spssRequired: 'Required - .sav file with survey data',
+      dropSpss: 'Drag your SPSS file here',
+      spssFormats: 'Supported formats: .sav (max. 100MB)',
+      questionnaire: 'Questionnaire',
+      questionnaireOptional: 'Optional - PDF or Word with original questionnaire',
+      dropQuestionnaire: 'Drag your questionnaire here',
+      questionnaireFormats: 'Supported formats: .pdf, .doc, .docx',
+      back: 'Back',
+      continue: 'Continue',
+      project: 'Project',
+    },
+    // Project Chat
+    chat: {
+      newChat: 'New chat',
+      noSessions: 'No conversations',
+      whatToKnow: 'What do you want to know?',
+      askAnything: 'Ask anything about your data. I can help you analyze, compare, and visualize the information.',
+      placeholder: 'Write your question about the data...',
+      analyzing: 'Analyzing your data...',
+      suggestions: [
+        'What is the demographic profile of respondents?',
+        'Are there significant differences by gender?',
+        'Which variables have the highest correlation?',
+        'Show me a summary of the main responses',
+        'What is the survey NPS?',
+        'Do a sentiment analysis of open responses',
+      ],
+      result: 'Result',
+      table: 'Table',
+      variables: 'Variables',
+      noResultsYet: 'Results will appear here',
+      sendQuestion: 'Send a question to see analysis, charts, and tables.',
+    },
+    // Exports
+    exports: {
+      title: 'Exports',
+      subtitle: 'Manage and download your generated reports',
+      newExport: 'New export',
+      noExports: 'No exports',
+      noExportsDescription: 'Generate your first report to get started.',
+      download: 'Download',
+      preview: 'Preview',
+      delete: 'Delete',
+      ready: 'Ready',
+      generating: 'Generating',
+      error: 'Error',
+      pdf: 'PDF',
+      excel: 'Excel',
+      pptx: 'PowerPoint',
+    },
+    // Create Project Dialog
+    createProject: {
+      title: 'New project',
+      description: 'Create a new project to organize your research',
+      nameLabel: 'Project name',
+      namePlaceholder: 'E.g: Q4 Satisfaction Study',
+      descriptionLabel: 'Description',
+      descriptionPlaceholder: 'Brief project description...',
+      cancel: 'Cancel',
+      create: 'Create project',
+      creating: 'Creating...',
+    },
   },
 } as const;
 
-// Use a more flexible type for translations
-export interface TranslationKeys {
-  auth: {
-    welcomeBack: string;
-    createAccount: string;
-    enterCredentials: string;
-    startAnalyzing: string;
-    continueWithGoogle: string;
-    orContinueWithEmail: string;
-    email: string;
-    emailPlaceholder: string;
-    password: string;
-    passwordPlaceholder: string;
-    forgotPassword: string;
-    signIn: string;
-    signUp: string;
-    noAccount: string;
-    hasAccount: string;
-    register: string;
-    login: string;
-    accountCreated: string;
-    checkEmail: string;
-    error: string;
-    genericError: string;
-    invalidEmail: string;
-    passwordMinLength: string;
-  };
-  hero: {
-    title: string;
-    description: string;
-    features: readonly string[];
-  };
-}
+// Create a type that represents the structure with string values
+type DeepStringify<T> = T extends readonly string[] 
+  ? readonly string[]
+  : T extends object 
+    ? { [K in keyof T]: DeepStringify<T[K]> }
+    : string;
+
+export type TranslationKeys = DeepStringify<typeof translations.es>;

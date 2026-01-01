@@ -6,10 +6,12 @@ import { ExportCard } from '@/components/exports/ExportCard';
 import { CreateExportDialog } from '@/components/exports/CreateExportDialog';
 import { useExports } from '@/hooks/useExports';
 import type { Export } from '@/types/database';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function Exports() {
   const { exports, isLoading, deleteExport } = useExports();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const { t } = useLanguage();
 
   const handleDelete = async (id: string) => {
     await deleteExport.mutateAsync(id);
@@ -26,14 +28,14 @@ export default function Exports() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Exportaciones</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t.exports.title}</h1>
             <p className="text-muted-foreground">
-              Gestiona y descarga tus reportes generados
+              {t.exports.subtitle}
             </p>
           </div>
           <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Nueva exportación
+            {t.exports.newExport}
           </Button>
         </div>
 
@@ -51,16 +53,16 @@ export default function Exports() {
           <div className="rounded-lg border bg-card">
             <div className="p-12 text-center">
               <FileText className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <h3 className="mt-4 text-lg font-semibold">No hay exportaciones</h3>
+              <h3 className="mt-4 text-lg font-semibold">{t.exports.noExports}</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Genera tu primer reporte para comenzar.
+                {t.exports.noExportsDescription}
               </p>
               <Button
                 onClick={() => setCreateDialogOpen(true)}
                 className="mt-6 gap-2"
               >
                 <Plus className="h-4 w-4" />
-                Nueva exportación
+                {t.exports.newExport}
               </Button>
             </div>
           </div>

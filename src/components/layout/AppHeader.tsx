@@ -13,6 +13,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface AppHeaderProps {
   title?: string;
@@ -22,6 +24,7 @@ export function AppHeader({ title }: AppHeaderProps) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Check for saved theme preference
@@ -70,7 +73,7 @@ export function AppHeader({ title }: AppHeaderProps) {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Buscar proyectos..."
+              placeholder={t.header.searchProjects}
               className="pl-9 bg-muted/50 border-transparent focus:border-primary focus:bg-background"
             />
           </div>
@@ -79,6 +82,9 @@ export function AppHeader({ title }: AppHeaderProps) {
 
       {/* Actions */}
       <div className="flex items-center gap-2">
+        {/* Language Selector */}
+        <LanguageSelector />
+
         {/* Theme Toggle */}
         <Button
           variant="ghost"
@@ -117,18 +123,18 @@ export function AppHeader({ title }: AppHeaderProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <div className="flex flex-col space-y-1 p-2">
-              <p className="text-sm font-medium">{user?.email ?? "Usuario"}</p>
-              <p className="text-xs text-muted-foreground">Plan Profesional</p>
+              <p className="text-sm font-medium">{user?.email ?? t.header.user}</p>
+              <p className="text-xs text-muted-foreground">{t.header.proPlan}</p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate("/settings")}>
-              Configuración
+              {t.header.settings}
             </DropdownMenuItem>
-            <DropdownMenuItem>Documentación</DropdownMenuItem>
+            <DropdownMenuItem>{t.header.documentation}</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
               <LogOut className="mr-2 h-4 w-4" />
-              Cerrar sesión
+              {t.header.signOut}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
