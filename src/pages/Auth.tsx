@@ -10,13 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
-const authSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
-});
-
-type AuthFormData = z.infer<typeof authSchema>;
+type AuthFormData = {
+  email: string;
+  password: string;
+};
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,6 +25,12 @@ export default function Auth() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const authSchema = z.object({
+    email: z.string().email(t.auth.invalidEmail),
+    password: z.string().min(6, t.auth.passwordMinLength),
+  });
 
   const {
     register,
@@ -43,25 +49,25 @@ export default function Auth() {
           password: data.password,
         });
         if (error) throw error;
-        navigate("/dashboard");
+        navigate("/projects");
       } else {
         const { error } = await supabase.auth.signUp({
           email: data.email,
           password: data.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/projects`,
           },
         });
         if (error) throw error;
         toast({
-          title: "¡Cuenta creada!",
-          description: "Revisa tu email para confirmar tu cuenta.",
+          title: t.auth.accountCreated,
+          description: t.auth.checkEmail,
         });
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Ha ocurrido un error";
+      const errorMessage = error instanceof Error ? error.message : t.auth.genericError;
       toast({
-        title: "Error",
+        title: t.auth.error,
         description: errorMessage,
         variant: "destructive",
       });
@@ -76,14 +82,14 @@ export default function Auth() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/projects`,
         },
       });
       if (error) throw error;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Ha ocurrido un error";
+      const errorMessage = error instanceof Error ? error.message : t.auth.genericError;
       toast({
-        title: "Error",
+        title: t.auth.error,
         description: errorMessage,
         variant: "destructive",
       });
@@ -94,7 +100,12 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
+      <div className="flex-1 flex items-center justify-center p-8 bg-background relative">
+        {/* Language selector */}
+        <div className="absolute top-4 right-4">
+          <LanguageSelector variant="outline" />
+        </div>
+
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           {/* Logo */}
           <div className="flex items-center gap-3">
@@ -107,12 +118,10 @@ export default function Auth() {
           {/* Header */}
           <div>
             <h1 className="font-heading text-3xl font-bold">
-              {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}
+              {isLogin ? t.auth.welcomeBack : t.auth.createAccount}
             </h1>
             <p className="mt-2 text-muted-foreground">
-              {isLogin
-                ? "Ingresa tus credenciales para continuar"
-                : "Comienza a analizar datos con IA"}
+              {isLogin ? t.auth.enterCredentials : t.auth.startAnalyzing}
             </p>
           </div>
 
@@ -146,26 +155,26 @@ export default function Auth() {
                 />
               </svg>
             )}
-            Continuar con Google
+            {t.auth.continueWithGoogle}
           </Button>
 
           <div className="relative">
             <Separator />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-4 text-xs text-muted-foreground">
-              O continúa con email
+              {t.auth.orContinueWithEmail}
             </span>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.auth.email}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="tu@email.com"
+                  placeholder={t.auth.emailPlaceholder}
                   className="pl-10 h-12"
                   {...register("email")}
                 />
@@ -176,13 +185,13 @@ export default function Auth() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">{t.auth.password}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder={t.auth.passwordPlaceholder}
                   className="pl-10 pr-10 h-12"
                   {...register("password")}
                 />
@@ -211,7 +220,7 @@ export default function Auth() {
                   to="/forgot-password"
                   className="text-sm text-primary hover:underline"
                 >
-                  ¿Olvidaste tu contraseña?
+                  {t.auth.forgotPassword}
                 </Link>
               </div>
             )}
@@ -225,7 +234,7 @@ export default function Auth() {
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               ) : (
                 <>
-                  {isLogin ? "Iniciar sesión" : "Crear cuenta"}
+                  {isLogin ? t.auth.signIn : t.auth.signUp}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
@@ -234,13 +243,13 @@ export default function Auth() {
 
           {/* Toggle */}
           <p className="text-center text-sm text-muted-foreground">
-            {isLogin ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}{" "}
+            {isLogin ? t.auth.noAccount : t.auth.hasAccount}{" "}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
               className="text-primary font-medium hover:underline"
             >
-              {isLogin ? "Regístrate" : "Inicia sesión"}
+              {isLogin ? t.auth.register : t.auth.login}
             </button>
           </p>
         </div>
@@ -260,24 +269,20 @@ export default function Auth() {
             </div>
           </div>
           <h2 className="font-heading text-4xl font-bold mb-4">
-            Transforma datos en insights
+            {t.hero.title}
           </h2>
           <p className="text-lg text-primary-foreground/80 mb-8">
-            Sube tus archivos SPSS y conversa con tus datos usando inteligencia
-            artificial. Obtén análisis estadísticos y reportes profesionales en
-            segundos.
+            {t.hero.description}
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            {["Análisis con IA", "Exporta PDFs", "Chat Natural", "SPSS nativo"].map(
-              (feature) => (
-                <span
-                  key={feature}
-                  className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium"
-                >
-                  {feature}
-                </span>
-              )
-            )}
+            {t.hero.features.map((feature) => (
+              <span
+                key={feature}
+                className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium"
+              >
+                {feature}
+              </span>
+            ))}
           </div>
         </div>
       </div>

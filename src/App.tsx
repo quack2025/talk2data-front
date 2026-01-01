@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-
+import { LanguageProvider } from "@/i18n/LanguageContext";
 // Pages
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -87,84 +87,86 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Redirect root to projects */}
-          <Route path="/" element={<Navigate to="/projects" replace />} />
-          
-          {/* Auth */}
-          <Route
-            path="/auth"
-            element={
-              <PublicRoute>
-                <Auth />
-              </PublicRoute>
-            }
-          />
+    <LanguageProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Redirect root to projects */}
+            <Route path="/" element={<Navigate to="/projects" replace />} />
+            
+            {/* Auth */}
+            <Route
+              path="/auth"
+              element={
+                <PublicRoute>
+                  <Auth />
+                </PublicRoute>
+              }
+            />
 
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/projects"
-            element={
-              <ProtectedRoute>
-                <Projects />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/projects"
+              element={
+                <ProtectedRoute>
+                  <Projects />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/projects/:projectId"
-            element={
-              <ProtectedRoute>
-                <ProjectDetail />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/projects/:projectId"
+              element={
+                <ProtectedRoute>
+                  <ProjectDetail />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/projects/:projectId/upload"
-            element={
-              <ProtectedRoute>
-                <ProjectUpload />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/projects/:projectId/upload"
+              element={
+                <ProtectedRoute>
+                  <ProjectUpload />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/projects/:projectId/chat"
-            element={
-              <ProtectedRoute>
-                <ProjectChat />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/projects/:projectId/chat"
+              element={
+                <ProtectedRoute>
+                  <ProjectChat />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/exports"
-            element={
-              <ProtectedRoute>
-                <Exports />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/exports"
+              element={
+                <ProtectedRoute>
+                  <Exports />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Catch all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            {/* Catch all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 
