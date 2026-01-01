@@ -10,6 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 // Pages
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
+import ProjectUpload from "./pages/ProjectUpload";
+import ProjectChat from "./pages/ProjectChat";
+import Exports from "./pages/Exports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,7 +52,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Public route - redirects to dashboard if already logged in
+// Public route - redirects to projects if already logged in
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,7 +79,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (session) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/projects" replace />;
   }
 
   return <>{children}</>;
@@ -87,8 +92,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Redirect root to dashboard or auth */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Redirect root to projects */}
+          <Route path="/" element={<Navigate to="/projects" replace />} />
           
           {/* Auth */}
           <Route
@@ -106,6 +111,51 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/projects"
+            element={
+              <ProtectedRoute>
+                <Projects />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/projects/:projectId"
+            element={
+              <ProtectedRoute>
+                <ProjectDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/projects/:projectId/upload"
+            element={
+              <ProtectedRoute>
+                <ProjectUpload />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/projects/:projectId/chat"
+            element={
+              <ProtectedRoute>
+                <ProjectChat />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/exports"
+            element={
+              <ProtectedRoute>
+                <Exports />
               </ProtectedRoute>
             }
           />
