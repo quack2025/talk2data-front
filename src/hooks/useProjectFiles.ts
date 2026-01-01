@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { ProjectFile } from '@/types/database';
+import type { Json } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
 
@@ -51,15 +52,15 @@ export function useProjectFiles(projectId: string) {
       formData.append('file_id', fileRecord.id);
 
       try {
-        const response = await api.upload('/files/upload', formData);
+        const response = await api.uploadFile<{ s3_key: string; metadata?: Record<string, unknown> }>('/files/upload', formData);
         
         // Update file record with S3 key and metadata
         await supabase
           .from('project_files')
           .update({
             s3_key: response.s3_key,
-            metadata: response.metadata || {},
-            status: 'ready',
+            metadata: (response.metadata || {}) as Json,
+            status: 'ready' as const,
           })
           .eq('id', fileRecord.id);
 

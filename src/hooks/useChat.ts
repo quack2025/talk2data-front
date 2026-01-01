@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { ChatSession, ChatMessage } from '@/types/database';
+import type { Json } from '@/integrations/supabase/types';
 import { api } from '@/lib/api';
 
 export function useChat(projectId: string) {
@@ -91,17 +92,17 @@ export function useChatMessages(sessionId: string | null) {
       // Send to backend for AI response
       setIsThinking(true);
       try {
-        const response = await api.post(`/chat/${projectId}`, { session_id: sessionId, message: content });
+        const response = await api.post<{ content: string; metadata?: Record<string, unknown> }>(`/chat/${projectId}`, { session_id: sessionId, message: content });
 
         // Save assistant message
         const { error: assistantMsgError } = await supabase
           .from('chat_messages')
-          .insert({
+          .insert([{
             session_id: sessionId,
             role: 'assistant',
             content: response.content,
-            metadata: response.metadata || {},
-          });
+            metadata: (response.metadata || {}) as Json,
+          }]);
 
         if (assistantMsgError) throw assistantMsgError;
 
