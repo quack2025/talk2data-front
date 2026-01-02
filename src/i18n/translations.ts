@@ -65,8 +65,12 @@ export const translations = {
     sidebar: {
       dashboard: 'Dashboard',
       projects: 'Proyectos',
+      uploadData: 'Subir Datos',
+      chat: 'Chat',
+      export: 'Exportar',
       exports: 'Exportaciones',
       settings: 'Configuración',
+      collapse: 'Colapsar',
     },
     // Dashboard
     dashboard: {
@@ -260,8 +264,12 @@ export const translations = {
     sidebar: {
       dashboard: 'Dashboard',
       projects: 'Projects',
+      uploadData: 'Upload Data',
+      chat: 'Chat',
+      export: 'Export',
       exports: 'Exports',
       settings: 'Settings',
+      collapse: 'Collapse',
     },
     // Dashboard
     dashboard: {

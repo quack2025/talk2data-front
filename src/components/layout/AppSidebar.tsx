@@ -13,33 +13,35 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-
-const navItems = [
-  {
-    title: "Proyectos",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Subir Datos",
-    href: "/upload",
-    icon: Upload,
-  },
-  {
-    title: "Chat",
-    href: "/chat",
-    icon: MessageSquare,
-  },
-  {
-    title: "Exportar",
-    href: "/exports",
-    icon: FileDown,
-  },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { t } = useLanguage();
+
+  const navItems = [
+    {
+      title: t.sidebar.projects,
+      href: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: t.sidebar.uploadData,
+      href: "/upload",
+      icon: Upload,
+    },
+    {
+      title: t.sidebar.chat,
+      href: "/chat",
+      icon: MessageSquare,
+    },
+    {
+      title: t.sidebar.export,
+      href: "/exports",
+      icon: FileDown,
+    },
+  ];
 
   return (
     <aside
@@ -114,7 +116,7 @@ export function AppSidebar() {
               </Link>
             </TooltipTrigger>
             <TooltipContent side="right" className="font-medium">
-              Configuración
+              {t.sidebar.settings}
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -123,7 +125,7 @@ export function AppSidebar() {
             className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
           >
             <Settings className="h-5 w-5 shrink-0" />
-            <span>Configuración</span>
+            <span>{t.sidebar.settings}</span>
           </Link>
         )}
 
@@ -138,7 +140,7 @@ export function AppSidebar() {
           ) : (
             <>
               <ChevronLeft className="h-4 w-4 mr-2" />
-              <span>Colapsar</span>
+              <span>{t.sidebar.collapse}</span>
             </>
           )}
         </Button>
