@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import {
   Table,
   TableBody,
@@ -32,13 +32,7 @@ import {
 import { MoreHorizontal, FolderOpen, Trash2, Archive, MessageSquare } from 'lucide-react';
 import type { Project } from '@/types/database';
 import { useProjects } from '@/hooks/useProjects';
-
-const statusConfig = {
-  active: { label: 'Activo', variant: 'default' as const },
-  processing: { label: 'Procesando', variant: 'secondary' as const },
-  completed: { label: 'Completado', variant: 'outline' as const },
-  archived: { label: 'Archivado', variant: 'outline' as const },
-};
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ProjectsTableProps {
   projects: Project[];
@@ -50,6 +44,16 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
   const { deleteProject, updateProject } = useProjects();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const { t, language } = useLanguage();
+
+  const dateLocale = language === 'es' ? es : enUS;
+
+  const statusConfig = {
+    active: { label: t.projects.active, variant: 'default' as const },
+    processing: { label: t.projects.processing, variant: 'secondary' as const },
+    completed: { label: t.projects.completed, variant: 'outline' as const },
+    archived: { label: t.projects.archived, variant: 'outline' as const },
+  };
 
   const handleDelete = async () => {
     if (selectedProject) {
@@ -71,7 +75,7 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
       <div className="rounded-lg border bg-card">
         <div className="p-8 text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="mt-4 text-sm text-muted-foreground">Cargando proyectos...</p>
+          <p className="mt-4 text-sm text-muted-foreground">{t.projects.loadingProjects}</p>
         </div>
       </div>
     );
@@ -82,9 +86,9 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
       <div className="rounded-lg border bg-card">
         <div className="p-12 text-center">
           <FolderOpen className="mx-auto h-12 w-12 text-muted-foreground/50" />
-          <h3 className="mt-4 text-lg font-semibold">No hay proyectos</h3>
+          <h3 className="mt-4 text-lg font-semibold">{t.projects.noProjects}</h3>
           <p className="mt-2 text-sm text-muted-foreground">
-            Crea tu primer proyecto para comenzar a analizar datos.
+            {t.projects.noProjectsDescription}
           </p>
         </div>
       </div>
@@ -97,10 +101,10 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-center">Archivos</TableHead>
-              <TableHead>Última actividad</TableHead>
+              <TableHead>{t.projects.name}</TableHead>
+              <TableHead>{t.projects.status}</TableHead>
+              <TableHead className="text-center">{t.projects.files}</TableHead>
+              <TableHead>{t.projects.lastActivity}</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -129,7 +133,7 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
                 <TableCell className="text-center">{project.file_count}</TableCell>
                 <TableCell>
                   {format(new Date(project.last_activity), "d MMM yyyy, HH:mm", {
-                    locale: es,
+                    locale: dateLocale,
                   })}
                 </TableCell>
                 <TableCell>
@@ -147,7 +151,7 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
                         }}
                       >
                         <MessageSquare className="mr-2 h-4 w-4" />
-                        Abrir chat
+                        {t.projects.openChat}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={(e) => {
@@ -156,7 +160,7 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
                         }}
                       >
                         <Archive className="mr-2 h-4 w-4" />
-                        {project.status === 'archived' ? 'Desarchivar' : 'Archivar'}
+                        {project.status === 'archived' ? t.projects.unarchive : t.projects.archive}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -168,7 +172,7 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
                         }}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Eliminar
+                        {t.common.delete}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -182,19 +186,18 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar proyecto?</AlertDialogTitle>
+            <AlertDialogTitle>{t.projects.deleteConfirmTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción eliminará permanentemente el proyecto "{selectedProject?.name}" y
-              todos sus datos asociados. Esta acción no se puede deshacer.
+              {t.projects.deleteConfirmDescriptionFull.replace('{name}', selectedProject?.name || '')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Eliminar
+              {t.common.delete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

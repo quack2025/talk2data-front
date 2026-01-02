@@ -106,6 +106,12 @@ export const translations = {
       unarchive: 'Desarchivar',
       deleteConfirmTitle: '¿Eliminar proyecto?',
       deleteConfirmDescription: 'Esta acción no se puede deshacer. Se eliminarán todos los archivos y datos asociados.',
+      // Table
+      name: 'Nombre',
+      loadingProjects: 'Cargando proyectos...',
+      noProjects: 'No hay proyectos',
+      noProjectsDescription: 'Crea tu primer proyecto para comenzar a analizar datos.',
+      deleteConfirmDescriptionFull: 'Esta acción eliminará permanentemente el proyecto y todos sus datos asociados. Esta acción no se puede deshacer.',
     },
     // Project Detail
     projectDetail: {
@@ -305,6 +311,12 @@ export const translations = {
       unarchive: 'Unarchive',
       deleteConfirmTitle: 'Delete project?',
       deleteConfirmDescription: 'This action cannot be undone. All files and associated data will be deleted.',
+      // Table
+      name: 'Name',
+      loadingProjects: 'Loading projects...',
+      noProjects: 'No projects',
+      noProjectsDescription: 'Create your first project to start analyzing data.',
+      deleteConfirmDescriptionFull: 'This action will permanently delete the project and all its associated data. This action cannot be undone.',
     },
     // Project Detail
     projectDetail: {
