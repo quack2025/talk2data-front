@@ -23,7 +23,7 @@ export function AppSidebar() {
   const navItems = [
     {
       title: t.sidebar.projects,
-      href: "/dashboard",
+      href: "/projects",
       icon: LayoutDashboard,
     },
     {
@@ -53,7 +53,7 @@ export function AppSidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed && (
-          <Link to="/dashboard" className="flex items-center gap-2 animate-fade-in">
+          <Link to="/projects" className="flex items-center gap-2 animate-fade-in">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
               <Sparkles className="h-4 w-4 text-primary-foreground" />
             </div>

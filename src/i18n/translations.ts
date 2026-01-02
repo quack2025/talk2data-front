@@ -112,6 +112,10 @@ export const translations = {
       noProjects: 'No hay proyectos',
       noProjectsDescription: 'Crea tu primer proyecto para comenzar a analizar datos.',
       deleteConfirmDescriptionFull: 'Esta acción eliminará permanentemente el proyecto y todos sus datos asociados. Esta acción no se puede deshacer.',
+      // Selector
+      selectProject: 'Selecciona un proyecto',
+      selectProjectForUpload: 'Selecciona un proyecto para subir archivos',
+      selectProjectForChat: 'Selecciona un proyecto para iniciar el chat',
     },
     // Project Detail
     projectDetail: {
@@ -317,6 +321,10 @@ export const translations = {
       noProjects: 'No projects',
       noProjectsDescription: 'Create your first project to start analyzing data.',
       deleteConfirmDescriptionFull: 'This action will permanently delete the project and all its associated data. This action cannot be undone.',
+      // Selector
+      selectProject: 'Select a project',
+      selectProjectForUpload: 'Select a project to upload files',
+      selectProjectForChat: 'Select a project to start chatting',
     },
     // Project Detail
     projectDetail: {
