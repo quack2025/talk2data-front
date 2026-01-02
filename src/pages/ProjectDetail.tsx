@@ -149,14 +149,14 @@ export default function ProjectDetail() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate(`/project/${projectId}/upload`)}
+              onClick={() => navigate(`/projects/${projectId}/upload`)}
             >
               <Upload className="h-4 w-4 mr-2" />
               {t.projectDetail.uploadFiles}
             </Button>
             <Button
               size="sm"
-              onClick={() => navigate(`/project/${projectId}/chat`)}
+              onClick={() => navigate(`/projects/${projectId}/chat`)}
               disabled={!hasReadyFiles}
             >
               <MessageSquare className="h-4 w-4 mr-2" />
@@ -169,7 +169,7 @@ export default function ProjectDetail() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card
             className="cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => navigate(`/project/${projectId}/upload`)}
+            onClick={() => navigate(`/projects/${projectId}/upload`)}
           >
             <CardHeader className="pb-2">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -186,7 +186,7 @@ export default function ProjectDetail() {
             className={`cursor-pointer transition-colors ${
               hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
             }`}
-            onClick={() => hasReadyFiles && navigate(`/project/${projectId}/chat`)}
+            onClick={() => hasReadyFiles && navigate(`/projects/${projectId}/chat`)}
           >
             <CardHeader className="pb-2">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -241,7 +241,7 @@ export default function ProjectDetail() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate(`/project/${projectId}/upload`)}
+              onClick={() => navigate(`/projects/${projectId}/upload`)}
             >
               <Plus className="h-4 w-4 mr-2" />
               {t.common.add}
@@ -258,7 +258,7 @@ export default function ProjectDetail() {
                 <p className="text-muted-foreground">{t.projectDetail.noFilesYet}</p>
                 <Button
                   variant="link"
-                  onClick={() => navigate(`/project/${projectId}/upload`)}
+                  onClick={() => navigate(`/projects/${projectId}/upload`)}
                   className="mt-2"
                 >
                   {t.projectDetail.uploadFirstFile}
