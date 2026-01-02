@@ -113,7 +113,7 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
               <TableRow
                 key={project.id}
                 className="cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => navigate(`/project/${project.id}`)}
+                onClick={() => navigate(`/projects/${project.id}`)}
               >
                 <TableCell>
                   <div>
@@ -147,7 +147,7 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/project/${project.id}/chat`);
+                          navigate(`/projects/${project.id}/chat`);
                         }}
                       >
                         <MessageSquare className="mr-2 h-4 w-4" />
