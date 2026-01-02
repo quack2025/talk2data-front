@@ -1,0 +1,44 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AppLayout } from '@/components/layout';
+import { ProjectSelector } from '@/components/projects/ProjectSelector';
+import { useLastProject } from '@/hooks/useLastProject';
+import { useProjects } from '@/hooks/useProjects';
+import { useLanguage } from '@/i18n/LanguageContext';
+
+export default function Upload() {
+  const navigate = useNavigate();
+  const { getLastProjectId } = useLastProject();
+  const { projects, isLoading } = useProjects();
+  const { t } = useLanguage();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    const lastProjectId = getLastProjectId();
+    
+    // If there's a last project and it still exists, redirect to it
+    if (lastProjectId && projects?.some(p => p.id === lastProjectId)) {
+      navigate(`/projects/${lastProjectId}/upload`, { replace: true });
+      return;
+    }
+
+    // If there's only one project, redirect to it
+    if (projects?.length === 1) {
+      navigate(`/projects/${projects[0].id}/upload`, { replace: true });
+    }
+  }, [isLoading, projects, getLastProjectId, navigate]);
+
+  // Show selector if we have multiple projects and no last project
+  return (
+    <AppLayout>
+      <div className="container mx-auto py-8 px-4">
+        <ProjectSelector
+          redirectPath="upload"
+          title={t.sidebar.uploadData}
+          description={t.projectUpload.subtitle}
+        />
+      </div>
+    </AppLayout>
+  );
+}

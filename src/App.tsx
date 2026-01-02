@@ -15,6 +15,8 @@ import ProjectDetail from "./pages/ProjectDetail";
 import ProjectUpload from "./pages/ProjectUpload";
 import ProjectChat from "./pages/ProjectChat";
 import Exports from "./pages/Exports";
+import Upload from "./pages/Upload";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -148,6 +150,24 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ProjectChat />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/upload"
+              element={
+                <ProtectedRoute>
+                  <Upload />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <Chat />
                 </ProtectedRoute>
               }
             />

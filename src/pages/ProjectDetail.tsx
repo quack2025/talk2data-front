@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,12 +27,21 @@ import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import type { Project, ProjectFile } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useLastProject } from '@/hooks/useLastProject';
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const dateLocale = language === 'es' ? es : enUS;
+  const { setLastProjectId } = useLastProject();
+
+  // Track last used project
+  useEffect(() => {
+    if (projectId) {
+      setLastProjectId(projectId);
+    }
+  }, [projectId, setLastProjectId]);
 
   const statusConfig = {
     active: { label: t.projects.active, variant: 'default' as const },
