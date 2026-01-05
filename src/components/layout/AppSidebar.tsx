@@ -51,17 +51,17 @@ export function AppSidebar() {
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
-        {!collapsed && (
-          <Link to="/projects" className="flex items-center gap-2 animate-fade-in">
-            <img src={logoImage} alt="Survey Genius" className="h-8 w-auto" />
-          </Link>
-        )}
-        {collapsed && (
-          <Link to="/projects" className="mx-auto">
-            <img src={logoImage} alt="Survey Genius" className="h-8 w-auto" />
-          </Link>
-        )}
+      <div className="flex h-16 items-center justify-center px-3 border-b border-sidebar-border">
+        <Link to="/projects" className="flex items-center justify-center animate-fade-in">
+          <img 
+            src={logoImage} 
+            alt="Survey Genius" 
+            className={cn(
+              "w-auto transition-all duration-300",
+              collapsed ? "h-8" : "h-12 max-w-[200px]"
+            )} 
+          />
+        </Link>
       </div>
 
       {/* Navigation */}
