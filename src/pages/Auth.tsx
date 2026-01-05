@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Mail, Lock, Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import logoImage from "@/assets/logo.png";
 
 type AuthFormData = {
   email: string;
@@ -109,10 +110,7 @@ export default function Auth() {
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="font-heading text-2xl font-bold">Survey Genius</span>
+            <img src={logoImage} alt="Survey Genius" className="h-10 w-auto" />
           </div>
 
           {/* Header */}
@@ -264,8 +262,8 @@ export default function Auth() {
 
         <div className="relative z-10 max-w-lg text-center text-primary-foreground p-8">
           <div className="flex justify-center mb-6">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 animate-bounce-subtle">
-              <Sparkles className="h-10 w-10" />
+            <div className="flex h-20 w-auto items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 animate-bounce-subtle p-4">
+              <img src={logoImage} alt="Survey Genius" className="h-10 w-auto brightness-0 invert" />
             </div>
           </div>
           <h2 className="font-heading text-4xl font-bold mb-4">

@@ -9,11 +9,11 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/i18n/LanguageContext";
+import logoImage from "@/assets/logo.png";
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -54,16 +54,13 @@ export function AppSidebar() {
       <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed && (
           <Link to="/projects" className="flex items-center gap-2 animate-fade-in">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-heading text-lg font-bold">Survey Genius</span>
+            <img src={logoImage} alt="Survey Genius" className="h-8 w-auto" />
           </Link>
         )}
         {collapsed && (
-          <div className="flex h-8 w-8 mx-auto items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <Link to="/projects" className="mx-auto">
+            <img src={logoImage} alt="Survey Genius" className="h-8 w-auto" />
+          </Link>
         )}
       </div>
 
