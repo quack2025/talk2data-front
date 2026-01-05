@@ -35,6 +35,7 @@ export function useProjects(toastMessages?: ToastMessages) {
       study_date?: string;
       is_tracking?: boolean;
       wave_number?: number;
+      additional_context?: string;
     }) =>
       api.post<Project>('/projects', { ...data, owner_type: 'user' }),
     onSuccess: () => {

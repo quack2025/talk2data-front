@@ -31,11 +31,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import {
   Form,
   FormControl,
   FormField,
@@ -46,7 +41,7 @@ import {
 } from '@/components/ui/form';
 import { useProjects } from '@/hooks/useProjects';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Loader2, ChevronDown, ChevronUp, CalendarIcon, X } from 'lucide-react';
+import { Loader2, CalendarIcon, X, ArrowLeft, ArrowRight, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -76,24 +71,28 @@ const METHODOLOGIES = [
 export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogProps) {
   const { createProject } = useProjects();
   const { t, language } = useLanguage();
-  const [contextOpen, setContextOpen] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
   const [brandInput, setBrandInput] = useState('');
   
   const dateLocale = language === 'es' ? es : enUS;
   
+  // Schema with required context fields in step 2
   const formSchema = z.object({
+    // Step 1 - Basic Info
     name: z.string().min(1, t.createProject.nameLabel).max(100),
     description: z.string().max(500).optional(),
-    // Study context fields
-    study_objective: z.string().max(1000).optional(),
-    country: z.string().optional(),
-    industry: z.string().optional(),
-    target_audience: z.string().max(500).optional(),
+    // Step 2 - Study Context (required fields)
+    study_objective: z.string().min(1, language === 'es' ? 'El objetivo es obligatorio' : 'Objective is required').max(1000),
+    country: z.string().min(1, language === 'es' ? 'El país es obligatorio' : 'Country is required'),
+    industry: z.string().min(1, language === 'es' ? 'La industria es obligatoria' : 'Industry is required'),
+    target_audience: z.string().min(1, language === 'es' ? 'El público objetivo es obligatorio' : 'Target audience is required').max(500),
+    // Optional context fields
     brands: z.array(z.string()).optional(),
     methodology: z.string().optional(),
     study_date: z.date().optional(),
     is_tracking: z.boolean().optional(),
     wave_number: z.number().min(1).optional(),
+    additional_context: z.string().max(2000).optional(),
   });
 
   type FormData = z.infer<typeof formSchema>;
@@ -112,6 +111,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
       study_date: undefined,
       is_tracking: false,
       wave_number: undefined,
+      additional_context: '',
     },
   });
 
@@ -137,22 +137,35 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
     }
   };
 
+  const handleNextStep = async () => {
+    // Validate step 1 fields
+    const isStep1Valid = await form.trigger(['name', 'description']);
+    if (isStep1Valid) {
+      setStep(2);
+    }
+  };
+
+  const handlePrevStep = () => {
+    setStep(1);
+  };
+
   const onSubmit = async (data: FormData) => {
     await createProject.mutateAsync({
       name: data.name,
       description: data.description,
-      study_objective: data.study_objective || undefined,
-      country: data.country || undefined,
-      industry: data.industry || undefined,
-      target_audience: data.target_audience || undefined,
+      study_objective: data.study_objective,
+      country: data.country,
+      industry: data.industry,
+      target_audience: data.target_audience,
       brands: data.brands?.length ? data.brands : undefined,
       methodology: data.methodology || undefined,
       study_date: data.study_date?.toISOString() || undefined,
       is_tracking: data.is_tracking || false,
       wave_number: data.is_tracking ? data.wave_number : undefined,
+      additional_context: data.additional_context || undefined,
     });
     form.reset();
-    setContextOpen(false);
+    setStep(1);
     setBrandInput('');
     onOpenChange(false);
   };
@@ -160,86 +173,115 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
       form.reset();
-      setContextOpen(false);
+      setStep(1);
       setBrandInput('');
     }
     onOpenChange(isOpen);
+  };
+
+  const stepTitles = {
+    1: {
+      title: t.createProject.title,
+      description: t.createProject.description,
+    },
+    2: {
+      title: language === 'es' ? 'Contexto del estudio' : 'Study Context',
+      description: language === 'es' 
+        ? 'Esta información es esencial para que la IA analice tus datos correctamente' 
+        : 'This information is essential for AI to analyze your data correctly',
+    },
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>{t.createProject.title}</DialogTitle>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex gap-1">
+              <div className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                step === 1 ? "bg-primary" : "bg-muted"
+              )} />
+              <div className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                step === 2 ? "bg-primary" : "bg-muted"
+              )} />
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {language === 'es' ? `Paso ${step} de 2` : `Step ${step} of 2`}
+            </span>
+          </div>
+          <DialogTitle>{stepTitles[step].title}</DialogTitle>
           <DialogDescription>
-            {t.createProject.description}
+            {stepTitles[step].description}
           </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="flex-1 pr-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Basic Fields */}
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t.createProject.nameLabel} *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={t.createProject.namePlaceholder}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t.createProject.descriptionLabel}</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder={t.createProject.descriptionPlaceholder}
-                        className="resize-none"
-                        rows={2}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Study Context - Collapsible */}
-              <Collapsible open={contextOpen} onOpenChange={setContextOpen}>
-                <CollapsibleTrigger asChild>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    className="w-full justify-between px-3 py-2 h-auto border border-dashed border-border hover:border-primary/50"
-                  >
-                    <span className="text-sm font-medium">{t.settings.studyContext}</span>
-                    {contextOpen ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              
+              {/* Step 1: Basic Information */}
+              {step === 1 && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.createProject.nameLabel} *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={t.createProject.namePlaceholder}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-4">
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.createProject.descriptionLabel}</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder={t.createProject.descriptionPlaceholder}
+                            className="resize-none"
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* Step 2: Study Context */}
+              {step === 2 && (
+                <>
+                  {/* Info banner */}
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                    <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'es' 
+                        ? 'Los campos marcados con * son obligatorios para obtener análisis precisos de la IA.'
+                        : 'Fields marked with * are required for accurate AI analysis.'}
+                    </p>
+                  </div>
+
                   {/* Study Objective */}
                   <FormField
                     control={form.control}
                     name="study_objective"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t.settings.studyObjective}</FormLabel>
+                        <FormLabel>{t.settings.studyObjective} *</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder={t.settings.studyObjectivePlaceholder}
@@ -260,7 +302,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                       name="country"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t.settings.country}</FormLabel>
+                          <FormLabel>{t.settings.country} *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -285,7 +327,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                       name="industry"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t.settings.industry}</FormLabel>
+                          <FormLabel>{t.settings.industry} *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -312,7 +354,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                     name="target_audience"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t.settings.targetAudience}</FormLabel>
+                        <FormLabel>{t.settings.targetAudience} *</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder={t.settings.targetAudiencePlaceholder}
@@ -478,7 +520,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                               placeholder={t.settings.waveNumberPlaceholder}
                               {...field}
                               onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                              value={field.value ?? ''}
+                              value={field.value || ''}
                             />
                           </FormControl>
                           <FormMessage />
@@ -486,23 +528,75 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                       )}
                     />
                   )}
-                </CollapsibleContent>
-              </Collapsible>
 
-              <DialogFooter className="pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleClose(false)}
-                >
-                  {t.createProject.cancel}
-                </Button>
-                <Button type="submit" disabled={createProject.isPending}>
-                  {createProject.isPending && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {createProject.isPending ? t.createProject.creating : t.createProject.create}
-                </Button>
+                  {/* Additional Context */}
+                  <FormField
+                    control={form.control}
+                    name="additional_context"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.settings.additionalContext}</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder={t.settings.additionalContextPlaceholder}
+                            className="resize-none"
+                            rows={2}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+
+              {/* Footer */}
+              <DialogFooter className="pt-4 gap-2">
+                {step === 1 ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleClose(false)}
+                    >
+                      {t.createProject.cancel}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleNextStep}
+                      className="gap-2"
+                    >
+                      {t.common.continue}
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handlePrevStep}
+                      className="gap-2"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      {t.common.back}
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createProject.isPending}
+                    >
+                      {createProject.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          {t.createProject.creating}
+                        </>
+                      ) : (
+                        t.createProject.create
+                      )}
+                    </Button>
+                  </>
+                )}
               </DialogFooter>
             </form>
           </Form>
