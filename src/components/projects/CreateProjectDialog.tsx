@@ -194,8 +194,8 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex gap-1">
               <div className={cn(
@@ -217,7 +217,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-1">
+        <ScrollArea className="flex-1 min-h-0 px-1 -mx-1">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-1">
               
