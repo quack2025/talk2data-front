@@ -31,7 +31,7 @@ export default function ProjectUpload() {
 
   const handleProcessingComplete = () => {
     setIsProcessing(false);
-    navigate(`/project/${projectId}/chat`);
+    navigate(`/projects/${projectId}/chat`);
   };
 
   return (
@@ -45,7 +45,7 @@ export default function ProjectUpload() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href={`/project/${projectId}`}>{t.projectUpload.project}</BreadcrumbLink>
+              <BreadcrumbLink href={`/projects/${projectId}`}>{t.projectUpload.project}</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -142,7 +142,7 @@ export default function ProjectUpload() {
         <div className="flex justify-between pt-4">
           <Button
             variant="outline"
-            onClick={() => navigate(`/project/${projectId}`)}
+            onClick={() => navigate(`/projects/${projectId}`)}
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
