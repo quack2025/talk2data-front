@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -22,14 +21,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useProjects } from '@/hooks/useProjects';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { Loader2 } from 'lucide-react';
-
-const formSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido').max(100),
-  description: z.string().max(500).optional(),
-});
-
-type FormData = z.infer<typeof formSchema>;
 
 interface CreateProjectDialogProps {
   open: boolean;
@@ -38,6 +31,14 @@ interface CreateProjectDialogProps {
 
 export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogProps) {
   const { createProject } = useProjects();
+  const { t } = useLanguage();
+  
+  const formSchema = z.object({
+    name: z.string().min(1, t.createProject.nameLabel).max(100),
+    description: z.string().max(500).optional(),
+  });
+
+  type FormData = z.infer<typeof formSchema>;
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -57,9 +58,9 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Nuevo proyecto</DialogTitle>
+          <DialogTitle>{t.createProject.title}</DialogTitle>
           <DialogDescription>
-            Crea un nuevo proyecto para analizar tus datos de encuesta.
+            {t.createProject.description}
           </DialogDescription>
         </DialogHeader>
 
@@ -70,10 +71,10 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre del proyecto</FormLabel>
+                  <FormLabel>{t.createProject.nameLabel}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Ej: Encuesta de satisfacción Q4 2024"
+                      placeholder={t.createProject.namePlaceholder}
                       {...field}
                     />
                   </FormControl>
@@ -87,10 +88,10 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Descripción (opcional)</FormLabel>
+                  <FormLabel>{t.createProject.descriptionLabel}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Describe brevemente el propósito de este proyecto..."
+                      placeholder={t.createProject.descriptionPlaceholder}
                       className="resize-none"
                       rows={3}
                       {...field}
@@ -107,13 +108,13 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                Cancelar
+                {t.createProject.cancel}
               </Button>
               <Button type="submit" disabled={createProject.isPending}>
                 {createProject.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Crear proyecto
+                {createProject.isPending ? t.createProject.creating : t.createProject.create}
               </Button>
             </DialogFooter>
           </form>
