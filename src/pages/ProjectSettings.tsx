@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,46 +27,154 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, Loader2, Save, Trash2 } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { ArrowLeft, Loader2, Save, Trash2, ChevronDown, X, CalendarIcon } from 'lucide-react';
 import { useProject, useUpdateProject, useDeleteProject } from '@/hooks/useProjects';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { es, enUS } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import type { ProjectUpdateData } from '@/types/database';
+
+const INDUSTRIES = [
+  'FMCG',
+  'Automotive',
+  'Banking',
+  'Telecom',
+  'Pharma',
+  'Retail',
+  'Technology',
+  'Media',
+  'Healthcare',
+  'Other',
+];
+
+const METHODOLOGIES = [
+  'Online panel',
+  'CATI',
+  'Face-to-face',
+  'Focus groups',
+  'In-depth interviews',
+  'Mixed methods',
+  'Other',
+];
 
 export default function ProjectSettings() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const { toast } = useToast();
+  const { t, language } = useLanguage();
 
   const { data: project, isLoading } = useProject(projectId!);
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
 
+  const [isContextOpen, setIsContextOpen] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  
+  // Basic fields
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [hasChanges, setHasChanges] = useState(false);
+  
+  // Study context fields
+  const [studyObjective, setStudyObjective] = useState('');
+  const [country, setCountry] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [targetAudience, setTargetAudience] = useState('');
+  const [brands, setBrands] = useState<string[]>([]);
+  const [brandInput, setBrandInput] = useState('');
+  const [methodology, setMethodology] = useState('');
+  const [studyDate, setStudyDate] = useState<Date | undefined>();
+  const [isTracking, setIsTracking] = useState(false);
+  const [waveNumber, setWaveNumber] = useState<number | undefined>();
+  const [additionalContext, setAdditionalContext] = useState('');
 
   // Initialize form when project loads
-  useState(() => {
+  useEffect(() => {
     if (project) {
       setName(project.name);
       setDescription(project.description || '');
+      setStudyObjective(project.study_objective || '');
+      setCountry(project.country || '');
+      setIndustry(project.industry || '');
+      setTargetAudience(project.target_audience || '');
+      setBrands(project.brands || []);
+      setMethodology(project.methodology || '');
+      setStudyDate(project.study_date ? new Date(project.study_date) : undefined);
+      setIsTracking(project.is_tracking || false);
+      setWaveNumber(project.wave_number);
+      setAdditionalContext(project.additional_context || '');
+      
+      // Open context section if any context field has data
+      const hasContextData = project.study_objective || project.country || 
+        project.industry || project.target_audience || 
+        (project.brands && project.brands.length > 0) || 
+        project.methodology || project.study_date || project.is_tracking;
+      setIsContextOpen(!!hasContextData);
     }
-  });
+  }, [project]);
 
-  // Update form when project data changes
-  if (project && !hasChanges && name === '' && description === '') {
-    setName(project.name);
-    setDescription(project.description || '');
-  }
+  const markChanged = () => setHasChanges(true);
+
+  const handleAddBrand = () => {
+    const trimmed = brandInput.trim();
+    if (trimmed && !brands.includes(trimmed)) {
+      setBrands([...brands, trimmed]);
+      setBrandInput('');
+      markChanged();
+    }
+  };
+
+  const handleRemoveBrand = (brand: string) => {
+    setBrands(brands.filter(b => b !== brand));
+    markChanged();
+  };
+
+  const handleBrandKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddBrand();
+    }
+  };
 
   const handleSave = async () => {
     if (!projectId) return;
     
+    const data: ProjectUpdateData = {
+      name,
+      description: description || undefined,
+      study_objective: studyObjective || undefined,
+      country: country || undefined,
+      industry: industry || undefined,
+      target_audience: targetAudience || undefined,
+      brands: brands.length > 0 ? brands : undefined,
+      methodology: methodology || undefined,
+      study_date: studyDate ? format(studyDate, 'yyyy-MM-dd') : undefined,
+      is_tracking: isTracking,
+      wave_number: isTracking && waveNumber ? waveNumber : undefined,
+      additional_context: additionalContext || undefined,
+    };
+
     try {
       await updateProject.mutateAsync({
         projectId,
-        data: { name, description },
+        data,
         toastMessages: {
           success: t.toasts.projectUpdated,
           error: t.toasts.error,
@@ -93,15 +203,7 @@ export default function ProjectSettings() {
     }
   };
 
-  const handleNameChange = (value: string) => {
-    setName(value);
-    setHasChanges(true);
-  };
-
-  const handleDescriptionChange = (value: string) => {
-    setDescription(value);
-    setHasChanges(true);
-  };
+  const dateLocale = language === 'es' ? es : enUS;
 
   if (isLoading) {
     return (
@@ -167,30 +269,211 @@ export default function ProjectSettings() {
             <CardTitle>{t.projectDetail.settingsCard}</CardTitle>
             <CardDescription>{t.projectDetail.settingsCardDescription}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">{t.projects.name}</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                placeholder={t.projects.name}
-              />
+          <CardContent className="space-y-6">
+            {/* Step 1: Basic */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">{t.projects.name} *</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); markChanged(); }}
+                  placeholder={t.projects.name}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">{t.projects.description}</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => { setDescription(e.target.value); markChanged(); }}
+                  placeholder={t.projects.description}
+                  rows={3}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">{t.projects.description}</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => handleDescriptionChange(e.target.value)}
-                placeholder={t.projects.description}
-                rows={3}
-              />
-            </div>
-            <div className="flex justify-end">
+
+            {/* Step 2: Study Context (Collapsible) */}
+            <Collapsible open={isContextOpen} onOpenChange={setIsContextOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+                  <span className="text-sm font-medium">{t.settings.studyContext}</span>
+                  <ChevronDown className={cn(
+                    "h-4 w-4 text-muted-foreground transition-transform",
+                    isContextOpen && "rotate-180"
+                  )} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-4">
+                {/* Study Objective */}
+                <div className="space-y-2">
+                  <Label htmlFor="studyObjective">{t.settings.studyObjective}</Label>
+                  <Textarea
+                    id="studyObjective"
+                    value={studyObjective}
+                    onChange={(e) => { setStudyObjective(e.target.value); markChanged(); }}
+                    placeholder={t.settings.studyObjectivePlaceholder}
+                    rows={3}
+                  />
+                </div>
+
+                {/* Country */}
+                <div className="space-y-2">
+                  <Label htmlFor="country">{t.settings.country}</Label>
+                  <Input
+                    id="country"
+                    value={country}
+                    onChange={(e) => { setCountry(e.target.value); markChanged(); }}
+                    placeholder={t.settings.countryPlaceholder}
+                  />
+                </div>
+
+                {/* Industry */}
+                <div className="space-y-2">
+                  <Label>{t.settings.industry}</Label>
+                  <Select value={industry} onValueChange={(v) => { setIndustry(v); markChanged(); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t.settings.industryPlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INDUSTRIES.map((ind) => (
+                        <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Target Audience */}
+                <div className="space-y-2">
+                  <Label htmlFor="targetAudience">{t.settings.targetAudience}</Label>
+                  <Textarea
+                    id="targetAudience"
+                    value={targetAudience}
+                    onChange={(e) => { setTargetAudience(e.target.value); markChanged(); }}
+                    placeholder={t.settings.targetAudiencePlaceholder}
+                    rows={2}
+                  />
+                </div>
+
+                {/* Brands */}
+                <div className="space-y-2">
+                  <Label>{t.settings.brands}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={brandInput}
+                      onChange={(e) => setBrandInput(e.target.value)}
+                      onKeyDown={handleBrandKeyDown}
+                      placeholder={t.settings.brandsPlaceholder}
+                    />
+                    <Button type="button" variant="secondary" onClick={handleAddBrand}>
+                      {t.common.add}
+                    </Button>
+                  </div>
+                  {brands.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {brands.map((brand) => (
+                        <Badge key={brand} variant="secondary" className="gap-1">
+                          {brand}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBrand(brand)}
+                            className="ml-1 hover:text-destructive"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Methodology */}
+                <div className="space-y-2">
+                  <Label>{t.settings.methodology}</Label>
+                  <Select value={methodology} onValueChange={(v) => { setMethodology(v); markChanged(); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t.settings.methodologyPlaceholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {METHODOLOGIES.map((m) => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Study Date */}
+                <div className="space-y-2">
+                  <Label>{t.settings.studyDate}</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !studyDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {studyDate ? format(studyDate, 'PPP', { locale: dateLocale }) : t.settings.studyDatePlaceholder}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={studyDate}
+                        onSelect={(date) => { setStudyDate(date); markChanged(); }}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Is Tracking */}
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isTracking">{t.settings.isTracking}</Label>
+                  <Switch
+                    id="isTracking"
+                    checked={isTracking}
+                    onCheckedChange={(checked) => { setIsTracking(checked); markChanged(); }}
+                  />
+                </div>
+
+                {/* Wave Number (visible if tracking) */}
+                {isTracking && (
+                  <div className="space-y-2">
+                    <Label htmlFor="waveNumber">{t.settings.waveNumber}</Label>
+                    <Input
+                      id="waveNumber"
+                      type="number"
+                      min={1}
+                      value={waveNumber || ''}
+                      onChange={(e) => { setWaveNumber(e.target.value ? parseInt(e.target.value) : undefined); markChanged(); }}
+                      placeholder={t.settings.waveNumberPlaceholder}
+                    />
+                  </div>
+                )}
+
+                {/* Additional Context */}
+                <div className="space-y-2">
+                  <Label htmlFor="additionalContext">{t.settings.additionalContext}</Label>
+                  <Textarea
+                    id="additionalContext"
+                    value={additionalContext}
+                    onChange={(e) => { setAdditionalContext(e.target.value); markChanged(); }}
+                    placeholder={t.settings.additionalContextPlaceholder}
+                    rows={3}
+                  />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Save Button */}
+            <div className="flex justify-end pt-4 border-t">
               <Button
                 onClick={handleSave}
-                disabled={!hasChanges || updateProject.isPending}
+                disabled={!hasChanges || updateProject.isPending || !name.trim()}
               >
                 {updateProject.isPending ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

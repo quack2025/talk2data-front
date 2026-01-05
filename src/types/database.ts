@@ -18,6 +18,32 @@ export interface Project {
   n_cases?: number;
   n_variables?: number;
   has_executive_summary?: boolean;
+  // Study context fields
+  study_objective?: string;
+  country?: string;
+  industry?: string;
+  target_audience?: string;
+  brands?: string[];
+  methodology?: string;
+  study_date?: string;
+  is_tracking?: boolean;
+  wave_number?: number;
+  additional_context?: string;
+}
+
+export interface ProjectUpdateData {
+  name?: string;
+  description?: string;
+  study_objective?: string;
+  country?: string;
+  industry?: string;
+  target_audience?: string;
+  brands?: string[];
+  methodology?: string;
+  study_date?: string;
+  is_tracking?: boolean;
+  wave_number?: number;
+  additional_context?: string;
 }
 
 export interface ProjectFile {
