@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { SummaryNotificationProvider } from "@/contexts/SummaryNotificationContext";
 // Pages
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -96,6 +97,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <SummaryNotificationProvider>
           <Routes>
             {/* Redirect root to projects */}
             <Route path="/" element={<Navigate to="/projects" replace />} />
@@ -204,6 +206,7 @@ const App = () => (
             {/* Catch all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </SummaryNotificationProvider>
         </BrowserRouter>
       </TooltipProvider>
     </LanguageProvider>
