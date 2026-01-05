@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
-import type { Project } from '@/types/database';
+import type { Project, ProjectUpdateData } from '@/types/database';
 
 interface ToastMessages {
   projectCreated: string;
@@ -84,7 +84,7 @@ export function useProject(projectId: string) {
 
 interface UpdateProjectParams {
   projectId: string;
-  data: { name?: string; description?: string };
+  data: ProjectUpdateData;
   toastMessages?: { success: string; error: string };
 }
 
