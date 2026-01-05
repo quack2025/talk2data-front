@@ -7,8 +7,9 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquare } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { Button } from '@/components/ui/button';
 
 export default function ProjectChat() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -17,8 +18,8 @@ export default function ProjectChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
 
-  const { conversations, isLoading: conversationsLoading, createConversation } = useChat(projectId!);
-  const { messages, isLoading: messagesLoading, isThinking, sendMessage } = useChatMessages(projectId!, activeConversationId);
+  const { conversations, isLoading: conversationsLoading, createConversation, error: conversationsError } = useChat(projectId!);
+  const { messages, isLoading: messagesLoading, isThinking, sendMessage, lastAnalysis } = useChatMessages(projectId!, activeConversationId);
 
   // Auto-select first conversation or create new one
   useEffect(() => {
@@ -33,13 +34,32 @@ export default function ProjectChat() {
   }, [messages]);
 
   const handleNewConversation = async () => {
-    const conversation = await createConversation.mutateAsync('Nueva conversación');
-    setActiveConversationId(conversation.id);
+    try {
+      const conversation = await createConversation.mutateAsync('Nueva conversación');
+      setActiveConversationId(conversation.id);
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
   };
 
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = async (content: string) => {
     if (!projectId) return;
-    sendMessage.mutate(content);
+
+    // Si no hay conversación activa, crear una primero
+    if (!activeConversationId && conversations.length === 0) {
+      try {
+        const conversation = await createConversation.mutateAsync('Nueva conversación');
+        setActiveConversationId(conversation.id);
+        // Esperar un momento para que el estado se actualice
+        setTimeout(() => {
+          sendMessage.mutate(content);
+        }, 100);
+      } catch (error) {
+        console.error('Error creating conversation:', error);
+      }
+    } else {
+      sendMessage.mutate(content);
+    }
   };
 
   const hasMessages = messages.length > 0;
@@ -55,13 +75,28 @@ export default function ProjectChat() {
           onNewConversation={handleNewConversation}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          isLoading={conversationsLoading}
         />
 
         {/* Chat Panel */}
         <div className="w-[400px] flex flex-col border-r bg-background">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto">
-            {messagesLoading ? (
+            {conversationsLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : conversationsError ? (
+              <div className="flex flex-col items-center justify-center h-full gap-4 p-4">
+                <MessageSquare className="h-12 w-12 text-muted-foreground/50" />
+                <p className="text-muted-foreground text-center">
+                  Error al cargar conversaciones
+                </p>
+                <Button variant="outline" onClick={handleNewConversation}>
+                  Iniciar nueva conversación
+                </Button>
+              </div>
+            ) : messagesLoading && activeConversationId ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
@@ -94,13 +129,16 @@ export default function ProjectChat() {
           {/* Input */}
           <ChatInput
             onSend={handleSendMessage}
-            disabled={!activeConversationId && conversations.length === 0}
+            disabled={false}
             isThinking={isThinking}
           />
         </div>
 
         {/* Results Panel */}
-        <ResultsPanel hasResults={hasMessages} />
+        <ResultsPanel 
+          hasResults={hasMessages} 
+          lastAnalysis={lastAnalysis}
+        />
       </div>
     </AppLayout>
   );
