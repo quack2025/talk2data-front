@@ -19,15 +19,16 @@ export function useChat(projectId: string, toastMessages?: ToastMessages) {
   // Listar conversaciones del proyecto
   const conversationsQuery = useQuery({
     queryKey: ['conversations', projectId],
-    queryFn: () => api.get<Conversation[]>(`/projects/${projectId}/conversations`),
+    queryFn: () => api.get<Conversation[]>(`/conversations?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
   // Crear nueva conversación
   const createConversation = useMutation({
     mutationFn: (title?: string) =>
-      api.post<Conversation>(`/projects/${projectId}/conversations`, {
-        title: title ?? 'New conversation',
+      api.post<Conversation>('/conversations', {
+        project_id: projectId,
+        title: title ?? 'Nueva conversación',
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations', projectId] });
@@ -44,7 +45,7 @@ export function useChat(projectId: string, toastMessages?: ToastMessages) {
   // Eliminar conversación
   const deleteConversation = useMutation({
     mutationFn: (conversationId: string) =>
-      api.delete(`/projects/${projectId}/conversations/${conversationId}`),
+      api.delete(`/conversations/${conversationId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations', projectId] });
     },
@@ -77,8 +78,8 @@ export function useChatMessages(projectId: string, conversationId: string | null
   // Obtener conversación con mensajes
   const conversationQuery = useQuery({
     queryKey: ['conversation', conversationId],
-    queryFn: () => api.get<Conversation>(`/projects/${projectId}/conversations/${conversationId}`),
-    enabled: !!conversationId && !!projectId,
+    queryFn: () => api.get<Conversation>(`/conversations/${conversationId}`),
+    enabled: !!conversationId,
   });
 
   // Enviar mensaje/pregunta
@@ -87,9 +88,9 @@ export function useChatMessages(projectId: string, conversationId: string | null
       setIsThinking(true);
 
       try {
-        // Usar el endpoint de query del proyecto
+        // Usar el endpoint correcto de query
         const response = await api.post<QueryResponse>(
-          `/projects/${projectId}/query`,
+          `/conversations/projects/${projectId}/query`,
           {
             question,
             conversation_id: conversationId ?? undefined,
