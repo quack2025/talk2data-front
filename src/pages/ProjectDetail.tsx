@@ -30,6 +30,8 @@ import {
   FlaskConical,
   Calendar,
   RefreshCw,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -37,6 +39,7 @@ import { useProject } from '@/hooks/useProjects';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useLastProject } from '@/hooks/useLastProject';
+import { useExecutiveSummary } from '@/hooks/useExecutiveSummary';
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -48,6 +51,7 @@ export default function ProjectDetail() {
   // Use the API hooks
   const { data: project, isLoading: projectLoading } = useProject(projectId!);
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
+  const { data: summary, isLoading: summaryLoading } = useExecutiveSummary(projectId!);
 
   // Track last used project
   useEffect(() => {
@@ -91,6 +95,7 @@ export default function ProjectDetail() {
 
   const hasFiles = files && files.length > 0;
   const hasReadyFiles = project.status === 'ready';
+  const hasSummary = !!summary;
 
   // Check if project has study context configured
   const hasStudyContext = project.study_objective || project.country || 
@@ -235,6 +240,37 @@ export default function ProjectDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Executive Summary Preview */}
+        {hasSummary && (
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>{t.summary?.title || 'Resumen Ejecutivo'}</CardTitle>
+                  <CardDescription>{t.summary?.generatedByAI || 'Generado automáticamente con IA'}</CardDescription>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/projects/${projectId}/summary`)}
+                className="gap-2"
+              >
+                {t.summary?.viewFullSummary || 'Ver resumen completo'}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {summary.content}
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Study Context Summary */}
         {hasStudyContext && (

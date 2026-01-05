@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, FileSpreadsheet, FileText, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { useToast } from '@/hooks/use-toast';
+import { usePollSummary } from '@/hooks/useExecutiveSummary';
+
+type UploadStep = 'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'processing' | 'generating-summary';
 
 export default function ProjectUpload() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -26,7 +29,11 @@ export default function ProjectUpload() {
   const [questionnaireFile, setQuestionnaireFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploadStep, setUploadStep] = useState<'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'processing'>('idle');
+  const [uploadStep, setUploadStep] = useState<UploadStep>('idle');
+  const [shouldPollSummary, setShouldPollSummary] = useState(false);
+  const [pollAttempts, setPollAttempts] = useState(0);
+  const maxPollAttempts = 30; // 60 seconds max (2s intervals)
+  
   const { t } = useLanguage();
   const { uploadFile } = useProjectFiles(projectId || '', {
     fileUploaded: t.toasts.fileUploaded,
@@ -36,12 +43,49 @@ export default function ProjectUpload() {
   });
   const { toast } = useToast();
 
+  // Poll for summary
+  const { data: summary } = usePollSummary(projectId || '', shouldPollSummary);
+
+  // Handle summary polling result
+  useEffect(() => {
+    if (!shouldPollSummary) return;
+
+    if (summary) {
+      // Summary is ready, navigate to summary page
+      setIsProcessing(false);
+      setShouldPollSummary(false);
+      toast({
+        title: t.projectUpload.uploadSuccess || 'Archivos procesados',
+        description: t.projectUpload.uploadSuccessDesc || 'Los archivos han sido procesados correctamente.',
+      });
+      navigate(`/projects/${projectId}/summary`);
+    } else {
+      // Increment poll attempts
+      setPollAttempts(prev => prev + 1);
+    }
+  }, [summary, shouldPollSummary, navigate, projectId, toast, t]);
+
+  // Handle poll timeout
+  useEffect(() => {
+    if (pollAttempts >= maxPollAttempts && shouldPollSummary) {
+      // Timeout - navigate to chat instead
+      setIsProcessing(false);
+      setShouldPollSummary(false);
+      toast({
+        title: t.projectUpload.uploadSuccess || 'Archivos procesados',
+        description: 'El resumen se está generando en segundo plano.',
+      });
+      navigate(`/projects/${projectId}/chat`);
+    }
+  }, [pollAttempts, shouldPollSummary, navigate, projectId, toast, t]);
+
   const handleUpload = async () => {
     if (!spssFile || !projectId) return;
     
     setIsProcessing(true);
     setUploadError(null);
     setUploadStep('uploading-spss');
+    setPollAttempts(0);
 
     try {
       // Upload SPSS file (required)
@@ -61,19 +105,17 @@ export default function ProjectUpload() {
 
       setUploadStep('processing');
       
-      // Small delay to show processing step before navigation
-      setTimeout(() => {
-        setIsProcessing(false);
-        toast({
-          title: t.projectUpload.uploadSuccess || 'Archivos procesados',
-          description: t.projectUpload.uploadSuccessDesc || 'Los archivos han sido procesados correctamente.',
-        });
-        navigate(`/projects/${projectId}/chat`);
-      }, 1000);
+      // Wait a bit for processing step animation
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Start polling for summary
+      setUploadStep('generating-summary');
+      setShouldPollSummary(true);
 
     } catch (error) {
       setIsProcessing(false);
       setUploadStep('idle');
+      setShouldPollSummary(false);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       setUploadError(errorMessage);
       console.error('Upload error:', error);
@@ -82,7 +124,7 @@ export default function ProjectUpload() {
 
   const handleProcessingComplete = () => {
     setIsProcessing(false);
-    navigate(`/projects/${projectId}/chat`);
+    navigate(`/projects/${projectId}/summary`);
   };
 
   return (

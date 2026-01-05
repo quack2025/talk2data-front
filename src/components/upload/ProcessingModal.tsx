@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CheckCircle, Loader2, FileSpreadsheet, Brain, Database, FileText } from 'lucide-react';
+import { CheckCircle, Loader2, FileSpreadsheet, Brain, Database, FileText, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -17,7 +17,7 @@ interface ProcessingStep {
   status: 'pending' | 'processing' | 'completed';
 }
 
-type UploadStep = 'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'processing';
+type UploadStep = 'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'processing' | 'generating-summary';
 
 interface ProcessingModalProps {
   open: boolean;
@@ -66,6 +66,12 @@ export function ProcessingModal({
         label: t.processing?.indexing || 'Indexando variables', 
         icon: Brain, 
         status: 'pending' 
+      },
+      {
+        id: 'generating-summary',
+        label: t.processing?.generatingSummary || 'Generando resumen ejecutivo',
+        icon: Sparkles,
+        status: 'pending'
       }
     );
 
@@ -108,8 +114,8 @@ export function ProcessingModal({
     const progressPercent = ((currentIndex + 0.5) / steps.length) * 100;
     setProgress(progressPercent);
 
-    // If we're on the last processing step, simulate completion
-    if (currentStep === 'processing') {
+    // If we're on the last step (generating summary), simulate completion
+    if (currentStep === 'generating-summary') {
       const timer = setTimeout(() => {
         setSteps(prev => prev.map(s => ({ ...s, status: 'completed' })));
         setProgress(100);

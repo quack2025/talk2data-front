@@ -93,6 +93,16 @@ export interface Export {
   created_at: string;
 }
 
+export interface ExecutiveSummary {
+  id: string;
+  project_id: string;
+  content: string;
+  key_findings?: string[];
+  methodology_notes?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
 export interface Profile {
   id: string;
   email: string | null;

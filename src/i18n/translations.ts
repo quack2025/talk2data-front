@@ -175,6 +175,23 @@ export const translations = {
       uploadingQuestionnaire: 'Subiendo cuestionario',
       analyzing: 'Analizando estructura SPSS',
       indexing: 'Indexando variables',
+      generatingSummary: 'Generando resumen ejecutivo',
+    },
+    // Executive Summary
+    summary: {
+      title: 'Resumen Ejecutivo',
+      subtitle: 'Análisis automático de tus datos',
+      generatedByAI: 'Generado automáticamente con IA',
+      noSummary: 'No hay resumen disponible',
+      generate: 'Generar resumen',
+      keyFindings: 'Hallazgos clave',
+      methodologyNotes: 'Notas metodológicas',
+      nextSteps: '¿Qué sigue?',
+      nextStepsDescription: 'Continúa explorando tus datos con el chat de IA',
+      goToChat: 'Ir al Chat',
+      generating: 'Generando resumen...',
+      generatingDescription: 'Analizando tus datos con IA. Esto puede tomar unos segundos.',
+      viewFullSummary: 'Ver resumen completo',
     },
     // Project Chat
     chat: {
@@ -486,6 +503,23 @@ export const translations = {
       uploadingQuestionnaire: 'Uploading questionnaire',
       analyzing: 'Analyzing SPSS structure',
       indexing: 'Indexing variables',
+      generatingSummary: 'Generating executive summary',
+    },
+    // Executive Summary
+    summary: {
+      title: 'Executive Summary',
+      subtitle: 'Automatic analysis of your data',
+      generatedByAI: 'Automatically generated with AI',
+      noSummary: 'No summary available',
+      generate: 'Generate summary',
+      keyFindings: 'Key findings',
+      methodologyNotes: 'Methodology notes',
+      nextSteps: 'What\'s next?',
+      nextStepsDescription: 'Continue exploring your data with AI chat',
+      goToChat: 'Go to Chat',
+      generating: 'Generating summary...',
+      generatingDescription: 'Analyzing your data with AI. This may take a few seconds.',
+      viewFullSummary: 'View full summary',
     },
     // Project Chat
     chat: {
