@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,26 +6,25 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Trash2,
 } from 'lucide-react';
-import type { ChatSession } from '@/types/database';
+import type { Conversation } from '@/types/database';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface ChatSidebarProps {
-  sessions: ChatSession[];
-  activeSessionId: string | null;
-  onSelectSession: (sessionId: string) => void;
-  onNewSession: () => void;
+  conversations: Conversation[];
+  activeConversationId: string | null;
+  onSelectConversation: (conversationId: string) => void;
+  onNewConversation: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
 }
 
 export function ChatSidebar({
-  sessions,
-  activeSessionId,
-  onSelectSession,
-  onNewSession,
+  conversations,
+  activeConversationId,
+  onSelectConversation,
+  onNewConversation,
   collapsed,
   onToggleCollapse,
 }: ChatSidebarProps) {
@@ -59,7 +57,7 @@ export function ChatSidebar({
       {/* New chat button */}
       <div className="p-3">
         <Button
-          onClick={onNewSession}
+          onClick={onNewConversation}
           className={cn('gap-2', collapsed ? 'w-10 p-0' : 'w-full')}
           size={collapsed ? 'icon' : 'default'}
         >
@@ -68,15 +66,15 @@ export function ChatSidebar({
         </Button>
       </div>
 
-      {/* Sessions list */}
+      {/* Conversations list */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        {sessions.map((session) => (
+        {conversations.map((conversation) => (
           <button
-            key={session.id}
-            onClick={() => onSelectSession(session.id)}
+            key={conversation.id}
+            onClick={() => onSelectConversation(conversation.id)}
             className={cn(
               'w-full text-left rounded-lg p-3 transition-colors',
-              activeSessionId === session.id
+              activeConversationId === conversation.id
                 ? 'bg-primary/10 text-primary'
                 : 'hover:bg-muted'
             )}
@@ -85,19 +83,22 @@ export function ChatSidebar({
               <MessageSquare className="h-4 w-4 mx-auto" />
             ) : (
               <div>
-                <p className="text-sm font-medium truncate">{session.title}</p>
+                <p className="text-sm font-medium truncate">{conversation.title}</p>
                 <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                   <Clock className="h-3 w-3" />
                   <span>
-                    {format(new Date(session.updated_at), "d MMM", { locale: es })}
+                    {format(new Date(conversation.last_activity), "d MMM", { locale: es })}
                   </span>
+                  {conversation.message_count !== undefined && (
+                    <span className="ml-2">({conversation.message_count} msgs)</span>
+                  )}
                 </div>
               </div>
             )}
           </button>
         ))}
 
-        {sessions.length === 0 && !collapsed && (
+        {conversations.length === 0 && !collapsed && (
           <p className="text-sm text-muted-foreground text-center py-4">
             No hay conversaciones
           </p>

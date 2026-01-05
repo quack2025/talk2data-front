@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,10 +20,13 @@ import {
   FileSpreadsheet,
   Plus,
   Loader2,
+  BarChart3,
+  Database,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
-import type { Project, ProjectFile } from '@/types/database';
+import { useProject } from '@/hooks/useProjects';
+import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useLastProject } from '@/hooks/useLastProject';
 
@@ -36,6 +37,10 @@ export default function ProjectDetail() {
   const dateLocale = language === 'es' ? es : enUS;
   const { setLastProjectId } = useLastProject();
 
+  // Use the API hooks
+  const { data: project, isLoading: projectLoading } = useProject(projectId!);
+  const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
+
   // Track last used project
   useEffect(() => {
     if (projectId) {
@@ -44,41 +49,10 @@ export default function ProjectDetail() {
   }, [projectId, setLastProjectId]);
 
   const statusConfig = {
-    active: { label: t.projects.active, variant: 'default' as const },
     processing: { label: t.projects.processing, variant: 'secondary' as const },
-    completed: { label: t.projects.completed, variant: 'outline' as const },
-    archived: { label: t.projects.archived, variant: 'outline' as const },
+    ready: { label: t.projects.completed, variant: 'default' as const },
+    error: { label: 'Error', variant: 'destructive' as const },
   };
-
-  const { data: project, isLoading: projectLoading } = useQuery({
-    queryKey: ['project', projectId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-
-      if (error) throw error;
-      return data as Project;
-    },
-    enabled: !!projectId,
-  });
-
-  const { data: files, isLoading: filesLoading } = useQuery({
-    queryKey: ['project-files', projectId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('project_files')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as ProjectFile[];
-    },
-    enabled: !!projectId,
-  });
 
   if (projectLoading) {
     return (
@@ -108,7 +82,7 @@ export default function ProjectDetail() {
   }
 
   const hasFiles = files && files.length > 0;
-  const hasReadyFiles = files?.some((f) => f.status === 'ready');
+  const hasReadyFiles = project.status === 'ready';
 
   return (
     <AppLayout>
@@ -131,19 +105,33 @@ export default function ProjectDetail() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
-              <Badge variant={statusConfig[project.status].variant}>
-                {statusConfig[project.status].label}
+              <Badge variant={statusConfig[project.status]?.variant ?? 'secondary'}>
+                {statusConfig[project.status]?.label ?? project.status}
               </Badge>
             </div>
             {project.description && (
               <p className="text-muted-foreground mt-1">{project.description}</p>
             )}
-            <p className="text-sm text-muted-foreground mt-2">
-              {t.projectDetail.createdOn}{' '}
-              {format(new Date(project.created_at), language === 'es' ? "d 'de' MMMM, yyyy" : "MMMM d, yyyy", {
-                locale: dateLocale,
-              })}
-            </p>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+              <span>
+                {t.projectDetail.createdOn}{' '}
+                {format(new Date(project.created_at), language === 'es' ? "d 'de' MMMM, yyyy" : "MMMM d, yyyy", {
+                  locale: dateLocale,
+                })}
+              </span>
+              {project.n_variables !== undefined && (
+                <span className="flex items-center gap-1">
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  {project.n_variables} variables
+                </span>
+              )}
+              {project.n_cases !== undefined && (
+                <span className="flex items-center gap-1">
+                  <Database className="h-3.5 w-3.5" />
+                  {project.n_cases} casos
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex gap-2">
             <Button
@@ -275,26 +263,14 @@ export default function ProjectDetail() {
                       <FileSpreadsheet className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{file.file_name}</p>
+                      <p className="font-medium truncate">{file.original_name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {(file.file_size / 1024 / 1024).toFixed(2)} MB •{' '}
-                        {format(new Date(file.created_at), "d MMM yyyy", { locale: dateLocale })}
+                        {(file.size_bytes / 1024 / 1024).toFixed(2)} MB •{' '}
+                        {format(new Date(file.uploaded_at), "d MMM yyyy", { locale: dateLocale })}
                       </p>
                     </div>
-                    <Badge
-                      variant={
-                        file.status === 'ready'
-                          ? 'default'
-                          : file.status === 'error'
-                          ? 'destructive'
-                          : 'secondary'
-                      }
-                    >
-                      {file.status === 'ready'
-                        ? t.projectDetail.ready
-                        : file.status === 'error'
-                        ? t.projectDetail.error
-                        : t.projects.processing}
+                    <Badge variant="outline">
+                      {file.file_type === 'spss_data' ? 'SPSS' : 'Cuestionario'}
                     </Badge>
                   </div>
                 ))}

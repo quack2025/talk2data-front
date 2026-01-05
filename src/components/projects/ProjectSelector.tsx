@@ -73,11 +73,12 @@ export function ProjectSelector({ redirectPath, title, description }: ProjectSel
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground mt-2">
-                    {format(new Date(project.last_activity), "d MMM yyyy", {
+                    {format(new Date(project.created_at), "d MMM yyyy", {
                       locale: dateLocale,
                     })}
-                    {' · '}
-                    {project.file_count} {t.projects.files}
+                    {project.n_variables !== undefined && (
+                      <> · {project.n_variables} variables</>
+                    )}
                   </p>
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0 ml-2" />

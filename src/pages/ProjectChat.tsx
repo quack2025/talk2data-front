@@ -13,33 +13,33 @@ import { useLanguage } from '@/i18n/LanguageContext';
 export default function ProjectChat() {
   const { projectId } = useParams<{ projectId: string }>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
 
-  const { sessions, isLoading: sessionsLoading, createSession } = useChat(projectId!);
-  const { messages, isLoading: messagesLoading, isThinking, sendMessage } = useChatMessages(activeSessionId);
+  const { conversations, isLoading: conversationsLoading, createConversation } = useChat(projectId!);
+  const { messages, isLoading: messagesLoading, isThinking, sendMessage } = useChatMessages(projectId!, activeConversationId);
 
-  // Auto-select first session or create new one
+  // Auto-select first conversation or create new one
   useEffect(() => {
-    if (!sessionsLoading && sessions.length > 0 && !activeSessionId) {
-      setActiveSessionId(sessions[0].id);
+    if (!conversationsLoading && conversations.length > 0 && !activeConversationId) {
+      setActiveConversationId(conversations[0].id);
     }
-  }, [sessions, sessionsLoading, activeSessionId]);
+  }, [conversations, conversationsLoading, activeConversationId]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleNewSession = async () => {
-    const session = await createSession.mutateAsync();
-    setActiveSessionId(session.id);
+  const handleNewConversation = async () => {
+    const conversation = await createConversation.mutateAsync('Nueva conversación');
+    setActiveConversationId(conversation.id);
   };
 
   const handleSendMessage = (content: string) => {
     if (!projectId) return;
-    sendMessage.mutate({ content, projectId });
+    sendMessage.mutate(content);
   };
 
   const hasMessages = messages.length > 0;
@@ -49,10 +49,10 @@ export default function ProjectChat() {
       <div className="flex h-[calc(100vh-4rem)]">
         {/* Chat Sidebar */}
         <ChatSidebar
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          onSelectSession={setActiveSessionId}
-          onNewSession={handleNewSession}
+          conversations={conversations}
+          activeConversationId={activeConversationId}
+          onSelectConversation={setActiveConversationId}
+          onNewConversation={handleNewConversation}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
@@ -94,7 +94,7 @@ export default function ProjectChat() {
           {/* Input */}
           <ChatInput
             onSend={handleSendMessage}
-            disabled={!activeSessionId}
+            disabled={!activeConversationId && conversations.length === 0}
             isThinking={isThinking}
           />
         </div>
