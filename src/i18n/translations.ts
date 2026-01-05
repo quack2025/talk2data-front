@@ -146,6 +146,7 @@ export const translations = {
       uploadFirstFile: 'Subir primer archivo',
       ready: 'Listo',
       error: 'Error',
+      studyContextDescription: 'Contexto configurado para el análisis con IA',
     },
     // Project Upload
     projectUpload: {
@@ -456,6 +457,7 @@ export const translations = {
       uploadFirstFile: 'Upload first file',
       ready: 'Ready',
       error: 'Error',
+      studyContextDescription: 'Context configured for AI analysis',
     },
     // Project Upload
     projectUpload: {
