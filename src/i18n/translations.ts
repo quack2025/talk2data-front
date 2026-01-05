@@ -192,6 +192,7 @@ export const translations = {
       generating: 'Generando resumen...',
       generatingDescription: 'Analizando tus datos con IA. Esto puede tomar unos segundos.',
       viewFullSummary: 'Ver resumen completo',
+      ready: 'Resumen ejecutivo listo',
     },
     // Project Chat
     chat: {
@@ -520,6 +521,7 @@ export const translations = {
       generating: 'Generating summary...',
       generatingDescription: 'Analyzing your data with AI. This may take a few seconds.',
       viewFullSummary: 'View full summary',
+      ready: 'Executive summary ready',
     },
     // Project Chat
     chat: {

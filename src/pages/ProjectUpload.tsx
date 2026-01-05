@@ -19,6 +19,8 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { useToast } from '@/hooks/use-toast';
 import { usePollSummary } from '@/hooks/useExecutiveSummary';
+import { useSummaryNotification } from '@/contexts/SummaryNotificationContext';
+import { useProjects } from '@/hooks/useProjects';
 
 type UploadStep = 'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'processing' | 'generating-summary';
 
@@ -42,6 +44,11 @@ export default function ProjectUpload() {
     fileDeleted: t.toasts.fileDeleted,
   });
   const { toast } = useToast();
+  const { addPendingSummary } = useSummaryNotification();
+  const { projects } = useProjects();
+  
+  // Get current project name
+  const currentProject = projects?.find(p => p.id === projectId);
 
   // Poll for summary
   const { data: summary } = usePollSummary(projectId || '', shouldPollSummary);
@@ -65,10 +72,13 @@ export default function ProjectUpload() {
     }
   }, [summary, shouldPollSummary, navigate, projectId, toast, t]);
 
-  // Handle poll timeout
+  // Handle poll timeout - register for background notifications
   useEffect(() => {
-    if (pollAttempts >= maxPollAttempts && shouldPollSummary) {
-      // Timeout - navigate to chat instead
+    if (pollAttempts >= maxPollAttempts && shouldPollSummary && projectId) {
+      // Timeout - register for background notifications and navigate to chat
+      if (currentProject) {
+        addPendingSummary(projectId, currentProject.name);
+      }
       setIsProcessing(false);
       setShouldPollSummary(false);
       toast({
@@ -77,7 +87,7 @@ export default function ProjectUpload() {
       });
       navigate(`/projects/${projectId}/chat`);
     }
-  }, [pollAttempts, shouldPollSummary, navigate, projectId, toast, t]);
+  }, [pollAttempts, shouldPollSummary, navigate, projectId, toast, t, addPendingSummary, currentProject]);
 
   const handleUpload = async () => {
     if (!spssFile || !projectId) return;
