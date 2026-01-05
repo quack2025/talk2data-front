@@ -22,6 +22,14 @@ import {
   Loader2,
   BarChart3,
   Database,
+  Target,
+  Globe,
+  Building2,
+  Users,
+  Tag,
+  FlaskConical,
+  Calendar,
+  RefreshCw,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -83,6 +91,12 @@ export default function ProjectDetail() {
 
   const hasFiles = files && files.length > 0;
   const hasReadyFiles = project.status === 'ready';
+
+  // Check if project has study context configured
+  const hasStudyContext = project.study_objective || project.country || 
+    project.industry || project.target_audience || 
+    (project.brands && project.brands.length > 0) || 
+    project.methodology || project.study_date || project.is_tracking;
 
   return (
     <AppLayout>
@@ -221,6 +235,117 @@ export default function ProjectDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Study Context Summary */}
+        {hasStudyContext && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>{t.settings.studyContext}</CardTitle>
+                <CardDescription>{t.projectDetail.studyContextDescription}</CardDescription>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(`/projects/${projectId}/settings`)}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                {t.common.edit}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {project.study_objective && (
+                  <div className="col-span-full space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Target className="h-4 w-4" />
+                      {t.settings.studyObjective}
+                    </div>
+                    <p className="text-sm">{project.study_objective}</p>
+                  </div>
+                )}
+
+                {project.country && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Globe className="h-4 w-4" />
+                      {t.settings.country}
+                    </div>
+                    <p className="text-sm font-medium">{project.country}</p>
+                  </div>
+                )}
+
+                {project.industry && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                      {t.settings.industry}
+                    </div>
+                    <p className="text-sm font-medium">{project.industry}</p>
+                  </div>
+                )}
+
+                {project.methodology && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <FlaskConical className="h-4 w-4" />
+                      {t.settings.methodology}
+                    </div>
+                    <p className="text-sm font-medium">{project.methodology}</p>
+                  </div>
+                )}
+
+                {project.target_audience && (
+                  <div className="col-span-full space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Users className="h-4 w-4" />
+                      {t.settings.targetAudience}
+                    </div>
+                    <p className="text-sm">{project.target_audience}</p>
+                  </div>
+                )}
+
+                {project.brands && project.brands.length > 0 && (
+                  <div className="col-span-full space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Tag className="h-4 w-4" />
+                      {t.settings.brands}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {project.brands.map((brand) => (
+                        <Badge key={brand} variant="secondary">{brand}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {project.study_date && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      {t.settings.studyDate}
+                    </div>
+                    <p className="text-sm font-medium">
+                      {format(new Date(project.study_date), 'PPP', { locale: dateLocale })}
+                    </p>
+                  </div>
+                )}
+
+                {project.is_tracking && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <RefreshCw className="h-4 w-4" />
+                      {t.settings.isTracking}
+                    </div>
+                    <p className="text-sm font-medium">
+                      {project.wave_number ? `Wave ${project.wave_number}` : t.common.yes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Files section */}
         <Card>
