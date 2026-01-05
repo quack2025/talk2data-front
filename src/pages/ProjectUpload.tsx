@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, FileSpreadsheet, FileText } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileSpreadsheet, FileText, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLayout } from '@/components/layout';
 import { FileDropZone } from '@/components/upload/FileDropZone';
@@ -14,7 +14,10 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useProjectFiles } from '@/hooks/useProjectFiles';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProjectUpload() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -22,11 +25,54 @@ export default function ProjectUpload() {
   const [spssFile, setSpssFile] = useState<File | null>(null);
   const [questionnaireFile, setQuestionnaireFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadStep, setUploadStep] = useState<'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'processing'>('idle');
   const { t } = useLanguage();
+  const { uploadFile } = useProjectFiles(projectId || '');
+  const { toast } = useToast();
 
-  const handleUpload = () => {
-    if (!spssFile) return;
+  const handleUpload = async () => {
+    if (!spssFile || !projectId) return;
+    
     setIsProcessing(true);
+    setUploadError(null);
+    setUploadStep('uploading-spss');
+
+    try {
+      // Upload SPSS file (required)
+      await uploadFile.mutateAsync({
+        file: spssFile,
+        fileType: 'spss',
+      });
+
+      // Upload questionnaire if provided (optional)
+      if (questionnaireFile) {
+        setUploadStep('uploading-questionnaire');
+        await uploadFile.mutateAsync({
+          file: questionnaireFile,
+          fileType: 'questionnaire',
+        });
+      }
+
+      setUploadStep('processing');
+      
+      // Small delay to show processing step before navigation
+      setTimeout(() => {
+        setIsProcessing(false);
+        toast({
+          title: t.projectUpload.uploadSuccess || 'Archivos procesados',
+          description: t.projectUpload.uploadSuccessDesc || 'Los archivos han sido procesados correctamente.',
+        });
+        navigate(`/projects/${projectId}/chat`);
+      }, 1000);
+
+    } catch (error) {
+      setIsProcessing(false);
+      setUploadStep('idle');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      setUploadError(errorMessage);
+      console.error('Upload error:', error);
+    }
   };
 
   const handleProcessingComplete = () => {
@@ -61,6 +107,14 @@ export default function ProjectUpload() {
             {t.projectUpload.subtitle}
           </p>
         </div>
+
+        {/* Error Alert */}
+        {uploadError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{uploadError}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Steps indicator */}
         <div className="flex items-center gap-4">
@@ -103,6 +157,7 @@ export default function ProjectUpload() {
                 onFileSelect={setSpssFile}
                 selectedFile={spssFile}
                 onRemove={() => setSpssFile(null)}
+                isUploading={isProcessing && uploadStep === 'uploading-spss'}
               />
             </CardContent>
           </Card>
@@ -133,6 +188,7 @@ export default function ProjectUpload() {
                 onFileSelect={setQuestionnaireFile}
                 selectedFile={questionnaireFile}
                 onRemove={() => setQuestionnaireFile(null)}
+                isUploading={isProcessing && uploadStep === 'uploading-questionnaire'}
               />
             </CardContent>
           </Card>
@@ -144,17 +200,24 @@ export default function ProjectUpload() {
             variant="outline"
             onClick={() => navigate(`/projects/${projectId}`)}
             className="gap-2"
+            disabled={isProcessing}
           >
             <ArrowLeft className="h-4 w-4" />
             {t.projectUpload.back}
           </Button>
           <Button
             onClick={handleUpload}
-            disabled={!spssFile}
+            disabled={!spssFile || isProcessing}
             className="gap-2"
           >
-            {t.projectUpload.continue}
-            <ArrowRight className="h-4 w-4" />
+            {isProcessing ? (
+              <>Procesando...</>
+            ) : (
+              <>
+                {t.projectUpload.continue}
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -162,6 +225,8 @@ export default function ProjectUpload() {
       <ProcessingModal
         open={isProcessing}
         onComplete={handleProcessingComplete}
+        currentStep={uploadStep}
+        hasQuestionnaire={!!questionnaireFile}
       />
     </AppLayout>
   );

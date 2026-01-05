@@ -5,9 +5,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { CheckCircle, Loader2, FileSpreadsheet, Brain, Database } from 'lucide-react';
+import { CheckCircle, Loader2, FileSpreadsheet, Brain, Database, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ProcessingStep {
   id: string;
@@ -16,75 +17,114 @@ interface ProcessingStep {
   status: 'pending' | 'processing' | 'completed';
 }
 
+type UploadStep = 'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'processing';
+
 interface ProcessingModalProps {
   open: boolean;
   onComplete: () => void;
+  currentStep?: UploadStep;
+  hasQuestionnaire?: boolean;
 }
 
-export function ProcessingModal({ open, onComplete }: ProcessingModalProps) {
-  const [steps, setSteps] = useState<ProcessingStep[]>([
-    { id: 'upload', label: 'Subiendo archivo', icon: FileSpreadsheet, status: 'pending' },
-    { id: 'parse', label: 'Analizando estructura SPSS', icon: Database, status: 'pending' },
-    { id: 'index', label: 'Indexando variables', icon: Brain, status: 'pending' },
-  ]);
+export function ProcessingModal({ 
+  open, 
+  onComplete, 
+  currentStep = 'idle',
+  hasQuestionnaire = false 
+}: ProcessingModalProps) {
+  const { t } = useLanguage();
+  
+  // Build steps dynamically based on whether there's a questionnaire
+  const getSteps = (): ProcessingStep[] => {
+    const baseSteps: ProcessingStep[] = [
+      { 
+        id: 'uploading-spss', 
+        label: t.processing?.uploadingSpss || 'Subiendo archivo SPSS', 
+        icon: FileSpreadsheet, 
+        status: 'pending' 
+      },
+    ];
+
+    if (hasQuestionnaire) {
+      baseSteps.push({
+        id: 'uploading-questionnaire',
+        label: t.processing?.uploadingQuestionnaire || 'Subiendo cuestionario',
+        icon: FileText,
+        status: 'pending',
+      });
+    }
+
+    baseSteps.push(
+      { 
+        id: 'processing', 
+        label: t.processing?.analyzing || 'Analizando estructura SPSS', 
+        icon: Database, 
+        status: 'pending' 
+      },
+      { 
+        id: 'indexing', 
+        label: t.processing?.indexing || 'Indexando variables', 
+        icon: Brain, 
+        status: 'pending' 
+      }
+    );
+
+    return baseSteps;
+  };
+
+  const [steps, setSteps] = useState<ProcessingStep[]>(getSteps());
   const [progress, setProgress] = useState(0);
 
+  // Update steps when hasQuestionnaire changes
+  useEffect(() => {
+    if (open) {
+      setSteps(getSteps());
+    }
+  }, [hasQuestionnaire, open]);
+
+  // Update step statuses based on currentStep
   useEffect(() => {
     if (!open) {
-      setSteps((prev) => prev.map((s) => ({ ...s, status: 'pending' })));
+      setSteps(getSteps().map(s => ({ ...s, status: 'pending' })));
       setProgress(0);
       return;
     }
 
-    const stepDurations = [1500, 2000, 1500];
-    let currentStep = 0;
+    const stepIds = steps.map(s => s.id);
+    const currentIndex = stepIds.indexOf(currentStep);
 
-    const processStep = () => {
-      if (currentStep >= steps.length) {
-        setTimeout(onComplete, 500);
-        return;
-      }
+    if (currentIndex === -1) return;
 
-      setSteps((prev) =>
-        prev.map((s, i) => ({
-          ...s,
-          status: i === currentStep ? 'processing' : i < currentStep ? 'completed' : 'pending',
-        }))
-      );
+    setSteps(prev => prev.map((step, index) => ({
+      ...step,
+      status: index < currentIndex 
+        ? 'completed' 
+        : index === currentIndex 
+          ? 'processing' 
+          : 'pending'
+    })));
 
-      const duration = stepDurations[currentStep];
-      const startProgress = (currentStep / steps.length) * 100;
-      const endProgress = ((currentStep + 1) / steps.length) * 100;
-      const progressIncrement = (endProgress - startProgress) / (duration / 50);
+    // Calculate progress
+    const progressPercent = ((currentIndex + 0.5) / steps.length) * 100;
+    setProgress(progressPercent);
 
-      let currentProgress = startProgress;
-      const progressInterval = setInterval(() => {
-        currentProgress += progressIncrement;
-        if (currentProgress >= endProgress) {
-          clearInterval(progressInterval);
-          setProgress(endProgress);
-          setSteps((prev) =>
-            prev.map((s, i) => ({
-              ...s,
-              status: i <= currentStep ? 'completed' : s.status,
-            }))
-          );
-          currentStep++;
-          setTimeout(processStep, 300);
-        } else {
-          setProgress(currentProgress);
-        }
-      }, 50);
-    };
-
-    setTimeout(processStep, 500);
-  }, [open, onComplete]);
+    // If we're on the last processing step, simulate completion
+    if (currentStep === 'processing') {
+      const timer = setTimeout(() => {
+        setSteps(prev => prev.map(s => ({ ...s, status: 'completed' })));
+        setProgress(100);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [open, currentStep, steps.length]);
 
   return (
     <Dialog open={open}>
       <DialogContent className="sm:max-w-md [&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className="text-center">Procesando archivo</DialogTitle>
+          <DialogTitle className="text-center">
+            {t.processing?.title || 'Procesando archivo'}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="py-6 space-y-6">

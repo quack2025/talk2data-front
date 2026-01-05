@@ -157,6 +157,16 @@ export const translations = {
       back: 'Volver',
       continue: 'Continuar',
       project: 'Proyecto',
+      uploadSuccess: 'Archivos procesados',
+      uploadSuccessDesc: 'Los archivos han sido procesados correctamente.',
+    },
+    // Processing Modal
+    processing: {
+      title: 'Procesando archivo',
+      uploadingSpss: 'Subiendo archivo SPSS',
+      uploadingQuestionnaire: 'Subiendo cuestionario',
+      analyzing: 'Analizando estructura SPSS',
+      indexing: 'Indexando variables',
     },
     // Project Chat
     chat: {
@@ -377,6 +387,16 @@ export const translations = {
       back: 'Back',
       continue: 'Continue',
       project: 'Project',
+      uploadSuccess: 'Files processed',
+      uploadSuccessDesc: 'Files have been processed successfully.',
+    },
+    // Processing Modal
+    processing: {
+      title: 'Processing file',
+      uploadingSpss: 'Uploading SPSS file',
+      uploadingQuestionnaire: 'Uploading questionnaire',
+      analyzing: 'Analyzing SPSS structure',
+      indexing: 'Indexing variables',
     },
     // Project Chat
     chat: {
