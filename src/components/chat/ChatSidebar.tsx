@@ -39,7 +39,7 @@ export function ChatSidebar({
       {/* Header */}
       <div className="p-3 border-b flex items-center justify-between">
         {!collapsed && (
-          <span className="font-semibold text-sm">Conversaciones</span>
+          <span className="font-semibold text-sm">{t.chat.conversations}</span>
         )}
         <Button
           variant="ghost"
@@ -99,7 +99,7 @@ export function ChatSidebar({
                 ) : (
                   <div>
                     <p className="text-sm font-medium truncate">
-                      {conversation.title || 'Nueva conversación'}
+                      {conversation.title || t.chat.newConversation}
                     </p>
                     <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
@@ -107,7 +107,7 @@ export function ChatSidebar({
                         {format(new Date(conversation.last_activity || conversation.created_at), 'd MMM', { locale: dateLocale })}
                       </span>
                       {conversation.message_count !== undefined && (
-                        <span className="ml-2">({conversation.message_count} msgs)</span>
+                        <span className="ml-2">({conversation.message_count} {t.chat.messages})</span>
                       )}
                     </div>
                   </div>

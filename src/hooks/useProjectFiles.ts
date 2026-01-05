@@ -3,7 +3,14 @@ import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
 import type { ProjectFile, FileType } from '@/types/database';
 
-export function useProjectFiles(projectId: string) {
+interface ToastMessages {
+  fileUploaded: string;
+  fileUploadedDesc: string;
+  fileUploadError: string;
+  fileDeleted: string;
+}
+
+export function useProjectFiles(projectId: string, toastMessages?: ToastMessages) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -41,13 +48,13 @@ export function useProjectFiles(projectId: string) {
       queryClient.invalidateQueries({ queryKey: ['project', projectId] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast({
-        title: 'Archivo subido',
-        description: 'El archivo se ha subido y procesado correctamente.',
+        title: toastMessages?.fileUploaded ?? 'File uploaded',
+        description: toastMessages?.fileUploadedDesc ?? 'The file has been uploaded and processed successfully.',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error al subir archivo',
+        title: toastMessages?.fileUploadError ?? 'Error uploading file',
         description: error.message,
         variant: 'destructive',
       });
@@ -61,7 +68,7 @@ export function useProjectFiles(projectId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-files', projectId] });
       toast({
-        title: 'Archivo eliminado',
+        title: toastMessages?.fileDeleted ?? 'File deleted',
       });
     },
   });

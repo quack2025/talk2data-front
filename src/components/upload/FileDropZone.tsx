@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Upload, FileSpreadsheet, FileText, X, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface FileDropZoneProps {
   accept: Record<string, string[]>;
@@ -29,6 +30,7 @@ export function FileDropZone({
   uploadProgress = 0,
 }: FileDropZoneProps) {
   const [isDragActive, setIsDragActive] = useState(false);
+  const { t } = useLanguage();
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -72,7 +74,7 @@ export function FileDropZone({
               <div className="mt-2">
                 <Progress value={uploadProgress} className="h-1.5" />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Subiendo... {uploadProgress}%
+                  {t.upload.uploading} {uploadProgress}%
                 </p>
               </div>
             )}
@@ -127,7 +129,7 @@ export function FileDropZone({
           <p className="text-sm text-muted-foreground mt-1">{description}</p>
         </div>
         <Button variant="outline" size="sm" className="mt-2">
-          Seleccionar archivo
+          {t.upload.selectFile}
         </Button>
       </div>
     </div>

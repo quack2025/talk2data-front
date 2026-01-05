@@ -3,7 +3,14 @@ import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
 import type { Export, ExportType } from '@/types/database';
 
-export function useExports(projectId: string) {
+interface ToastMessages {
+  exportCreated: string;
+  exportCreatedDesc: string;
+  exportDeleted: string;
+  error: string;
+}
+
+export function useExports(projectId: string, toastMessages?: ToastMessages) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -39,8 +46,8 @@ export function useExports(projectId: string) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['exports', projectId] });
       toast({
-        title: 'Exportación creada',
-        description: 'El reporte se ha generado correctamente.',
+        title: toastMessages?.exportCreated ?? 'Export created',
+        description: toastMessages?.exportCreatedDesc ?? 'The report has been generated successfully.',
       });
 
       // Abrir URL de descarga en nueva pestaña
@@ -50,7 +57,7 @@ export function useExports(projectId: string) {
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error',
+        title: toastMessages?.error ?? 'Error',
         description: error.message,
         variant: 'destructive',
       });
@@ -64,7 +71,7 @@ export function useExports(projectId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exports', projectId] });
       toast({
-        title: 'Exportación eliminada',
+        title: toastMessages?.exportDeleted ?? 'Export deleted',
       });
     },
   });

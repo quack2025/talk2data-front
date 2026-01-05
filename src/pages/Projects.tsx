@@ -10,12 +10,18 @@ import { useProjects } from '@/hooks/useProjects';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function Projects() {
-  const { projects, isLoading } = useProjects();
+  const { t } = useLanguage();
+  const { projects, isLoading } = useProjects({
+    projectCreated: t.toasts.projectCreated,
+    projectCreatedDesc: t.toasts.projectCreatedDesc,
+    projectUpdated: t.toasts.projectUpdated,
+    projectDeleted: t.toasts.projectDeleted,
+    error: t.toasts.error,
+  });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [view, setView] = useState<'list' | 'grid'>('list');
-  const { t } = useLanguage();
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {

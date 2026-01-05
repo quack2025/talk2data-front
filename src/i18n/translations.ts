@@ -116,6 +116,12 @@ export const translations = {
       selectProject: 'Selecciona un proyecto',
       selectProjectForUpload: 'Selecciona un proyecto para subir archivos',
       selectProjectForChat: 'Selecciona un proyecto para iniciar el chat',
+      // Status
+      statusProcessing: 'Procesando',
+      statusReady: 'Listo',
+      statusError: 'Error',
+      cases: 'casos',
+      variables: 'variables',
     },
     // Project Detail
     projectDetail: {
@@ -189,6 +195,24 @@ export const translations = {
       variables: 'Variables',
       noResultsYet: 'Los resultados aparecerán aquí',
       sendQuestion: 'Envía una pregunta para ver análisis, gráficos y tablas.',
+      conversations: 'Conversaciones',
+      newConversation: 'Nueva conversación',
+      startNewConversation: 'Iniciar nueva conversación',
+      errorLoadingConversations: 'Error al cargar conversaciones',
+      analysisExecuted: 'Análisis ejecutado',
+      visualization: 'Visualización',
+      analysisCompleted: 'Análisis Completado',
+      analysisProcessed: 'Análisis procesado correctamente.',
+      analysisPerformed: 'Análisis realizados:',
+      noVisualization: 'Sin visualización disponible',
+      askToSeeAnalysis: 'Realiza una pregunta para ver el análisis',
+      noTableData: 'No hay datos tabulares disponibles',
+      analysis: 'Análisis',
+      variablesLabel: 'Variables:',
+      noSpecificVariables: 'Sin variables específicas',
+      noVariablesAnalyzed: 'No hay variables analizadas',
+      frequencyDistribution: 'Distribución de Frecuencias',
+      messages: 'msgs',
     },
     // Exports
     exports: {
@@ -206,6 +230,9 @@ export const translations = {
       pdf: 'PDF',
       excel: 'Excel',
       pptx: 'PowerPoint',
+      report: 'Reporte',
+      specificConversation: 'Conversación específica',
+      generalSummary: 'Resumen general',
     },
     // Create Export Dialog
     createExport: {
@@ -229,6 +256,29 @@ export const translations = {
       cancel: 'Cancelar',
       create: 'Crear proyecto',
       creating: 'Creando...',
+    },
+    // Upload
+    upload: {
+      uploading: 'Subiendo...',
+      selectFile: 'Seleccionar archivo',
+    },
+    // Toasts
+    toasts: {
+      projectCreated: 'Proyecto creado',
+      projectCreatedDesc: 'El proyecto se ha creado correctamente.',
+      projectUpdated: 'Proyecto actualizado',
+      projectDeleted: 'Proyecto eliminado',
+      fileUploaded: 'Archivo subido',
+      fileUploadedDesc: 'El archivo se ha subido y procesado correctamente.',
+      fileUploadError: 'Error al subir archivo',
+      fileDeleted: 'Archivo eliminado',
+      exportCreated: 'Exportación creada',
+      exportCreatedDesc: 'El reporte se ha generado correctamente.',
+      exportDeleted: 'Exportación eliminada',
+      conversationError: 'Error al crear conversación',
+      conversationDeleteError: 'Error al eliminar conversación',
+      queryError: 'Error al procesar pregunta',
+      error: 'Error',
     },
   },
   en: {
@@ -346,6 +396,12 @@ export const translations = {
       selectProject: 'Select a project',
       selectProjectForUpload: 'Select a project to upload files',
       selectProjectForChat: 'Select a project to start chatting',
+      // Status
+      statusProcessing: 'Processing',
+      statusReady: 'Ready',
+      statusError: 'Error',
+      cases: 'cases',
+      variables: 'variables',
     },
     // Project Detail
     projectDetail: {
@@ -419,6 +475,24 @@ export const translations = {
       variables: 'Variables',
       noResultsYet: 'Results will appear here',
       sendQuestion: 'Send a question to see analysis, charts, and tables.',
+      conversations: 'Conversations',
+      newConversation: 'New conversation',
+      startNewConversation: 'Start new conversation',
+      errorLoadingConversations: 'Error loading conversations',
+      analysisExecuted: 'Analysis executed',
+      visualization: 'Visualization',
+      analysisCompleted: 'Analysis Completed',
+      analysisProcessed: 'Analysis processed successfully.',
+      analysisPerformed: 'Analysis performed:',
+      noVisualization: 'No visualization available',
+      askToSeeAnalysis: 'Ask a question to see analysis',
+      noTableData: 'No table data available',
+      analysis: 'Analysis',
+      variablesLabel: 'Variables:',
+      noSpecificVariables: 'No specific variables',
+      noVariablesAnalyzed: 'No variables analyzed',
+      frequencyDistribution: 'Frequency Distribution',
+      messages: 'msgs',
     },
     // Exports
     exports: {
@@ -436,6 +510,9 @@ export const translations = {
       pdf: 'PDF',
       excel: 'Excel',
       pptx: 'PowerPoint',
+      report: 'Report',
+      specificConversation: 'Specific conversation',
+      generalSummary: 'General summary',
     },
     // Create Export Dialog
     createExport: {
@@ -459,6 +536,29 @@ export const translations = {
       cancel: 'Cancel',
       create: 'Create project',
       creating: 'Creating...',
+    },
+    // Upload
+    upload: {
+      uploading: 'Uploading...',
+      selectFile: 'Select file',
+    },
+    // Toasts
+    toasts: {
+      projectCreated: 'Project created',
+      projectCreatedDesc: 'The project has been created successfully.',
+      projectUpdated: 'Project updated',
+      projectDeleted: 'Project deleted',
+      fileUploaded: 'File uploaded',
+      fileUploadedDesc: 'The file has been uploaded and processed successfully.',
+      fileUploadError: 'Error uploading file',
+      fileDeleted: 'File deleted',
+      exportCreated: 'Export created',
+      exportCreatedDesc: 'The report has been generated successfully.',
+      exportDeleted: 'Export deleted',
+      conversationError: 'Error creating conversation',
+      conversationDeleteError: 'Error deleting conversation',
+      queryError: 'Error processing question',
+      error: 'Error',
     },
   },
 } as const;
