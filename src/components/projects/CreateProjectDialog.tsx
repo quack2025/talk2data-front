@@ -217,9 +217,9 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 px-1">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-1">
               
               {/* Step 1: Basic Information */}
               {step === 1 && (
