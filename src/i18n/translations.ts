@@ -197,6 +197,17 @@ export const translations = {
       excel: 'Excel',
       pptx: 'PowerPoint',
     },
+    // Create Export Dialog
+    createExport: {
+      title: 'Nueva exportación',
+      description: 'Genera un reporte con los análisis de tu proyecto.',
+      projectLabel: 'Proyecto',
+      projectPlaceholder: 'Selecciona un proyecto',
+      formatLabel: 'Formato',
+      cancel: 'Cancelar',
+      generate: 'Generar reporte',
+      generating: 'Generando...',
+    },
     // Create Project Dialog
     createProject: {
       title: 'Nuevo proyecto',
@@ -405,6 +416,17 @@ export const translations = {
       pdf: 'PDF',
       excel: 'Excel',
       pptx: 'PowerPoint',
+    },
+    // Create Export Dialog
+    createExport: {
+      title: 'New export',
+      description: 'Generate a report with your project analysis.',
+      projectLabel: 'Project',
+      projectPlaceholder: 'Select a project',
+      formatLabel: 'Format',
+      cancel: 'Cancel',
+      generate: 'Generate report',
+      generating: 'Generating...',
     },
     // Create Project Dialog
     createProject: {

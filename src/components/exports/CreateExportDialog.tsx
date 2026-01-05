@@ -27,14 +27,8 @@ import {
 } from '@/components/ui/select';
 import { useExports } from '@/hooks/useExports';
 import { useProjects } from '@/hooks/useProjects';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { Loader2 } from 'lucide-react';
-
-const formSchema = z.object({
-  projectId: z.string().min(1, 'Selecciona un proyecto'),
-  format: z.enum(['pdf', 'excel', 'pptx']),
-});
-
-type FormData = z.infer<typeof formSchema>;
 
 interface CreateExportDialogProps {
   open: boolean;
@@ -48,8 +42,16 @@ export function CreateExportDialog({
   defaultProjectId,
 }: CreateExportDialogProps) {
   const { projects } = useProjects();
+  const { t } = useLanguage();
   const projectId = defaultProjectId || (projects.length > 0 ? projects[0].id : '');
   const { createExport } = useExports(projectId);
+
+  const formSchema = z.object({
+    projectId: z.string().min(1, t.createExport.projectPlaceholder),
+    format: z.enum(['pdf', 'excel', 'pptx']),
+  });
+
+  type FormData = z.infer<typeof formSchema>;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -71,9 +73,9 @@ export function CreateExportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Nueva exportación</DialogTitle>
+          <DialogTitle>{t.createExport.title}</DialogTitle>
           <DialogDescription>
-            Genera un reporte con los análisis de tu proyecto.
+            {t.createExport.description}
           </DialogDescription>
         </DialogHeader>
 
@@ -84,11 +86,11 @@ export function CreateExportDialog({
               name="projectId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Proyecto</FormLabel>
+                  <FormLabel>{t.createExport.projectLabel}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un proyecto" />
+                        <SelectValue placeholder={t.createExport.projectPlaceholder} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -109,7 +111,7 @@ export function CreateExportDialog({
               name="format"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Formato</FormLabel>
+                  <FormLabel>{t.createExport.formatLabel}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -117,9 +119,9 @@ export function CreateExportDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="pdf">PDF</SelectItem>
-                      <SelectItem value="excel">Excel (.xlsx)</SelectItem>
-                      <SelectItem value="pptx">PowerPoint (.pptx)</SelectItem>
+                      <SelectItem value="pdf">{t.exports.pdf}</SelectItem>
+                      <SelectItem value="excel">{t.exports.excel} (.xlsx)</SelectItem>
+                      <SelectItem value="pptx">{t.exports.pptx} (.pptx)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -133,13 +135,13 @@ export function CreateExportDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                Cancelar
+                {t.createExport.cancel}
               </Button>
               <Button type="submit" disabled={createExport.isPending || !projectId}>
                 {createExport.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Generar reporte
+                {createExport.isPending ? t.createExport.generating : t.createExport.generate}
               </Button>
             </DialogFooter>
           </form>
