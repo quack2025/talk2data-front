@@ -4,8 +4,15 @@ import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
 import type { Conversation, QueryResponse, Message } from '@/types/database';
 
+interface ToastMessages {
+  conversationError: string;
+  conversationDeleteError: string;
+  queryError: string;
+  error: string;
+}
+
 // Hook para manejar sesiones/conversaciones
-export function useChat(projectId: string) {
+export function useChat(projectId: string, toastMessages?: ToastMessages) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -20,14 +27,14 @@ export function useChat(projectId: string) {
   const createConversation = useMutation({
     mutationFn: (title?: string) =>
       api.post<Conversation>(`/projects/${projectId}/conversations`, {
-        title: title ?? 'Nueva conversación',
+        title: title ?? 'New conversation',
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations', projectId] });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error al crear conversación',
+        title: toastMessages?.conversationError ?? 'Error creating conversation',
         description: error.message,
         variant: 'destructive',
       });
@@ -43,7 +50,7 @@ export function useChat(projectId: string) {
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error al eliminar conversación',
+        title: toastMessages?.conversationDeleteError ?? 'Error deleting conversation',
         description: error.message,
         variant: 'destructive',
       });
@@ -61,7 +68,7 @@ export function useChat(projectId: string) {
 }
 
 // Hook para manejar mensajes y queries
-export function useChatMessages(projectId: string, conversationId: string | null) {
+export function useChatMessages(projectId: string, conversationId: string | null, toastMessages?: ToastMessages) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isThinking, setIsThinking] = useState(false);
@@ -106,7 +113,7 @@ export function useChatMessages(projectId: string, conversationId: string | null
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error al procesar pregunta',
+        title: toastMessages?.queryError ?? 'Error processing question',
         description: error.message,
         variant: 'destructive',
       });

@@ -1,17 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es, enUS } from 'date-fns/locale';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FolderOpen, Database, BarChart3, MoreHorizontal } from 'lucide-react';
 import type { Project } from '@/types/database';
-
-const statusConfig = {
-  processing: { label: 'Procesando', variant: 'secondary' as const },
-  ready: { label: 'Listo', variant: 'default' as const },
-  error: { label: 'Error', variant: 'destructive' as const },
-};
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ProjectCardProps {
   project: Project;
@@ -19,6 +14,14 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
+  const dateLocale = language === 'es' ? es : enUS;
+
+  const statusConfig = {
+    processing: { label: t.projects.statusProcessing, variant: 'secondary' as const },
+    ready: { label: t.projects.statusReady, variant: 'default' as const },
+    error: { label: t.projects.statusError, variant: 'destructive' as const },
+  };
 
   return (
     <Card
@@ -60,18 +63,18 @@ export function ProjectCard({ project }: ProjectCardProps) {
           {project.n_variables !== undefined && (
             <div className="flex items-center gap-1">
               <BarChart3 className="h-3.5 w-3.5" />
-              <span>{project.n_variables} variables</span>
+              <span>{project.n_variables} {t.projects.variables}</span>
             </div>
           )}
           {project.n_cases !== undefined && (
             <div className="flex items-center gap-1">
               <Database className="h-3.5 w-3.5" />
-              <span>{project.n_cases} casos</span>
+              <span>{project.n_cases} {t.projects.cases}</span>
             </div>
           )}
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          {format(new Date(project.created_at), "d MMM yyyy", { locale: es })}
+          {format(new Date(project.created_at), "d MMM yyyy", { locale: dateLocale })}
         </p>
       </CardContent>
     </Card>

@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Bot, User } from 'lucide-react';
 import type { Message } from '@/types/database';
 import { format } from 'date-fns';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ChatMessageProps {
   message: Message;
@@ -10,6 +11,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
+  const { t } = useLanguage();
 
   return (
     <div
@@ -45,7 +47,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         {!isUser && message.analysis_executed && Object.keys(message.analysis_executed).length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
             <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-              Análisis ejecutado
+              {t.chat.analysisExecuted}
             </span>
           </div>
         )}

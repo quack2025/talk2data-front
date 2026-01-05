@@ -28,7 +28,12 @@ export default function ProjectUpload() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadStep, setUploadStep] = useState<'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'processing'>('idle');
   const { t } = useLanguage();
-  const { uploadFile } = useProjectFiles(projectId || '');
+  const { uploadFile } = useProjectFiles(projectId || '', {
+    fileUploaded: t.toasts.fileUploaded,
+    fileUploadedDesc: t.toasts.fileUploadedDesc,
+    fileUploadError: t.toasts.fileUploadError,
+    fileDeleted: t.toasts.fileDeleted,
+  });
   const { toast } = useToast();
 
   const handleUpload = async () => {

@@ -10,14 +10,25 @@ import type { Export } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function Exports() {
-  const { projects, isLoading: projectsLoading } = useProjects();
+  const { t } = useLanguage();
+  const { projects, isLoading: projectsLoading } = useProjects({
+    projectCreated: t.toasts.projectCreated,
+    projectCreatedDesc: t.toasts.projectCreatedDesc,
+    projectUpdated: t.toasts.projectUpdated,
+    projectDeleted: t.toasts.projectDeleted,
+    error: t.toasts.error,
+  });
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const { t } = useLanguage();
 
   // Use first project by default if available
   const projectId = selectedProjectId || (projects.length > 0 ? projects[0].id : '');
-  const { exports, isLoading, deleteExport } = useExports(projectId);
+  const { exports, isLoading, deleteExport } = useExports(projectId, {
+    exportCreated: t.toasts.exportCreated,
+    exportCreatedDesc: t.toasts.exportCreatedDesc,
+    exportDeleted: t.toasts.exportDeleted,
+    error: t.toasts.error,
+  });
 
   const handleDelete = async (id: string) => {
     await deleteExport.mutateAsync(id);

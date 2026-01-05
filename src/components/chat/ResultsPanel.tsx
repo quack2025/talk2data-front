@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart3, Table as TableIcon, Variable, FileText, PieChart } from 'lucide-react';
+import { BarChart3, Table as TableIcon, Variable, PieChart } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { QueryResponse } from '@/types/database';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
@@ -34,7 +34,7 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
 
   // Extraer datos de tablas si existen
   const tableData = extractTableData(analysisPerformed);
-  const chartData = extractChartData(visualizations);
+  const chartData = extractChartData(visualizations, t);
 
   if (!hasResults) {
     return (
@@ -88,7 +88,7 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <PieChart className="h-5 w-5 text-primary" />
-                  {chartData[0].title || 'Visualización'}
+                  {chartData[0].title || t.chat.visualization}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -134,16 +134,16 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
           ) : lastAnalysis ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Análisis Completado</CardTitle>
+                <CardTitle className="text-lg">{t.chat.analysisCompleted}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="prose prose-sm dark:prose-invert max-w-none">
                   <p className="text-muted-foreground">
-                    {lastAnalysis.answer || 'Análisis procesado correctamente.'}
+                    {lastAnalysis.answer || t.chat.analysisProcessed}
                   </p>
                   {analysisPerformed.length > 0 && (
                     <div className="mt-4">
-                      <p className="text-sm font-medium mb-2">Análisis realizados:</p>
+                      <p className="text-sm font-medium mb-2">{t.chat.analysisPerformed}</p>
                       <ul className="text-sm text-muted-foreground">
                         {analysisPerformed.map((analysis, index) => (
                           <li key={index}>
@@ -159,12 +159,12 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Sin visualización disponible</CardTitle>
+                <CardTitle className="text-lg">{t.chat.noVisualization}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg">
                   <p className="text-muted-foreground">
-                    Realiza una pregunta para ver el análisis
+                    {t.chat.askToSeeAnalysis}
                   </p>
                 </div>
               </CardContent>
@@ -201,7 +201,7 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
                 </Table>
               ) : (
                 <div className="p-8 text-center text-muted-foreground">
-                  No hay datos tabulares disponibles
+                  {t.chat.noTableData}
                 </div>
               )}
             </CardContent>
@@ -215,7 +215,7 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
               analysisPerformed.map((analysis, index) => {
                 const analysisObj = analysis as Record<string, unknown>;
                 const variables = (analysisObj.variables as string[]) ?? [];
-                const type = (analysisObj.type as string) ?? 'Análisis';
+                const type = (analysisObj.type as string) ?? t.chat.analysis;
                 
                 return (
                   <Card key={index}>
@@ -226,8 +226,8 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
                           <p className="font-medium">{type}</p>
                           <p className="text-sm text-muted-foreground">
                             {variables.length > 0 
-                              ? `Variables: ${variables.join(', ')}` 
-                              : 'Sin variables específicas'}
+                              ? `${t.chat.variablesLabel} ${variables.join(', ')}` 
+                              : t.chat.noSpecificVariables}
                           </p>
                         </div>
                       </div>
@@ -237,7 +237,7 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
               })
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                No hay variables analizadas
+                {t.chat.noVariablesAnalyzed}
               </div>
             )}
           </div>
@@ -260,7 +260,10 @@ function extractTableData(analysisPerformed: Record<string, unknown>[]): Record<
   return [];
 }
 
-function extractChartData(visualizations: Record<string, unknown> | undefined): Array<{
+function extractChartData(
+  visualizations: Record<string, unknown> | undefined,
+  t: { chat: { visualization: string; frequencyDistribution: string } }
+): Array<{
   type: 'bar' | 'pie';
   title: string;
   data: Array<{ name: string; value: number }>;
@@ -278,7 +281,7 @@ function extractChartData(visualizations: Record<string, unknown> | undefined): 
     const chart = visualizations.chart as Record<string, unknown>;
     charts.push({
       type: (chart.type as 'bar' | 'pie') || 'bar',
-      title: (chart.title as string) || 'Visualización',
+      title: (chart.title as string) || t.chat.visualization,
       data: (chart.data as Array<{ name: string; value: number }>) || [],
     });
   }
@@ -287,7 +290,7 @@ function extractChartData(visualizations: Record<string, unknown> | undefined): 
     for (const chart of visualizations.charts as Array<Record<string, unknown>>) {
       charts.push({
         type: (chart.type as 'bar' | 'pie') || 'bar',
-        title: (chart.title as string) || 'Visualización',
+        title: (chart.title as string) || t.chat.visualization,
         data: (chart.data as Array<{ name: string; value: number }>) || [],
       });
     }
@@ -298,7 +301,7 @@ function extractChartData(visualizations: Record<string, unknown> | undefined): 
     const freqs = visualizations.frequencies as Record<string, number>;
     charts.push({
       type: 'bar',
-      title: 'Distribución de Frecuencias',
+      title: t.chat.frequencyDistribution,
       data: Object.entries(freqs).map(([name, value]) => ({ name, value })),
     });
   }

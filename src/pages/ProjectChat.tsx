@@ -18,8 +18,15 @@ export default function ProjectChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
 
-  const { conversations, isLoading: conversationsLoading, createConversation, error: conversationsError } = useChat(projectId!);
-  const { messages, isLoading: messagesLoading, isThinking, sendMessage, lastAnalysis } = useChatMessages(projectId!, activeConversationId);
+  const toastMessages = {
+    conversationError: t.toasts.conversationError,
+    conversationDeleteError: t.toasts.conversationDeleteError,
+    queryError: t.toasts.queryError,
+    error: t.toasts.error,
+  };
+
+  const { conversations, isLoading: conversationsLoading, createConversation, error: conversationsError } = useChat(projectId!, toastMessages);
+  const { messages, isLoading: messagesLoading, isThinking, sendMessage, lastAnalysis } = useChatMessages(projectId!, activeConversationId, toastMessages);
 
   // Auto-select first conversation or create new one
   useEffect(() => {
@@ -35,7 +42,7 @@ export default function ProjectChat() {
 
   const handleNewConversation = async () => {
     try {
-      const conversation = await createConversation.mutateAsync('Nueva conversación');
+      const conversation = await createConversation.mutateAsync(t.chat.newConversation);
       setActiveConversationId(conversation.id);
     } catch (error) {
       console.error('Error creating conversation:', error);
@@ -48,7 +55,7 @@ export default function ProjectChat() {
     // Si no hay conversación activa, crear una primero
     if (!activeConversationId && conversations.length === 0) {
       try {
-        const conversation = await createConversation.mutateAsync('Nueva conversación');
+        const conversation = await createConversation.mutateAsync(t.chat.newConversation);
         setActiveConversationId(conversation.id);
         // Esperar un momento para que el estado se actualice
         setTimeout(() => {
@@ -90,10 +97,10 @@ export default function ProjectChat() {
               <div className="flex flex-col items-center justify-center h-full gap-4 p-4">
                 <MessageSquare className="h-12 w-12 text-muted-foreground/50" />
                 <p className="text-muted-foreground text-center">
-                  Error al cargar conversaciones
+                  {t.chat.errorLoadingConversations}
                 </p>
                 <Button variant="outline" onClick={handleNewConversation}>
-                  Iniciar nueva conversación
+                  {t.chat.startNewConversation}
                 </Button>
               </div>
             ) : messagesLoading && activeConversationId ? (

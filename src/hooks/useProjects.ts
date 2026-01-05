@@ -3,7 +3,15 @@ import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
 import type { Project } from '@/types/database';
 
-export function useProjects() {
+interface ToastMessages {
+  projectCreated: string;
+  projectCreatedDesc: string;
+  projectUpdated: string;
+  projectDeleted: string;
+  error: string;
+}
+
+export function useProjects(toastMessages?: ToastMessages) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -20,13 +28,13 @@ export function useProjects() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast({
-        title: 'Proyecto creado',
-        description: 'El proyecto se ha creado correctamente.',
+        title: toastMessages?.projectCreated ?? 'Project created',
+        description: toastMessages?.projectCreatedDesc ?? 'The project has been created successfully.',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error',
+        title: toastMessages?.error ?? 'Error',
         description: error.message,
         variant: 'destructive',
       });
@@ -40,7 +48,7 @@ export function useProjects() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast({
-        title: 'Proyecto actualizado',
+        title: toastMessages?.projectUpdated ?? 'Project updated',
       });
     },
   });
@@ -51,7 +59,7 @@ export function useProjects() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast({
-        title: 'Proyecto eliminado',
+        title: toastMessages?.projectDeleted ?? 'Project deleted',
       });
     },
   });
