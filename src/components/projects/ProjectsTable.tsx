@@ -29,7 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MoreHorizontal, FolderOpen, Trash2, Archive, MessageSquare } from 'lucide-react';
+import { MoreHorizontal, FolderOpen, Trash2, MessageSquare } from 'lucide-react';
 import type { Project } from '@/types/database';
 import { useProjects } from '@/hooks/useProjects';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -41,7 +41,7 @@ interface ProjectsTableProps {
 
 export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
   const navigate = useNavigate();
-  const { deleteProject, updateProject } = useProjects();
+  const { deleteProject } = useProjects();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const { t, language } = useLanguage();
@@ -49,10 +49,9 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
   const dateLocale = language === 'es' ? es : enUS;
 
   const statusConfig = {
-    active: { label: t.projects.active, variant: 'default' as const },
     processing: { label: t.projects.processing, variant: 'secondary' as const },
-    completed: { label: t.projects.completed, variant: 'outline' as const },
-    archived: { label: t.projects.archived, variant: 'outline' as const },
+    ready: { label: t.projects.completed, variant: 'default' as const },
+    error: { label: 'Error', variant: 'destructive' as const },
   };
 
   const handleDelete = async () => {
@@ -61,13 +60,6 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
       setDeleteDialogOpen(false);
       setSelectedProject(null);
     }
-  };
-
-  const handleArchive = async (project: Project) => {
-    await updateProject.mutateAsync({
-      id: project.id,
-      status: project.status === 'archived' ? 'active' : 'archived',
-    });
   };
 
   if (isLoading) {
@@ -103,8 +95,9 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
             <TableRow>
               <TableHead>{t.projects.name}</TableHead>
               <TableHead>{t.projects.status}</TableHead>
-              <TableHead className="text-center">{t.projects.files}</TableHead>
-              <TableHead>{t.projects.lastActivity}</TableHead>
+              <TableHead className="text-center">Variables</TableHead>
+              <TableHead className="text-center">Casos</TableHead>
+              <TableHead>{t.common.create === 'Crear' ? 'Creado' : 'Created'}</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -126,13 +119,14 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusConfig[project.status].variant}>
-                    {statusConfig[project.status].label}
+                  <Badge variant={statusConfig[project.status]?.variant ?? 'secondary'}>
+                    {statusConfig[project.status]?.label ?? project.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-center">{project.file_count}</TableCell>
+                <TableCell className="text-center">{project.n_variables ?? '-'}</TableCell>
+                <TableCell className="text-center">{project.n_cases ?? '-'}</TableCell>
                 <TableCell>
-                  {format(new Date(project.last_activity), "d MMM yyyy, HH:mm", {
+                  {format(new Date(project.created_at), "d MMM yyyy, HH:mm", {
                     locale: dateLocale,
                   })}
                 </TableCell>
@@ -152,15 +146,6 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
                       >
                         <MessageSquare className="mr-2 h-4 w-4" />
                         {t.projects.openChat}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleArchive(project);
-                        }}
-                      >
-                        <Archive className="mr-2 h-4 w-4" />
-                        {project.status === 'archived' ? t.projects.unarchive : t.projects.archive}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem

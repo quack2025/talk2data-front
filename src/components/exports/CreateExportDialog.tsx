@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,7 +10,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
@@ -27,18 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useExports } from '@/hooks/useExports';
 import { useProjects } from '@/hooks/useProjects';
-import { Loader2, FileText, FileImage, Table } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
-  title: z.string().min(1, 'El título es requerido').max(100),
   projectId: z.string().min(1, 'Selecciona un proyecto'),
-  format: z.enum(['pdf', 'docx', 'pptx']),
-  includeCharts: z.boolean(),
-  includeTables: z.boolean(),
-  includeInterpretation: z.boolean(),
+  format: z.enum(['pdf', 'excel', 'pptx']),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -54,31 +47,21 @@ export function CreateExportDialog({
   onOpenChange,
   defaultProjectId,
 }: CreateExportDialogProps) {
-  const { createExport } = useExports();
   const { projects } = useProjects();
+  const projectId = defaultProjectId || (projects.length > 0 ? projects[0].id : '');
+  const { createExport } = useExports(projectId);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
       projectId: defaultProjectId || '',
       format: 'pdf',
-      includeCharts: true,
-      includeTables: true,
-      includeInterpretation: true,
     },
   });
 
   const onSubmit = async (data: FormData) => {
     await createExport.mutateAsync({
-      projectId: data.projectId,
-      title: data.title,
       format: data.format,
-      options: {
-        includeCharts: data.includeCharts,
-        includeTables: data.includeTables,
-        includeInterpretation: data.includeInterpretation,
-      },
     });
     form.reset();
     onOpenChange(false);
@@ -96,23 +79,6 @@ export function CreateExportDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Título del reporte</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ej: Reporte de satisfacción Q4 2024"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="projectId"
@@ -152,7 +118,7 @@ export function CreateExportDialog({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="pdf">PDF</SelectItem>
-                      <SelectItem value="docx">Word (.docx)</SelectItem>
+                      <SelectItem value="excel">Excel (.xlsx)</SelectItem>
                       <SelectItem value="pptx">PowerPoint (.pptx)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -160,67 +126,6 @@ export function CreateExportDialog({
                 </FormItem>
               )}
             />
-
-            <div className="space-y-3">
-              <FormLabel>Contenido a incluir</FormLabel>
-              
-              <FormField
-                control={form.control}
-                name="includeCharts"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="flex items-center gap-2">
-                      <FileImage className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Gráficos y visualizaciones</span>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="includeTables"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="flex items-center gap-2">
-                      <Table className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Tablas de datos</span>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="includeInterpretation"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Interpretación AI</span>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
 
             <DialogFooter>
               <Button
@@ -230,7 +135,7 @@ export function CreateExportDialog({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createExport.isPending}>
+              <Button type="submit" disabled={createExport.isPending || !projectId}>
                 {createExport.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}

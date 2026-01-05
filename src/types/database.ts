@@ -1,65 +1,70 @@
-// Database types for Survey Genius
+// Database types for Survey Genius - Adapted for Railway Backend
+// These types match the Railway backend API responses
+
+export type OwnerType = 'user' | 'team';
+export type ProjectStatus = 'processing' | 'ready' | 'error';
+export type FileType = 'spss_data' | 'questionnaire_pdf' | 'questionnaire_text';
+export type MessageRole = 'user' | 'assistant';
+export type ExportType = 'pdf' | 'excel' | 'pptx';
 
 export interface Project {
   id: string;
-  user_id: string;
   name: string;
-  description: string | null;
-  status: 'active' | 'processing' | 'completed' | 'archived';
-  file_count: number;
-  last_activity: string;
+  description?: string;
+  owner_type: OwnerType;
+  owner_id: string;
+  status: ProjectStatus;
   created_at: string;
-  updated_at: string;
+  n_cases?: number;
+  n_variables?: number;
+  has_executive_summary?: boolean;
 }
 
 export interface ProjectFile {
   id: string;
   project_id: string;
-  user_id: string;
-  file_name: string;
-  file_type: 'spss' | 'questionnaire';
-  file_size: number;
-  s3_key: string | null;
-  metadata: Record<string, unknown>;
-  status: 'pending' | 'uploading' | 'processing' | 'ready' | 'error';
-  created_at: string;
-  updated_at: string;
+  file_type: FileType;
+  storage_url: string;
+  original_name: string;
+  size_bytes: number;
+  uploaded_at: string;
 }
 
-export interface ChatSession {
+export interface Conversation {
   id: string;
   project_id: string;
   user_id: string;
   title: string;
   created_at: string;
-  updated_at: string;
+  last_activity: string;
+  message_count?: number;
+  messages?: Message[];
 }
 
-export interface ChatMessage {
+export interface Message {
   id: string;
-  session_id: string;
-  role: 'user' | 'assistant';
+  conversation_id: string;
+  role: MessageRole;
   content: string;
-  metadata: {
-    type?: 'text' | 'table' | 'chart';
-    n?: number;
-    p_value?: number;
-    test_type?: string;
-  };
+  analysis_executed?: Record<string, unknown>;
   created_at: string;
+}
+
+export interface QueryResponse {
+  answer: string;
+  conversation_id: string;
+  message_id: string;
+  analysis_performed?: Record<string, unknown>[];
+  visualizations?: Record<string, unknown>;
 }
 
 export interface Export {
   id: string;
+  export_type: ExportType;
   project_id: string;
-  user_id: string;
-  title: string;
-  format: 'pdf' | 'docx' | 'pptx';
-  status: 'pending' | 'generating' | 'ready' | 'error';
-  s3_key: string | null;
-  options: Record<string, unknown>;
+  conversation_id?: string;
+  download_url: string;
   created_at: string;
-  updated_at: string;
 }
 
 export interface Profile {

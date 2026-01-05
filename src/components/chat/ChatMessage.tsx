@@ -1,11 +1,11 @@
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Bot, User } from 'lucide-react';
-import type { ChatMessage as ChatMessageType } from '@/types/database';
+import type { Message } from '@/types/database';
 import { format } from 'date-fns';
 
 interface ChatMessageProps {
-  message: ChatMessageType;
+  message: Message;
 }
 
 export function ChatMessage({ message }: ChatMessageProps) {
@@ -42,28 +42,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
         </div>
 
         {/* Metadata badges for assistant messages */}
-        {!isUser && message.metadata && (
+        {!isUser && message.analysis_executed && Object.keys(message.analysis_executed).length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {message.metadata.type && message.metadata.type !== 'text' && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                {message.metadata.type === 'table' ? 'Tabla' : 'Gráfico'}
-              </span>
-            )}
-            {message.metadata.n && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                n = {message.metadata.n}
-              </span>
-            )}
-            {message.metadata.p_value !== undefined && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                p = {message.metadata.p_value.toFixed(4)}
-              </span>
-            )}
-            {message.metadata.test_type && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                {message.metadata.test_type}
-              </span>
-            )}
+            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground">
+              Análisis ejecutado
+            </span>
           </div>
         )}
 

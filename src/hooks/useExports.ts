@@ -1,97 +1,54 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Export } from '@/types/database';
-import type { Json } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
+import type { Export, ExportType } from '@/types/database';
 
-export function useExports(projectId?: string) {
+export function useExports(projectId: string) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Listar exportaciones del proyecto
   const exportsQuery = useQuery({
     queryKey: ['exports', projectId],
-    queryFn: async () => {
-      let query = supabase
-        .from('exports')
-        .select('*, projects(name)')
-        .order('created_at', { ascending: false });
-
-      if (projectId) {
-        query = query.eq('project_id', projectId);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as (Export & { projects: { name: string } })[];
-    },
+    queryFn: () => api.get<Export[]>(`/projects/${projectId}/exports`),
+    enabled: !!projectId,
   });
 
+  // Crear exportación
   const createExport = useMutation({
     mutationFn: async ({
-      projectId,
-      title,
       format,
-      options,
+      conversationId,
     }: {
-      projectId: string;
-      title: string;
-      format: 'pdf' | 'docx' | 'pptx';
-      options?: Record<string, unknown>;
+      format: 'pdf' | 'excel' | 'pptx';
+      conversationId?: string;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No autenticado');
+      // Mapear formato al enum del backend
+      const exportType: ExportType = format;
 
-      // Create export record
-      const { data: exportRecord, error: insertError } = await supabase
-        .from('exports')
-        .insert([{
-          project_id: projectId,
-          user_id: user.id,
-          title,
-          format,
-          options: (options || {}) as Json,
-          status: 'generating' as const,
-        }])
-        .select()
-        .single();
+      const response = await api.post<Export>(
+        `/projects/${projectId}/exports`,
+        {
+          export_type: exportType,
+          conversation_id: conversationId ?? undefined,
+        }
+      );
 
-      if (insertError) throw insertError;
-
-      // Trigger export generation on backend
-      try {
-        const response = await api.post<{ s3_key: string }>(`/exports/${projectId}`, {
-          export_id: exportRecord.id,
-          format,
-          options
-        });
-
-        // Update with S3 key
-        await supabase
-          .from('exports')
-          .update({
-            s3_key: response.s3_key,
-            status: 'ready',
-          })
-          .eq('id', exportRecord.id);
-
-        return response;
-      } catch (error) {
-        await supabase
-          .from('exports')
-          .update({ status: 'error' })
-          .eq('id', exportRecord.id);
-        throw error;
-      }
+      return response;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exports'] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['exports', projectId] });
       toast({
         title: 'Exportación creada',
-        description: 'El reporte se está generando.',
+        description: 'El reporte se ha generado correctamente.',
       });
+
+      // Abrir URL de descarga en nueva pestaña
+      if (data.download_url) {
+        window.open(data.download_url, '_blank');
+      }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: 'Error',
         description: error.message,
@@ -100,17 +57,12 @@ export function useExports(projectId?: string) {
     },
   });
 
+  // Eliminar exportación
   const deleteExport = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('exports')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
+    mutationFn: (exportId: string) =>
+      api.delete(`/projects/${projectId}/exports/${exportId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exports'] });
+      queryClient.invalidateQueries({ queryKey: ['exports', projectId] });
       toast({
         title: 'Exportación eliminada',
       });

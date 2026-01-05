@@ -1,124 +1,100 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { ChatSession, ChatMessage } from '@/types/database';
-import type { Json } from '@/integrations/supabase/types';
+import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
+import type { Conversation, QueryResponse } from '@/types/database';
 
+// Hook para manejar sesiones/conversaciones
 export function useChat(projectId: string) {
   const queryClient = useQueryClient();
-  const [isThinking, setIsThinking] = useState(false);
 
-  const sessionsQuery = useQuery({
-    queryKey: ['chat-sessions', projectId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      return data as ChatSession[];
-    },
+  // Listar conversaciones del proyecto
+  const conversationsQuery = useQuery({
+    queryKey: ['conversations', projectId],
+    queryFn: () => api.get<Conversation[]>(`/conversations?project_id=${projectId}`),
     enabled: !!projectId,
   });
 
-  const createSession = useMutation({
-    mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No autenticado');
-
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .insert({
-          project_id: projectId,
-          user_id: user.id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as ChatSession;
-    },
+  // Crear nueva conversación
+  const createConversation = useMutation({
+    mutationFn: (title?: string) =>
+      api.post<Conversation>('/conversations', {
+        project_id: projectId,
+        title: title ?? 'Nueva conversación',
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat-sessions', projectId] });
+      queryClient.invalidateQueries({ queryKey: ['conversations', projectId] });
+    },
+  });
+
+  // Eliminar conversación
+  const deleteConversation = useMutation({
+    mutationFn: (conversationId: string) =>
+      api.delete(`/conversations/${conversationId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', projectId] });
     },
   });
 
   return {
-    sessions: sessionsQuery.data ?? [],
-    isLoading: sessionsQuery.isLoading,
-    createSession,
+    conversations: conversationsQuery.data ?? [],
+    isLoading: conversationsQuery.isLoading,
+    createConversation,
+    deleteConversation,
   };
 }
 
-export function useChatMessages(sessionId: string | null) {
+// Hook para manejar mensajes y queries
+export function useChatMessages(projectId: string, conversationId: string | null) {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isThinking, setIsThinking] = useState(false);
 
-  const messagesQuery = useQuery({
-    queryKey: ['chat-messages', sessionId],
-    queryFn: async () => {
-      if (!sessionId) return [];
-      
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      return data as ChatMessage[];
-    },
-    enabled: !!sessionId,
+  // Obtener conversación con mensajes
+  const conversationQuery = useQuery({
+    queryKey: ['conversation', conversationId],
+    queryFn: () => api.get<Conversation>(`/conversations/${conversationId}`),
+    enabled: !!conversationId,
   });
 
+  // Enviar mensaje/pregunta
   const sendMessage = useMutation({
-    mutationFn: async ({ content, projectId }: { content: string; projectId: string }) => {
-      if (!sessionId) throw new Error('No hay sesión activa');
-
-      // Save user message
-      const { error: userMsgError } = await supabase
-        .from('chat_messages')
-        .insert({
-          session_id: sessionId,
-          role: 'user',
-          content,
-        });
-
-      if (userMsgError) throw userMsgError;
-
-      // Send to backend for AI response
+    mutationFn: async (question: string): Promise<QueryResponse> => {
       setIsThinking(true);
+
       try {
-        const response = await api.post<{ content: string; metadata?: Record<string, unknown> }>(`/chat/${projectId}`, { session_id: sessionId, message: content });
-
-        // Save assistant message
-        const { error: assistantMsgError } = await supabase
-          .from('chat_messages')
-          .insert([{
-            session_id: sessionId,
-            role: 'assistant',
-            content: response.content,
-            metadata: (response.metadata || {}) as Json,
-          }]);
-
-        if (assistantMsgError) throw assistantMsgError;
+        // Usar el endpoint de query del proyecto
+        const response = await api.post<QueryResponse>(
+          `/conversations/projects/${projectId}/query`,
+          {
+            question,
+            conversation_id: conversationId ?? undefined,
+          }
+        );
 
         return response;
       } finally {
         setIsThinking(false);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat-messages', sessionId] });
+    onSuccess: (data) => {
+      // Invalidar queries para refrescar mensajes
+      queryClient.invalidateQueries({ queryKey: ['conversation', data.conversation_id] });
+      queryClient.invalidateQueries({ queryKey: ['conversations', projectId] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 
   return {
-    messages: messagesQuery.data ?? [],
-    isLoading: messagesQuery.isLoading,
+    conversation: conversationQuery.data,
+    messages: conversationQuery.data?.messages ?? [],
+    isLoading: conversationQuery.isLoading,
     isThinking,
     sendMessage,
   };

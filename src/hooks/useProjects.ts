@@ -1,43 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Project } from '@/types/database';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
+import type { Project } from '@/types/database';
 
 export function useProjects() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Listar proyectos
   const projectsQuery = useQuery({
     queryKey: ['projects'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('last_activity', { ascending: false });
-
-      if (error) throw error;
-      return data as Project[];
-    },
+    queryFn: () => api.get<Project[]>('/projects'),
   });
 
+  // Crear proyecto
   const createProject = useMutation({
-    mutationFn: async (project: { name: string; description?: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No autenticado');
-
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          name: project.name,
-          description: project.description,
-          user_id: user.id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as Project;
-    },
+    mutationFn: (data: { name: string; description?: string }) =>
+      api.post<Project>('/projects', { ...data, owner_type: 'user' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast({
@@ -45,7 +24,7 @@ export function useProjects() {
         description: 'El proyecto se ha creado correctamente.',
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: 'Error',
         description: error.message,
@@ -54,44 +33,25 @@ export function useProjects() {
     },
   });
 
+  // Actualizar proyecto
   const updateProject = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Project> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('projects')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data as Project;
-    },
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; description?: string } }) =>
+      api.patch<Project>(`/projects/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast({
+        title: 'Proyecto actualizado',
+      });
     },
   });
 
+  // Eliminar proyecto
   const deleteProject = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => api.delete(`/projects/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast({
         title: 'Proyecto eliminado',
-        description: 'El proyecto se ha eliminado correctamente.',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
       });
     },
   });
@@ -104,4 +64,12 @@ export function useProjects() {
     updateProject,
     deleteProject,
   };
+}
+
+export function useProject(projectId: string) {
+  return useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => api.get<Project>(`/projects/${projectId}`),
+    enabled: !!projectId,
+  });
 }

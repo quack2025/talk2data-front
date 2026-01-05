@@ -4,23 +4,32 @@ import { Button } from '@/components/ui/button';
 import { AppLayout } from '@/components/layout';
 import { ExportCard } from '@/components/exports/ExportCard';
 import { CreateExportDialog } from '@/components/exports/CreateExportDialog';
+import { useProjects } from '@/hooks/useProjects';
 import { useExports } from '@/hooks/useExports';
 import type { Export } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 export default function Exports() {
-  const { exports, isLoading, deleteExport } = useExports();
+  const { projects, isLoading: projectsLoading } = useProjects();
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { t } = useLanguage();
+
+  // Use first project by default if available
+  const projectId = selectedProjectId || (projects.length > 0 ? projects[0].id : '');
+  const { exports, isLoading, deleteExport } = useExports(projectId);
 
   const handleDelete = async (id: string) => {
     await deleteExport.mutateAsync(id);
   };
 
   const handleDownload = (export_: Export) => {
-    // TODO: Implement download from S3
-    console.log('Download:', export_.s3_key);
+    if (export_.download_url) {
+      window.open(export_.download_url, '_blank');
+    }
   };
+
+  const isLoadingAll = projectsLoading || isLoading;
 
   return (
     <AppLayout>
@@ -33,14 +42,34 @@ export default function Exports() {
               {t.exports.subtitle}
             </p>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+          <Button 
+            onClick={() => setCreateDialogOpen(true)} 
+            className="gap-2"
+            disabled={!projectId}
+          >
             <Plus className="h-4 w-4" />
             {t.exports.newExport}
           </Button>
         </div>
 
+        {/* Project selector for exports */}
+        {projects.length > 1 && (
+          <div className="flex gap-2 flex-wrap">
+            {projects.map((project) => (
+              <Button
+                key={project.id}
+                variant={projectId === project.id ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedProjectId(project.id)}
+              >
+                {project.name}
+              </Button>
+            ))}
+          </div>
+        )}
+
         {/* Exports Grid */}
-        {isLoading ? (
+        {isLoadingAll ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <div
@@ -60,6 +89,7 @@ export default function Exports() {
               <Button
                 onClick={() => setCreateDialogOpen(true)}
                 className="mt-6 gap-2"
+                disabled={!projectId}
               >
                 <Plus className="h-4 w-4" />
                 {t.exports.newExport}
@@ -83,6 +113,7 @@ export default function Exports() {
       <CreateExportDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        defaultProjectId={projectId}
       />
     </AppLayout>
   );

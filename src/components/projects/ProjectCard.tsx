@@ -4,14 +4,13 @@ import { es } from 'date-fns/locale';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FolderOpen, FileText, Clock, MoreHorizontal } from 'lucide-react';
+import { FolderOpen, Database, BarChart3, MoreHorizontal } from 'lucide-react';
 import type { Project } from '@/types/database';
 
 const statusConfig = {
-  active: { label: 'Activo', variant: 'default' as const },
   processing: { label: 'Procesando', variant: 'secondary' as const },
-  completed: { label: 'Completado', variant: 'outline' as const },
-  archived: { label: 'Archivado', variant: 'outline' as const },
+  ready: { label: 'Listo', variant: 'default' as const },
+  error: { label: 'Error', variant: 'destructive' as const },
 };
 
 interface ProjectCardProps {
@@ -24,7 +23,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   return (
     <Card
       className="group cursor-pointer transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20"
-      onClick={() => navigate(`/project/${project.id}`)}
+      onClick={() => navigate(`/projects/${project.id}`)}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -36,8 +35,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
               <h3 className="font-semibold line-clamp-1 group-hover:text-primary transition-colors">
                 {project.name}
               </h3>
-              <Badge variant={statusConfig[project.status].variant} className="mt-1">
-                {statusConfig[project.status].label}
+              <Badge variant={statusConfig[project.status]?.variant ?? 'secondary'} className="mt-1">
+                {statusConfig[project.status]?.label ?? project.status}
               </Badge>
             </div>
           </div>
@@ -58,17 +57,22 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </p>
         )}
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <FileText className="h-3.5 w-3.5" />
-            <span>{project.file_count} archivos</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
-            <span>
-              {format(new Date(project.last_activity), "d MMM", { locale: es })}
-            </span>
-          </div>
+          {project.n_variables !== undefined && (
+            <div className="flex items-center gap-1">
+              <BarChart3 className="h-3.5 w-3.5" />
+              <span>{project.n_variables} variables</span>
+            </div>
+          )}
+          {project.n_cases !== undefined && (
+            <div className="flex items-center gap-1">
+              <Database className="h-3.5 w-3.5" />
+              <span>{project.n_cases} casos</span>
+            </div>
+          )}
         </div>
+        <p className="text-xs text-muted-foreground mt-2">
+          {format(new Date(project.created_at), "d MMM yyyy", { locale: es })}
+        </p>
       </CardContent>
     </Card>
   );
