@@ -206,7 +206,10 @@ export default function ProjectDetail() {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:border-primary/50 transition-colors">
+          <Card
+            className="cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => navigate(`/projects/${projectId}/settings`)}
+          >
             <CardHeader className="pb-2">
               <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
                 <Settings className="h-5 w-5 text-muted-foreground" />

@@ -81,3 +81,61 @@ export function useProject(projectId: string) {
     enabled: !!projectId,
   });
 }
+
+interface UpdateProjectParams {
+  projectId: string;
+  data: { name?: string; description?: string };
+  toastMessages?: { success: string; error: string };
+}
+
+export function useUpdateProject() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId, data }: UpdateProjectParams) =>
+      api.patch<Project>(`/projects/${projectId}`, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
+      toast({
+        title: variables.toastMessages?.success ?? 'Project updated',
+      });
+    },
+    onError: (error: Error, variables) => {
+      toast({
+        title: variables.toastMessages?.error ?? 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+interface DeleteProjectParams {
+  projectId: string;
+  toastMessages?: { success: string; error: string };
+}
+
+export function useDeleteProject() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ projectId }: DeleteProjectParams) =>
+      api.delete(`/projects/${projectId}`),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast({
+        title: variables.toastMessages?.success ?? 'Project deleted',
+      });
+    },
+    onError: (error: Error, variables) => {
+      toast({
+        title: variables.toastMessages?.error ?? 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}

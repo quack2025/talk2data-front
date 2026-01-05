@@ -108,6 +108,7 @@ export const translations = {
       deleteConfirmDescription: 'Esta acción no se puede deshacer. Se eliminarán todos los archivos y datos asociados.',
       // Table
       name: 'Nombre',
+      description: 'Descripción',
       loadingProjects: 'Cargando proyectos...',
       noProjects: 'No hay proyectos',
       noProjectsDescription: 'Crea tu primer proyecto para comenzar a analizar datos.',
@@ -262,6 +263,14 @@ export const translations = {
       uploading: 'Subiendo...',
       selectFile: 'Seleccionar archivo',
     },
+    // Settings
+    settings: {
+      dangerZone: 'Zona de peligro',
+      dangerZoneDescription: 'Acciones irreversibles para este proyecto.',
+      deleteProject: 'Eliminar proyecto',
+      deleteProjectConfirm: '¿Eliminar este proyecto?',
+      deleteProjectWarning: 'Esta acción eliminará permanentemente el proyecto, todos los archivos y conversaciones asociadas. Esta acción no se puede deshacer.',
+    },
     // Toasts
     toasts: {
       projectCreated: 'Proyecto creado',
@@ -388,6 +397,7 @@ export const translations = {
       deleteConfirmDescription: 'This action cannot be undone. All files and associated data will be deleted.',
       // Table
       name: 'Name',
+      description: 'Description',
       loadingProjects: 'Loading projects...',
       noProjects: 'No projects',
       noProjectsDescription: 'Create your first project to start analyzing data.',
@@ -541,6 +551,14 @@ export const translations = {
     upload: {
       uploading: 'Uploading...',
       selectFile: 'Select file',
+    },
+    // Settings
+    settings: {
+      dangerZone: 'Danger Zone',
+      dangerZoneDescription: 'Irreversible actions for this project.',
+      deleteProject: 'Delete project',
+      deleteProjectConfirm: 'Delete this project?',
+      deleteProjectWarning: 'This action will permanently delete the project, all files and associated conversations. This action cannot be undone.',
     },
     // Toasts
     toasts: {
