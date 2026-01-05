@@ -23,7 +23,19 @@ export function useProjects(toastMessages?: ToastMessages) {
 
   // Crear proyecto
   const createProject = useMutation({
-    mutationFn: (data: { name: string; description?: string }) =>
+    mutationFn: (data: { 
+      name: string; 
+      description?: string;
+      study_objective?: string;
+      country?: string;
+      industry?: string;
+      target_audience?: string;
+      brands?: string[];
+      methodology?: string;
+      study_date?: string;
+      is_tracking?: boolean;
+      wave_number?: number;
+    }) =>
       api.post<Project>('/projects', { ...data, owner_type: 'user' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
