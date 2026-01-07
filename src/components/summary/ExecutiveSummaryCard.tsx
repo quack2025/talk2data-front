@@ -1,3 +1,4 @@
+import ReactMarkdown from 'react-markdown';
 import { Sparkles, Lightbulb, FileText, RefreshCw, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -101,9 +102,9 @@ export function ExecutiveSummaryCard({
       <CardContent className="space-y-6">
         {/* Main content */}
         <div className={compact ? 'line-clamp-4' : ''}>
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">
-            {summary.content}
-          </p>
+          <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-ul:text-muted-foreground prose-li:marker:text-primary">
+            <ReactMarkdown>{summary.content}</ReactMarkdown>
+          </div>
         </div>
 
         {/* Key findings */}
