@@ -4,10 +4,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { CheckCircle, Loader2, FileSpreadsheet, Brain, Database, FileText, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 interface ProcessingStep {
@@ -22,6 +24,7 @@ type UploadStep = 'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'proce
 interface ProcessingModalProps {
   open: boolean;
   onComplete: () => void;
+  onSkip?: () => void;
   currentStep?: UploadStep;
   hasQuestionnaire?: boolean;
 }
@@ -29,6 +32,7 @@ interface ProcessingModalProps {
 export function ProcessingModal({ 
   open, 
   onComplete, 
+  onSkip,
   currentStep = 'idle',
   hasQuestionnaire = false 
 }: ProcessingModalProps) {
@@ -177,6 +181,14 @@ export function ProcessingModal({
               );
             })}
           </div>
+
+          {onSkip && currentStep === 'generating-summary' && (
+            <DialogFooter className="pt-4">
+              <Button variant="outline" onClick={onSkip} className="w-full">
+                {t.processing?.skip || 'Omitir y continuar al chat'}
+              </Button>
+            </DialogFooter>
+          )}
         </div>
       </DialogContent>
     </Dialog>

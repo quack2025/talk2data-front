@@ -176,6 +176,8 @@ export const translations = {
       analyzing: 'Analizando estructura SPSS',
       indexing: 'Indexando variables',
       generatingSummary: 'Generando resumen ejecutivo',
+      skip: 'Omitir y continuar al chat',
+      skipDescription: 'El resumen se generará en segundo plano.',
     },
     // Executive Summary
     summary: {
@@ -505,6 +507,8 @@ export const translations = {
       analyzing: 'Analyzing SPSS structure',
       indexing: 'Indexing variables',
       generatingSummary: 'Generating executive summary',
+      skip: 'Skip and continue to chat',
+      skipDescription: 'The summary will be generated in the background.',
     },
     // Executive Summary
     summary: {
