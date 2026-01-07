@@ -137,6 +137,20 @@ export default function ProjectUpload() {
     navigate(`/projects/${projectId}/summary`);
   };
 
+  const handleSkip = () => {
+    // Register for background notification
+    if (projectId && currentProject) {
+      addPendingSummary(projectId, currentProject.name);
+    }
+    setIsProcessing(false);
+    setShouldPollSummary(false);
+    toast({
+      title: t.projectUpload.uploadSuccess || 'Archivos procesados',
+      description: t.processing?.skipDescription || 'El resumen se generará en segundo plano.',
+    });
+    navigate(`/projects/${projectId}/chat`);
+  };
+
   return (
     <AppLayout>
       <div className="p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
@@ -282,6 +296,7 @@ export default function ProjectUpload() {
       <ProcessingModal
         open={isProcessing}
         onComplete={handleProcessingComplete}
+        onSkip={handleSkip}
         currentStep={uploadStep}
         hasQuestionnaire={!!questionnaireFile}
       />
