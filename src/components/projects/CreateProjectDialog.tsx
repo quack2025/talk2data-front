@@ -50,11 +50,18 @@ interface CreateProjectDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// G8 countries + Latin America + Other
 const COUNTRIES = [
+  // G8 Countries
+  'Estados Unidos', 'Reino Unido', 'Francia', 'Alemania', 'Italia', 
+  'Canadá', 'Japón', 'Rusia',
+  // Latin America
   'Argentina', 'Bolivia', 'Brasil', 'Chile', 'Colombia', 'Costa Rica', 
   'Ecuador', 'El Salvador', 'España', 'Guatemala', 'Honduras', 'México', 
   'Nicaragua', 'Panamá', 'Paraguay', 'Perú', 'República Dominicana', 
-  'Uruguay', 'Venezuela', 'Estados Unidos', 'Otro'
+  'Uruguay', 'Venezuela',
+  // Other
+  'Otro'
 ];
 
 const INDUSTRIES = [
@@ -73,6 +80,8 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
   const { t, language } = useLanguage();
   const [step, setStep] = useState<1 | 2>(1);
   const [brandInput, setBrandInput] = useState('');
+  const [customCountry, setCustomCountry] = useState('');
+  const [showCustomCountry, setShowCustomCountry] = useState(false);
   
   const dateLocale = language === 'es' ? es : enUS;
   
@@ -175,6 +184,8 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
       form.reset();
       setStep(1);
       setBrandInput('');
+      setCustomCountry('');
+      setShowCustomCountry(false);
     }
     onOpenChange(isOpen);
   };
@@ -303,20 +314,57 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>{t.settings.country} *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder={t.settings.countryPlaceholder} />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {COUNTRIES.map(country => (
-                                <SelectItem key={country} value={country}>
-                                  {country}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          {showCustomCountry ? (
+                            <div className="flex gap-2">
+                              <FormControl>
+                                <Input
+                                  placeholder={language === 'es' ? 'Nombre del país' : 'Country name'}
+                                  value={customCountry}
+                                  onChange={(e) => {
+                                    setCustomCountry(e.target.value);
+                                    field.onChange(e.target.value);
+                                  }}
+                                />
+                              </FormControl>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => {
+                                  setShowCustomCountry(false);
+                                  setCustomCountry('');
+                                  field.onChange('');
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Select 
+                              onValueChange={(value) => {
+                                if (value === 'Otro') {
+                                  setShowCustomCountry(true);
+                                  field.onChange('');
+                                } else {
+                                  field.onChange(value);
+                                }
+                              }} 
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t.settings.countryPlaceholder} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {COUNTRIES.map(country => (
+                                  <SelectItem key={country} value={country}>
+                                    {country}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}

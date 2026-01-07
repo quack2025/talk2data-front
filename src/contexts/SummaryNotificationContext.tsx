@@ -15,6 +15,7 @@ interface SummaryNotificationContextType {
   addPendingSummary: (projectId: string, projectName: string) => void;
   removePendingSummary: (projectId: string) => void;
   hasPendingSummary: (projectId: string) => boolean;
+  pendingCount: number;
 }
 
 const SummaryNotificationContext = createContext<SummaryNotificationContextType | null>(null);
@@ -105,7 +106,7 @@ export function SummaryNotificationProvider({ children }: { children: React.Reac
   }, [pendingSummaries, removePendingSummary, navigate, t]);
 
   return (
-    <SummaryNotificationContext.Provider value={{ addPendingSummary, removePendingSummary, hasPendingSummary }}>
+    <SummaryNotificationContext.Provider value={{ addPendingSummary, removePendingSummary, hasPendingSummary, pendingCount: pendingSummaries.length }}>
       {children}
     </SummaryNotificationContext.Provider>
   );
