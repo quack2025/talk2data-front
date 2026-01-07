@@ -9,16 +9,18 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/i18n/LanguageContext";
-import logoImage from "@/assets/logo.png";
+import { useSummaryNotification } from "@/contexts/SummaryNotificationContext";
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { t } = useLanguage();
+  const { pendingCount } = useSummaryNotification();
 
   const navItems = [
     {
@@ -50,18 +52,31 @@ export function AppSidebar() {
         collapsed ? "w-16" : "w-64"
       )}
     >
-      {/* Logo */}
-      <div className="flex h-16 items-center justify-center px-3 border-b border-sidebar-border">
-        <Link to="/projects" className="flex items-center justify-center animate-fade-in">
-          <img 
-            src={logoImage} 
-            alt="Survey Genius" 
-            className={cn(
-              "w-auto transition-all duration-300",
-              collapsed ? "h-8" : "h-12 max-w-[200px]"
-            )} 
-          />
+      {/* Header */}
+      <div className="flex h-16 items-center justify-between px-3 border-b border-sidebar-border">
+        <Link to="/projects" className="flex items-center gap-2 animate-fade-in">
+          <span className={cn(
+            "font-semibold text-sidebar-foreground transition-all duration-300",
+            collapsed ? "text-sm" : "text-lg"
+          )}>
+            {collapsed ? "SG" : "Survey Genius"}
+          </span>
         </Link>
+        
+        {/* Background processing indicator */}
+        {pendingCount > 0 && (
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 text-primary animate-pulse">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {!collapsed && <span className="text-xs font-medium">{pendingCount}</span>}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {t.summary?.generating || 'Generando resumen ejecutivo...'}
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       {/* Navigation */}
