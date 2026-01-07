@@ -29,6 +29,7 @@ export interface Project {
   is_tracking?: boolean;
   wave_number?: number;
   additional_context?: string;
+  report_language?: string;
 }
 
 export interface ProjectUpdateData {
@@ -44,6 +45,7 @@ export interface ProjectUpdateData {
   is_tracking?: boolean;
   wave_number?: number;
   additional_context?: string;
+  report_language?: string;
 }
 
 export interface ProjectFile {
