@@ -102,6 +102,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
     is_tracking: z.boolean().optional(),
     wave_number: z.number().min(1).optional(),
     additional_context: z.string().max(2000).optional(),
+    report_language: z.string().default('en'),
   });
 
   type FormData = z.infer<typeof formSchema>;
@@ -121,6 +122,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
       is_tracking: false,
       wave_number: undefined,
       additional_context: '',
+      report_language: 'en',
     },
   });
 
@@ -172,6 +174,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
       is_tracking: data.is_tracking || false,
       wave_number: data.is_tracking ? data.wave_number : undefined,
       additional_context: data.additional_context || undefined,
+      report_language: data.report_language || 'en',
     });
     form.reset();
     setStep(1);
@@ -592,6 +595,36 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Report Language */}
+                  <FormField
+                    control={form.control}
+                    name="report_language"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{language === 'es' ? 'Idioma del Reporte' : 'Report Language'}</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || 'en'}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={language === 'es' ? 'Selecciona idioma' : 'Select language'} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="es">🇪🇸 Español</SelectItem>
+                            <SelectItem value="en">🇺🇸 English</SelectItem>
+                            <SelectItem value="pt">🇧🇷 Português</SelectItem>
+                            <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription className="text-xs">
+                          {language === 'es' 
+                            ? 'Idioma en el que se generarán los reportes y análisis (independiente del idioma del estudio)'
+                            : 'Language for generated reports and analysis (independent of study language)'}
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

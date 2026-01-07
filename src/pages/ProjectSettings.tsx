@@ -104,6 +104,7 @@ export default function ProjectSettings() {
   const [isTracking, setIsTracking] = useState(false);
   const [waveNumber, setWaveNumber] = useState<number | undefined>();
   const [additionalContext, setAdditionalContext] = useState('');
+  const [reportLanguage, setReportLanguage] = useState('en');
 
   // Initialize form when project loads
   useEffect(() => {
@@ -120,6 +121,7 @@ export default function ProjectSettings() {
       setIsTracking(project.is_tracking || false);
       setWaveNumber(project.wave_number);
       setAdditionalContext(project.additional_context || '');
+      setReportLanguage(project.report_language || 'en');
       
       // Open context section if any context field has data
       const hasContextData = project.study_objective || project.country || 
@@ -169,6 +171,7 @@ export default function ProjectSettings() {
       is_tracking: isTracking,
       wave_number: isTracking && waveNumber ? waveNumber : undefined,
       additional_context: additionalContext || undefined,
+      report_language: reportLanguage,
     };
 
     try {
@@ -465,6 +468,27 @@ export default function ProjectSettings() {
                     placeholder={t.settings.additionalContextPlaceholder}
                     rows={3}
                   />
+                </div>
+
+                {/* Report Language */}
+                <div className="space-y-2">
+                  <Label>{language === 'es' ? 'Idioma del Reporte' : 'Report Language'}</Label>
+                  <Select value={reportLanguage} onValueChange={(v) => { setReportLanguage(v); markChanged(); }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={language === 'es' ? 'Selecciona idioma' : 'Select language'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="es">🇪🇸 Español</SelectItem>
+                      <SelectItem value="en">🇺🇸 English</SelectItem>
+                      <SelectItem value="pt">🇧🇷 Português</SelectItem>
+                      <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    {language === 'es' 
+                      ? 'Idioma en el que se generarán los reportes y análisis (independiente del idioma del estudio)'
+                      : 'Language for generated reports and analysis (independent of study language)'}
+                  </p>
                 </div>
               </CollapsibleContent>
             </Collapsible>
