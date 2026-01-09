@@ -2,10 +2,98 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart3, Table as TableIcon, Variable, PieChart } from 'lucide-react';
+import { BarChart3, Table as TableIcon, Variable, PieChart, CheckCircle2, Hash, ListFilter, TrendingUp } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { QueryResponse } from '@/types/database';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
+import { Badge } from '@/components/ui/badge';
+
+// Componente para mostrar un análisis de forma legible
+function AnalysisCard({ analysis }: { analysis: Record<string, unknown> }) {
+  const analysisType = (analysis.type as string) || (analysis.analysis_type as string) || 'Analysis';
+  const variables = (analysis.variables as string[]) || (analysis.variable as string[]) || [];
+  const filters = analysis.filters as Record<string, unknown> | undefined;
+  const sampleSize = analysis.sample_size as number | undefined;
+  const result = analysis.result as Record<string, unknown> | undefined;
+  
+  // Obtener ícono según tipo de análisis
+  const getIcon = () => {
+    const type = analysisType.toLowerCase();
+    if (type.includes('frequency') || type.includes('distribution')) return <BarChart3 className="h-4 w-4" />;
+    if (type.includes('cross') || type.includes('crosstab')) return <TableIcon className="h-4 w-4" />;
+    if (type.includes('correlation') || type.includes('regression')) return <TrendingUp className="h-4 w-4" />;
+    if (type.includes('filter')) return <ListFilter className="h-4 w-4" />;
+    return <CheckCircle2 className="h-4 w-4" />;
+  };
+
+  // Formatear nombre de tipo de análisis
+  const formatTypeName = (type: string) => {
+    return type
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  return (
+    <div className="rounded-lg border bg-card p-4 space-y-3">
+      <div className="flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
+          {getIcon()}
+        </div>
+        <div className="flex-1">
+          <p className="font-medium text-sm">{formatTypeName(analysisType)}</p>
+          {sampleSize && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Hash className="h-3 w-3" />
+              n = {sampleSize.toLocaleString()}
+            </p>
+          )}
+        </div>
+      </div>
+      
+      {variables.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {(Array.isArray(variables) ? variables : [variables]).map((v, i) => (
+            <Badge key={i} variant="secondary" className="text-xs font-normal">
+              {String(v)}
+            </Badge>
+          ))}
+        </div>
+      )}
+      
+      {filters && Object.keys(filters).length > 0 && (
+        <div className="text-xs text-muted-foreground">
+          <span className="font-medium">Filters: </span>
+          {Object.entries(filters).map(([key, value], i) => (
+            <span key={key}>
+              {i > 0 && ', '}
+              {key}: {String(value)}
+            </span>
+          ))}
+        </div>
+      )}
+      
+      {result && (
+        <div className="text-xs bg-muted/50 rounded p-2 space-y-1">
+          {Object.entries(result).slice(0, 5).map(([key, value]) => (
+            <div key={key} className="flex justify-between">
+              <span className="text-muted-foreground">{key}:</span>
+              <span className="font-medium">
+                {typeof value === 'number' 
+                  ? value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+                  : String(value)}
+              </span>
+            </div>
+          ))}
+          {Object.keys(result).length > 5 && (
+            <p className="text-muted-foreground text-center">
+              +{Object.keys(result).length - 5} more...
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface ResultsPanelProps {
   hasResults: boolean;
@@ -142,15 +230,11 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
                     {lastAnalysis.answer || t.chat.analysisProcessed}
                   </p>
                   {analysisPerformed.length > 0 && (
-                    <div className="mt-4">
-                      <p className="text-sm font-medium mb-2">{t.chat.analysisPerformed}</p>
-                      <ul className="text-sm text-muted-foreground">
-                        {analysisPerformed.map((analysis, index) => (
-                          <li key={index}>
-                            {JSON.stringify(analysis)}
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="mt-4 space-y-3">
+                      <p className="text-sm font-medium">{t.chat.analysisPerformed}</p>
+                      {analysisPerformed.map((analysis, index) => (
+                        <AnalysisCard key={index} analysis={analysis} />
+                      ))}
                     </div>
                   )}
                 </div>
