@@ -2,127 +2,54 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart3, Table as TableIcon, Variable, PieChart, CheckCircle2, Hash, ListFilter, TrendingUp } from 'lucide-react';
+import { BarChart3, Table as TableIcon, Variable, AlertCircle, Hash, Users, FileWarning } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import type { QueryResponse } from '@/types/database';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
+import type { ChartData } from '@/types/database';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Componente para mostrar un análisis de forma legible
-function AnalysisCard({ analysis }: { analysis: Record<string, unknown> }) {
-  const analysisType = (analysis.type as string) || (analysis.analysis_type as string) || 'Analysis';
-  const variables = (analysis.variables as string[]) || (analysis.variable as string[]) || [];
-  const filters = analysis.filters as Record<string, unknown> | undefined;
-  const sampleSize = analysis.sample_size as number | undefined;
-  const result = analysis.result as Record<string, unknown> | undefined;
-  
-  // Obtener ícono según tipo de análisis
-  const getIcon = () => {
-    const type = analysisType.toLowerCase();
-    if (type.includes('frequency') || type.includes('distribution')) return <BarChart3 className="h-4 w-4" />;
-    if (type.includes('cross') || type.includes('crosstab')) return <TableIcon className="h-4 w-4" />;
-    if (type.includes('correlation') || type.includes('regression')) return <TrendingUp className="h-4 w-4" />;
-    if (type.includes('filter')) return <ListFilter className="h-4 w-4" />;
-    return <CheckCircle2 className="h-4 w-4" />;
-  };
+// Types for backend data
+interface TableData {
+  columns: string[];
+  rows: (string | number | null)[][];
+  title?: string;
+}
 
-  // Formatear nombre de tipo de análisis
-  const formatTypeName = (type: string) => {
-    return type
-      .replace(/_/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase());
-  };
+interface VariableInfo {
+  name: string;
+  label?: string;
+  type?: string;
+}
 
-  return (
-    <div className="rounded-lg border bg-card p-4 space-y-3">
-      <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-          {getIcon()}
-        </div>
-        <div className="flex-1">
-          <p className="font-medium text-sm">{formatTypeName(analysisType)}</p>
-          {sampleSize && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Hash className="h-3 w-3" />
-              n = {sampleSize.toLocaleString()}
-            </p>
-          )}
-        </div>
-      </div>
-      
-      {variables.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {(Array.isArray(variables) ? variables : [variables]).map((v, i) => (
-            <Badge key={i} variant="secondary" className="text-xs font-normal">
-              {String(v)}
-            </Badge>
-          ))}
-        </div>
-      )}
-      
-      {filters && Object.keys(filters).length > 0 && (
-        <div className="text-xs text-muted-foreground">
-          <span className="font-medium">Filters: </span>
-          {Object.entries(filters).map(([key, value], i) => (
-            <span key={key}>
-              {i > 0 && ', '}
-              {key}: {String(value)}
-            </span>
-          ))}
-        </div>
-      )}
-      
-      {result && (
-        <div className="text-xs bg-muted/50 rounded p-2 space-y-1">
-          {Object.entries(result).slice(0, 5).map(([key, value]) => (
-            <div key={key} className="flex justify-between">
-              <span className="text-muted-foreground">{key}:</span>
-              <span className="font-medium">
-                {typeof value === 'number' 
-                  ? value.toLocaleString(undefined, { maximumFractionDigits: 2 })
-                  : String(value)}
-              </span>
-            </div>
-          ))}
-          {Object.keys(result).length > 5 && (
-            <p className="text-muted-foreground text-center">
-              +{Object.keys(result).length - 5} more...
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
+interface AnalysisMetadata {
+  analysis_type?: string;
+  variables_analyzed?: VariableInfo[];
+  sample_size?: number;
+  missing_values?: number;
+  warnings?: string[];
+  filters_applied?: Record<string, unknown>;
+}
+
+interface AnalysisPerformedItem {
+  table_data?: TableData;
+  analysis_metadata?: AnalysisMetadata;
+  [key: string]: unknown;
 }
 
 interface ResultsPanelProps {
   hasResults: boolean;
-  lastAnalysis?: QueryResponse | null;
+  charts?: ChartData[];
+  analysisPerformed?: AnalysisPerformedItem[];
 }
 
-// Colores para gráficos
-const CHART_COLORS = [
-  'hsl(var(--primary))',
-  'hsl(var(--secondary))',
-  'hsl(220, 70%, 50%)',
-  'hsl(160, 60%, 45%)',
-  'hsl(30, 80%, 55%)',
-  'hsl(280, 60%, 50%)',
-  'hsl(340, 70%, 50%)',
-  'hsl(190, 70%, 45%)',
-];
-
-export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
+export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsPanelProps) {
   const [activeTab, setActiveTab] = useState('result');
   const { t } = useLanguage();
 
-  // Parsear visualizaciones del análisis
-  const visualizations = lastAnalysis?.visualizations;
-  const analysisPerformed = lastAnalysis?.analysis_performed ?? [];
-
-  // Extraer datos de tablas si existen
-  const tableData = extractTableData(analysisPerformed);
-  const chartData = extractChartData(visualizations, t);
+  // Check what data is available
+  const hasCharts = charts && charts.length > 0;
+  const tablesData = analysisPerformed?.filter(a => a.table_data) || [];
+  const metadataItems = analysisPerformed?.filter(a => a.analysis_metadata) || [];
 
   if (!hasResults) {
     return (
@@ -151,6 +78,11 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
             >
               <BarChart3 className="h-4 w-4" />
               {t.chat.result}
+              {hasCharts && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {charts.length}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger
               value="table"
@@ -158,6 +90,11 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
             >
               <TableIcon className="h-4 w-4" />
               {t.chat.table}
+              {tablesData.length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {tablesData.length}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger
               value="variables"
@@ -165,230 +102,232 @@ export function ResultsPanel({ hasResults, lastAnalysis }: ResultsPanelProps) {
             >
               <Variable className="h-4 w-4" />
               {t.chat.variables}
+              {metadataItems.length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {metadataItems.length}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
         </div>
 
-        {/* Result/Chart Tab */}
+        {/* Result/Chart Tab - Shows charts from message.charts */}
         <TabsContent value="result" className="flex-1 p-6 overflow-auto">
-          {chartData.length > 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <PieChart className="h-5 w-5 text-primary" />
-                  {chartData[0].title || t.chat.visualization}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    {chartData[0].type === 'pie' ? (
-                      <RechartsPieChart>
-                        <Pie
-                          data={chartData[0].data}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={100}
-                          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                        >
-                          {chartData[0].data.map((_: unknown, index: number) => (
-                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </RechartsPieChart>
-                    ) : (
-                      <BarChart data={chartData[0].data}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="name" className="text-xs" />
-                        <YAxis className="text-xs" />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: 'hsl(var(--card))', 
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px'
-                          }} 
-                        />
-                        <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    )}
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          ) : lastAnalysis ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t.chat.analysisCompleted}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <p className="text-muted-foreground">
-                    {lastAnalysis.answer || t.chat.analysisProcessed}
-                  </p>
-                  {analysisPerformed.length > 0 && (
-                    <div className="mt-4 space-y-3">
-                      <p className="text-sm font-medium">{t.chat.analysisPerformed}</p>
-                      {analysisPerformed.map((analysis, index) => (
-                        <AnalysisCard key={index} analysis={analysis} />
-                      ))}
+          {hasCharts ? (
+            <div className="space-y-6">
+              {charts.map((chart, index) => (
+                <Card key={index}>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-primary" />
+                      {chart.title || `Chart ${index + 1}`}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-center">
+                      <img
+                        src={`data:image/png;base64,${chart.chart_base64}`}
+                        alt={chart.title || `Chart ${index + 1}`}
+                        className="max-w-full h-auto rounded-lg border"
+                      />
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           ) : (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t.chat.noVisualization}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg">
-                  <p className="text-muted-foreground">
-                    {t.chat.askToSeeAnalysis}
-                  </p>
+              <CardContent className="py-12">
+                <div className="text-center text-muted-foreground">
+                  <BarChart3 className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                  <p>{t.chat.noVisualization}</p>
+                  <p className="text-sm mt-1">{t.chat.askToSeeAnalysis}</p>
                 </div>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        {/* Table Tab */}
+        {/* Table Tab - Shows table_data from analysis_performed */}
         <TabsContent value="table" className="flex-1 p-6 overflow-auto">
-          <Card>
-            <CardContent className="p-0">
-              {tableData.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {Object.keys(tableData[0]).map((key) => (
-                        <TableHead key={key}>{key}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tableData.map((row, index) => (
-                      <TableRow key={index}>
-                        {Object.values(row).map((value, cellIndex) => (
-                          <TableCell key={cellIndex}>
-                            {typeof value === 'number' 
-                              ? value.toLocaleString(undefined, { maximumFractionDigits: 2 })
-                              : String(value)}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="p-8 text-center text-muted-foreground">
-                  {t.chat.noTableData}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Variables Tab */}
-        <TabsContent value="variables" className="flex-1 p-6 overflow-auto">
-          <div className="grid gap-4">
-            {analysisPerformed.length > 0 ? (
-              analysisPerformed.map((analysis, index) => {
-                const analysisObj = analysis as Record<string, unknown>;
-                const variables = (analysisObj.variables as string[]) ?? [];
-                const type = (analysisObj.type as string) ?? t.chat.analysis;
-                
+          {tablesData.length > 0 ? (
+            <div className="space-y-6">
+              {tablesData.map((analysis, index) => {
+                const tableData = analysis.table_data!;
                 return (
                   <Card key={index}>
-                    <CardContent className="py-4">
-                      <div className="flex items-center gap-3">
-                        <Variable className="h-5 w-5 text-primary" />
-                        <div>
-                          <p className="font-medium">{type}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {variables.length > 0 
-                              ? `${t.chat.variablesLabel} ${variables.join(', ')}` 
-                              : t.chat.noSpecificVariables}
-                          </p>
-                        </div>
-                      </div>
+                    {tableData.title && (
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <TableIcon className="h-5 w-5 text-primary" />
+                          {tableData.title}
+                        </CardTitle>
+                      </CardHeader>
+                    )}
+                    <CardContent className={tableData.title ? "pt-0" : "pt-6"}>
+                      <ScrollArea className="max-h-[500px]">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              {tableData.columns.map((col, colIndex) => (
+                                <TableHead key={colIndex} className="font-semibold">
+                                  {col}
+                                </TableHead>
+                              ))}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {tableData.rows.map((row, rowIndex) => (
+                              <TableRow key={rowIndex}>
+                                {row.map((cell, cellIndex) => (
+                                  <TableCell key={cellIndex}>
+                                    {cell === null || cell === undefined
+                                      ? '-'
+                                      : typeof cell === 'number'
+                                        ? cell.toLocaleString(undefined, { maximumFractionDigits: 2 })
+                                        : String(cell)}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </ScrollArea>
                     </CardContent>
                   </Card>
                 );
-              })
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                {t.chat.noVariablesAnalyzed}
-              </div>
-            )}
-          </div>
+              })}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center text-muted-foreground">
+                  <TableIcon className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                  <p>{t.chat.noTableData}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Variables Tab - Shows analysis_metadata from analysis_performed */}
+        <TabsContent value="variables" className="flex-1 p-6 overflow-auto">
+          {metadataItems.length > 0 ? (
+            <div className="space-y-4">
+              {metadataItems.map((analysis, index) => {
+                const metadata = analysis.analysis_metadata!;
+                return (
+                  <Card key={index}>
+                    <CardContent className="py-4 space-y-4">
+                      {/* Analysis Type */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                          <Variable className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-lg">
+                            {metadata.analysis_type
+                              ?.replace(/_/g, ' ')
+                              .replace(/\b\w/g, l => l.toUpperCase()) || 'Analysis'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Variables Analyzed */}
+                      {metadata.variables_analyzed && metadata.variables_analyzed.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">
+                            Variables Analyzed
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {metadata.variables_analyzed.map((variable, vIndex) => (
+                              <Badge key={vIndex} variant="secondary" className="text-sm">
+                                {variable.name}
+                                {variable.label && (
+                                  <span className="ml-1 text-muted-foreground">
+                                    ({variable.label})
+                                  </span>
+                                )}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 gap-4 pt-2">
+                        {metadata.sample_size !== undefined && (
+                          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                            <Users className="h-4 w-4 text-primary" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Sample Size</p>
+                              <p className="font-semibold">{metadata.sample_size.toLocaleString()}</p>
+                            </div>
+                          </div>
+                        )}
+                        {metadata.missing_values !== undefined && (
+                          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                            <Hash className="h-4 w-4 text-orange-500" />
+                            <div>
+                              <p className="text-xs text-muted-foreground">Missing Values</p>
+                              <p className="font-semibold">{metadata.missing_values.toLocaleString()}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Warnings */}
+                      {metadata.warnings && metadata.warnings.length > 0 && (
+                        <div className="space-y-2 pt-2">
+                          <p className="text-sm font-medium text-orange-600 flex items-center gap-1">
+                            <FileWarning className="h-4 w-4" />
+                            Warnings
+                          </p>
+                          <div className="space-y-1">
+                            {metadata.warnings.map((warning, wIndex) => (
+                              <div
+                                key={wIndex}
+                                className="flex items-start gap-2 text-sm text-orange-600 bg-orange-50 dark:bg-orange-950/30 p-2 rounded"
+                              >
+                                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                                <span>{warning}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Filters Applied */}
+                      {metadata.filters_applied && Object.keys(metadata.filters_applied).length > 0 && (
+                        <div className="space-y-2 pt-2">
+                          <p className="text-sm font-medium text-muted-foreground">Filters Applied</p>
+                          <div className="text-sm bg-muted/50 p-3 rounded-lg">
+                            {Object.entries(metadata.filters_applied).map(([key, value]) => (
+                              <div key={key} className="flex justify-between">
+                                <span className="text-muted-foreground">{key}:</span>
+                                <span className="font-medium">{String(value)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center text-muted-foreground">
+                  <Variable className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                  <p>{t.chat.noVariablesAnalyzed}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
   );
-}
-
-// Helpers para extraer datos
-function extractTableData(analysisPerformed: Record<string, unknown>[]): Record<string, unknown>[] {
-  for (const analysis of analysisPerformed) {
-    if (analysis.table && Array.isArray(analysis.table)) {
-      return analysis.table as Record<string, unknown>[];
-    }
-    if (analysis.data && Array.isArray(analysis.data)) {
-      return analysis.data as Record<string, unknown>[];
-    }
-  }
-  return [];
-}
-
-function extractChartData(
-  visualizations: Record<string, unknown> | undefined,
-  t: { chat: { visualization: string; frequencyDistribution: string } }
-): Array<{
-  type: 'bar' | 'pie';
-  title: string;
-  data: Array<{ name: string; value: number }>;
-}> {
-  if (!visualizations) return [];
-
-  const charts: Array<{
-    type: 'bar' | 'pie';
-    title: string;
-    data: Array<{ name: string; value: number }>;
-  }> = [];
-
-  // Intentar parsear diferentes formatos de visualización
-  if (visualizations.chart) {
-    const chart = visualizations.chart as Record<string, unknown>;
-    charts.push({
-      type: (chart.type as 'bar' | 'pie') || 'bar',
-      title: (chart.title as string) || t.chat.visualization,
-      data: (chart.data as Array<{ name: string; value: number }>) || [],
-    });
-  }
-
-  if (visualizations.charts && Array.isArray(visualizations.charts)) {
-    for (const chart of visualizations.charts as Array<Record<string, unknown>>) {
-      charts.push({
-        type: (chart.type as 'bar' | 'pie') || 'bar',
-        title: (chart.title as string) || t.chat.visualization,
-        data: (chart.data as Array<{ name: string; value: number }>) || [],
-      });
-    }
-  }
-
-  // Si hay datos directos en formato de frecuencias
-  if (visualizations.frequencies) {
-    const freqs = visualizations.frequencies as Record<string, number>;
-    charts.push({
-      type: 'bar',
-      title: t.chat.frequencyDistribution,
-      data: Object.entries(freqs).map(([name, value]) => ({ name, value })),
-    });
-  }
-
-  return charts;
 }
