@@ -46,10 +46,11 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
   const [activeTab, setActiveTab] = useState('result');
   const { t } = useLanguage();
 
-  // Check what data is available
-  const hasCharts = charts && charts.length > 0;
-  const tablesData = analysisPerformed?.filter(a => a.table_data) || [];
-  const metadataItems = analysisPerformed?.filter(a => a.analysis_metadata) || [];
+  // Check what data is available - with defensive checks
+  const hasCharts = charts && Array.isArray(charts) && charts.length > 0;
+  const analysisArray = Array.isArray(analysisPerformed) ? analysisPerformed : [];
+  const tablesData = analysisArray.filter(a => a && typeof a === 'object' && a.table_data);
+  const metadataItems = analysisArray.filter(a => a && typeof a === 'object' && a.analysis_metadata);
 
   if (!hasResults) {
     return (
