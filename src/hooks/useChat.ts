@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
-import type { Conversation, QueryResponse, Message } from '@/types/database';
+import type { Conversation, QueryResponse, Message, ChartData } from '@/types/database';
 
 interface ToastMessages {
   conversationError: string;
@@ -74,6 +74,9 @@ export function useChatMessages(projectId: string, conversationId: string | null
   const queryClient = useQueryClient();
   const [isThinking, setIsThinking] = useState(false);
   const [lastAnalysis, setLastAnalysis] = useState<QueryResponse | null>(null);
+  
+  // Cache de charts por message_id (persistente entre renders)
+  const chartsCache = useRef<Record<string, ChartData[]>>({});
 
   // Obtener conversación con mensajes
   const conversationQuery = useQuery({
@@ -106,6 +109,11 @@ export function useChatMessages(projectId: string, conversationId: string | null
       // Guardar el análisis más reciente para mostrar en el panel
       setLastAnalysis(data);
       
+      // Guardar charts en cache si vienen en la respuesta
+      if (data.charts && data.charts.length > 0 && data.message_id) {
+        chartsCache.current[data.message_id] = data.charts;
+      }
+      
       // Invalidar queries para refrescar mensajes
       if (data.conversation_id) {
         queryClient.invalidateQueries({ queryKey: ['conversation', data.conversation_id] });
@@ -121,8 +129,16 @@ export function useChatMessages(projectId: string, conversationId: string | null
     },
   });
 
-  // Obtener mensajes como array plano para facilitar el rendering
-  const messages: Message[] = conversationQuery.data?.messages ?? [];
+  // Obtener mensajes base del backend
+  const baseMessages: Message[] = conversationQuery.data?.messages ?? [];
+  
+  // Enriquecer mensajes con charts del cache
+  const messages = useMemo(() => {
+    return baseMessages.map(msg => ({
+      ...msg,
+      charts: msg.charts || chartsCache.current[msg.id] || undefined,
+    }));
+  }, [baseMessages]);
 
   return {
     conversation: conversationQuery.data,
