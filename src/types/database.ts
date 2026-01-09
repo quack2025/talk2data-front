@@ -91,6 +91,7 @@ export interface QueryResponse {
   message_id: string;
   analysis_performed?: Record<string, unknown>[];
   visualizations?: Record<string, unknown>;
+  charts?: ChartData[];
 }
 
 export interface Export {
