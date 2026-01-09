@@ -69,12 +69,19 @@ export interface Conversation {
   messages?: Message[];
 }
 
+export interface ChartData {
+  title: string;
+  chart_type: string;
+  chart_base64: string;
+}
+
 export interface Message {
   id: string;
   conversation_id: string;
   role: MessageRole;
   content: string;
   analysis_executed?: Record<string, unknown>;
+  charts?: ChartData[];
   created_at: string;
 }
 
