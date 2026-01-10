@@ -257,21 +257,21 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
 
                       {/* Stats Grid */}
                       <div className="grid grid-cols-2 gap-4 pt-2">
-                        {metadata.sample_size !== undefined && (
+                        {metadata.sample_size != null && (
                           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
                             <Users className="h-4 w-4 text-primary" />
                             <div>
                               <p className="text-xs text-muted-foreground">Sample Size</p>
-                              <p className="font-semibold">{metadata.sample_size.toLocaleString()}</p>
+                              <p className="font-semibold">{Number(metadata.sample_size).toLocaleString()}</p>
                             </div>
                           </div>
                         )}
-                        {metadata.missing_values !== undefined && (
+                        {metadata.missing_values != null && (
                           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
                             <Hash className="h-4 w-4 text-orange-500" />
                             <div>
                               <p className="text-xs text-muted-foreground">Missing Values</p>
-                              <p className="font-semibold">{metadata.missing_values.toLocaleString()}</p>
+                              <p className="font-semibold">{Number(metadata.missing_values).toLocaleString()}</p>
                             </div>
                           </div>
                         )}
