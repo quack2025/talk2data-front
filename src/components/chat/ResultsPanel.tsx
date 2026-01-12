@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart3, Table as TableIcon, Variable, AlertCircle, Hash, Users, FileWarning } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { BarChart3, Table as TableIcon, Variable, AlertCircle, Hash, Users, FileWarning, X, ZoomIn } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { ChartData } from '@/types/database';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
+import { Button } from '@/components/ui/button';
 // Types for backend data
 interface TableData {
   columns: string[];
@@ -44,8 +45,8 @@ interface ResultsPanelProps {
 
 export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsPanelProps) {
   const [activeTab, setActiveTab] = useState('result');
+  const [selectedChart, setSelectedChart] = useState<ChartData | null>(null);
   const { t } = useLanguage();
-
   // Check what data is available - with defensive checks
   const hasCharts = charts && Array.isArray(charts) && charts.length > 0;
   const analysisArray = Array.isArray(analysisPerformed) ? analysisPerformed : [];
@@ -119,18 +120,40 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
               {charts.map((chart, index) => (
                 <Card key={index}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5 text-primary" />
-                      {chart.title || `Chart ${index + 1}`}
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-primary" />
+                        {chart.title || `Chart ${index + 1}`}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedChart(chart)}
+                        className="text-muted-foreground hover:text-primary"
+                      >
+                        <ZoomIn className="h-4 w-4 mr-1" />
+                        {t.chat.fullscreen}
+                      </Button>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex justify-center">
-                      <img
-                        src={`data:image/png;base64,${chart.chart_base64}`}
-                        alt={chart.title || `Chart ${index + 1}`}
-                        className="max-w-full h-auto rounded-lg border"
-                      />
+                    <div 
+                      className="flex justify-center cursor-pointer group"
+                      onClick={() => setSelectedChart(chart)}
+                    >
+                      <div className="relative">
+                        <img
+                          src={`data:image/png;base64,${chart.chart_base64}`}
+                          alt={chart.title || `Chart ${index + 1}`}
+                          className="max-w-full h-auto rounded-lg border transition-opacity group-hover:opacity-90"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-lg">
+                          <div className="bg-background/90 text-foreground px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5 shadow-lg">
+                            <ZoomIn className="h-4 w-4" />
+                            {t.chat.clickToZoom}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -329,6 +352,27 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Fullscreen Chart Modal */}
+      <Dialog open={!!selectedChart} onOpenChange={(open) => !open && setSelectedChart(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] w-auto p-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-2 border-b">
+            <DialogTitle className="flex items-center gap-2 pr-8">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              {selectedChart?.title || 'Chart'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4 overflow-auto max-h-[calc(95vh-80px)] flex items-center justify-center bg-muted/30">
+            {selectedChart && (
+              <img
+                src={`data:image/png;base64,${selectedChart.chart_base64}`}
+                alt={selectedChart.title || 'Chart'}
+                className="max-w-full max-h-[calc(95vh-120px)] h-auto rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
