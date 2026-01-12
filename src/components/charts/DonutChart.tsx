@@ -69,6 +69,9 @@ export function DonutChart({ data, title }: DonutChartProps) {
             dataKey="value"
             label={renderCustomLabel}
             labelLine={false}
+            animationBegin={0}
+            animationDuration={800}
+            animationEasing="ease-out"
           >
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />

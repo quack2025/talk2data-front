@@ -1,7 +1,7 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList, CartesianGrid } from 'recharts';
 import { getChartColor } from '@/lib/chartColors';
 
-interface HorizontalBarChartProps {
+interface VerticalBarChartProps {
   data: {
     labels: string[];
     values: number[];
@@ -12,46 +12,54 @@ interface HorizontalBarChartProps {
   showPercentages?: boolean;
 }
 
-export function HorizontalBarChart({ data, title, showPercentages = true }: HorizontalBarChartProps) {
+export function VerticalBarChart({ data, title, showPercentages = true }: VerticalBarChartProps) {
   const chartData = data.labels.map((label, index) => ({
-    name: label,
+    name: label.length > 15 ? label.substring(0, 12) + '...' : label,
+    fullName: label,
     value: data.values[index],
     percentage: data.percentages?.[index] ?? 0,
     color: data.colors?.[index] ?? getChartColor(index),
   }));
-
-  // Calculate left margin based on longest label
-  const maxLabelLength = Math.max(...data.labels.map(l => l.length));
-  const leftMargin = Math.min(Math.max(maxLabelLength * 6, 80), 180);
 
   return (
     <div className="w-full h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart 
           data={chartData} 
-          layout="vertical"
-          margin={{ top: 10, right: 60, left: leftMargin, bottom: 10 }}
+          margin={{ top: 30, right: 20, left: 20, bottom: 20 }}
         >
+          <CartesianGrid 
+            strokeDasharray="3 3" 
+            vertical={false}
+            stroke="hsl(var(--border))"
+            opacity={0.5}
+          />
           <XAxis 
-            type="number" 
+            type="category" 
+            dataKey="name"
+            tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }}
+            tickLine={false}
+            axisLine={{ stroke: 'hsl(var(--border))' }}
+            interval={0}
+            angle={-25}
+            textAnchor="end"
+            height={60}
+          />
+          <YAxis 
+            type="number"
             tickFormatter={(value) => showPercentages ? `${value}%` : value.toLocaleString()}
             domain={showPercentages ? [0, 100] : [0, 'auto']}
             tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-          />
-          <YAxis 
-            type="category" 
-            dataKey="name" 
-            width={leftMargin - 10}
-            tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
             tickLine={false}
             axisLine={false}
+            width={50}
           />
           <Tooltip 
             formatter={(value: number, name: string, props) => [
               showPercentages 
                 ? `${props.payload.percentage.toFixed(1)}% (${props.payload.value.toLocaleString()})`
                 : value.toLocaleString(),
-              ''
+              props.payload.fullName
             ]}
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
@@ -64,8 +72,8 @@ export function HorizontalBarChart({ data, title, showPercentages = true }: Hori
           />
           <Bar 
             dataKey={showPercentages ? "percentage" : "value"} 
-            radius={[0, 4, 4, 0]}
-            barSize={24}
+            radius={[4, 4, 0, 0]}
+            barSize={40}
             animationBegin={0}
             animationDuration={600}
             animationEasing="ease-out"
@@ -75,9 +83,9 @@ export function HorizontalBarChart({ data, title, showPercentages = true }: Hori
             ))}
             <LabelList 
               dataKey={showPercentages ? "percentage" : "value"}
-              position="right" 
+              position="top" 
               formatter={(value: number) => showPercentages ? `${value.toFixed(1)}%` : value.toLocaleString()}
-              style={{ fill: 'hsl(var(--foreground))', fontSize: 12, fontWeight: 500 }}
+              style={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 500 }}
             />
           </Bar>
         </BarChart>
