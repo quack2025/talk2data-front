@@ -238,6 +238,11 @@ export const translations = {
       messages: 'msgs',
       fullscreen: 'Pantalla completa',
       clickToZoom: 'Clic para ampliar',
+      variablesAnalyzed: 'Variables analizadas',
+      sampleSize: 'Tamaño de muestra',
+      missingValues: 'Valores perdidos',
+      warnings: 'Advertencias',
+      filtersApplied: 'Filtros aplicados',
     },
     // Exports
     exports: {
@@ -572,6 +577,11 @@ export const translations = {
       messages: 'msgs',
       fullscreen: 'Fullscreen',
       clickToZoom: 'Click to zoom',
+      variablesAnalyzed: 'Variables Analyzed',
+      sampleSize: 'Sample Size',
+      missingValues: 'Missing Values',
+      warnings: 'Warnings',
+      filtersApplied: 'Filters Applied',
     },
     // Exports
     exports: {

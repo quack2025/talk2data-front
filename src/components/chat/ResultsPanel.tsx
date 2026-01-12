@@ -3,12 +3,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BarChart3, Table as TableIcon, Variable, AlertCircle, Hash, Users, FileWarning, X, ZoomIn } from 'lucide-react';
+import { BarChart3, Table as TableIcon, Variable, AlertCircle, Hash, Users, FileWarning, ZoomIn, PieChart } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { ChartData } from '@/types/database';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
+import { ChartWithTable, DonutChart, HorizontalBarChart } from '@/components/charts';
+import { ProgressBar } from '@/components/charts/ProgressBar';
+import { getChartColor } from '@/lib/chartColors';
+
 // Types for backend data
 interface TableData {
   columns: string[];
@@ -118,45 +122,12 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
           {hasCharts ? (
             <div className="space-y-6">
               {charts.map((chart, index) => (
-                <Card key={index}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <BarChart3 className="h-5 w-5 text-primary" />
-                        {chart.title || `Chart ${index + 1}`}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedChart(chart)}
-                        className="text-muted-foreground hover:text-primary"
-                      >
-                        <ZoomIn className="h-4 w-4 mr-1" />
-                        {t.chat.fullscreen}
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div 
-                      className="flex justify-center cursor-pointer group"
-                      onClick={() => setSelectedChart(chart)}
-                    >
-                      <div className="relative">
-                        <img
-                          src={`data:image/png;base64,${chart.chart_base64}`}
-                          alt={chart.title || `Chart ${index + 1}`}
-                          className="max-w-full h-auto rounded-lg border transition-opacity group-hover:opacity-90"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 rounded-lg">
-                          <div className="bg-background/90 text-foreground px-3 py-1.5 rounded-full text-sm flex items-center gap-1.5 shadow-lg">
-                            <ZoomIn className="h-4 w-4" />
-                            {t.chat.clickToZoom}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ChartWithTable 
+                  key={index}
+                  chart={chart}
+                  index={index}
+                  onZoom={() => setSelectedChart(chart)}
+                />
               ))}
             </div>
           ) : (
@@ -178,6 +149,10 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
             <div className="space-y-6">
               {tablesData.map((analysis, index) => {
                 const tableData = analysis.table_data!;
+                const percentColIndex = tableData.columns.findIndex(col => 
+                  col.toLowerCase().includes('percent') || col === '%'
+                );
+                
                 return (
                   <Card key={index}>
                     {tableData.title && (
@@ -203,15 +178,33 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
                           <TableBody>
                             {tableData.rows.map((row, rowIndex) => (
                               <TableRow key={rowIndex}>
-                                {row.map((cell, cellIndex) => (
-                                  <TableCell key={cellIndex}>
-                                    {cell === null || cell === undefined
-                                      ? '-'
-                                      : typeof cell === 'number'
-                                        ? cell.toLocaleString(undefined, { maximumFractionDigits: 2 })
-                                        : String(cell)}
-                                  </TableCell>
-                                ))}
+                                {row.map((cell, cellIndex) => {
+                                  const isPercentCell = cellIndex === percentColIndex;
+                                  const color = getChartColor(rowIndex);
+                                  
+                                  let percentValue = 0;
+                                  if (isPercentCell && cell !== null && cell !== undefined) {
+                                    if (typeof cell === 'string') {
+                                      percentValue = parseFloat(cell.replace('%', '')) || 0;
+                                    } else if (typeof cell === 'number') {
+                                      percentValue = cell;
+                                    }
+                                  }
+
+                                  return (
+                                    <TableCell key={cellIndex}>
+                                      {isPercentCell ? (
+                                        <ProgressBar value={percentValue} color={color} />
+                                      ) : (
+                                        cell === null || cell === undefined
+                                          ? '-'
+                                          : typeof cell === 'number'
+                                            ? cell.toLocaleString(undefined, { maximumFractionDigits: 2 })
+                                            : String(cell)
+                                      )}
+                                    </TableCell>
+                                  );
+                                })}
                               </TableRow>
                             ))}
                           </TableBody>
@@ -261,7 +254,7 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
                       {metadata.variables_analyzed && metadata.variables_analyzed.length > 0 && (
                         <div className="space-y-2">
                           <p className="text-sm font-medium text-muted-foreground">
-                            Variables Analyzed
+                            {t.chat.variablesAnalyzed}
                           </p>
                           <div className="flex flex-wrap gap-2">
                             {metadata.variables_analyzed.map((variable, vIndex) => (
@@ -284,7 +277,7 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
                           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
                             <Users className="h-4 w-4 text-primary" />
                             <div>
-                              <p className="text-xs text-muted-foreground">Sample Size</p>
+                              <p className="text-xs text-muted-foreground">{t.chat.sampleSize}</p>
                               <p className="font-semibold">{Number(metadata.sample_size).toLocaleString()}</p>
                             </div>
                           </div>
@@ -293,7 +286,7 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
                           <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
                             <Hash className="h-4 w-4 text-orange-500" />
                             <div>
-                              <p className="text-xs text-muted-foreground">Missing Values</p>
+                              <p className="text-xs text-muted-foreground">{t.chat.missingValues}</p>
                               <p className="font-semibold">{Number(metadata.missing_values).toLocaleString()}</p>
                             </div>
                           </div>
@@ -305,7 +298,7 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
                         <div className="space-y-2 pt-2">
                           <p className="text-sm font-medium text-orange-600 flex items-center gap-1">
                             <FileWarning className="h-4 w-4" />
-                            Warnings
+                            {t.chat.warnings}
                           </p>
                           <div className="space-y-1">
                             {metadata.warnings.map((warning, wIndex) => (
@@ -324,7 +317,7 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
                       {/* Filters Applied */}
                       {metadata.filters_applied && Object.keys(metadata.filters_applied).length > 0 && (
                         <div className="space-y-2 pt-2">
-                          <p className="text-sm font-medium text-muted-foreground">Filters Applied</p>
+                          <p className="text-sm font-medium text-muted-foreground">{t.chat.filtersApplied}</p>
                           <div className="text-sm bg-muted/50 p-3 rounded-lg">
                             {Object.entries(metadata.filters_applied).map(([key, value]) => (
                               <div key={key} className="flex justify-between">

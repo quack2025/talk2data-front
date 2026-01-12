@@ -69,10 +69,26 @@ export interface Conversation {
   messages?: Message[];
 }
 
+export type ChartType = 'bar' | 'horizontal_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge';
+
+export interface ChartDataStructured {
+  labels: string[];
+  values: number[];
+  percentages?: number[];
+  colors?: string[];
+}
+
+export interface ChartTableData {
+  columns: string[];
+  rows: (string | number)[][];
+}
+
 export interface ChartData {
   title: string;
-  chart_type: string;
-  chart_base64: string;
+  chart_type: ChartType;
+  chart_base64?: string; // Fallback for compatibility
+  data?: ChartDataStructured;
+  table?: ChartTableData;
 }
 
 export interface Message {
