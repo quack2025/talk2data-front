@@ -236,6 +236,8 @@ export const translations = {
       noVariablesAnalyzed: 'No hay variables analizadas',
       frequencyDistribution: 'Distribución de Frecuencias',
       messages: 'msgs',
+      fullscreen: 'Pantalla completa',
+      clickToZoom: 'Clic para ampliar',
     },
     // Exports
     exports: {
@@ -568,6 +570,8 @@ export const translations = {
       noVariablesAnalyzed: 'No variables analyzed',
       frequencyDistribution: 'Frequency Distribution',
       messages: 'msgs',
+      fullscreen: 'Fullscreen',
+      clickToZoom: 'Click to zoom',
     },
     // Exports
     exports: {
