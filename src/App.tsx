@@ -20,6 +20,7 @@ import ProjectSummary from "./pages/ProjectSummary";
 import Exports from "./pages/Exports";
 import Upload from "./pages/Upload";
 import Chat from "./pages/Chat";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -199,6 +200,15 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Exports />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />
