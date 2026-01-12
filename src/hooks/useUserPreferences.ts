@@ -10,14 +10,14 @@ const DEFAULT_PROMPT_KEY = ['default-prompt'];
 export function useUserPreferences() {
   return useQuery({
     queryKey: PREFERENCES_KEY,
-    queryFn: () => api.get<UserPreferences>('/api/v1/users/me/preferences'),
+    queryFn: () => api.get<UserPreferences>('/users/me/preferences'),
   });
 }
 
 export function useDefaultPrompt() {
   return useQuery({
     queryKey: DEFAULT_PROMPT_KEY,
-    queryFn: () => api.get<DefaultPromptResponse>('/api/v1/users/me/preferences/default-prompt'),
+    queryFn: () => api.get<DefaultPromptResponse>('/users/me/preferences/default-prompt'),
   });
 }
 
@@ -28,7 +28,7 @@ export function useUpdatePreferences() {
 
   return useMutation({
     mutationFn: (data: Partial<UserPreferences>) =>
-      api.patch<UserPreferences>('/api/v1/users/me/preferences', data),
+      api.patch<UserPreferences>('/users/me/preferences', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PREFERENCES_KEY });
       toast({
