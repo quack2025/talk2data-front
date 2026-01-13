@@ -23,21 +23,17 @@ export default function Exports() {
 
   // Use first project by default if available
   const projectId = selectedProjectId || (projects.length > 0 ? projects[0].id : '');
-  const { exports, isLoading, deleteExport } = useExports(projectId, {
+  const { exports, isLoading, deleteExport, handleDownload } = useExports(projectId, {
     exportCreated: t.toasts.exportCreated,
     exportCreatedDesc: t.toasts.exportCreatedDesc,
     exportDeleted: t.toasts.exportDeleted,
+    downloadStarted: t.toasts.downloadStarted,
+    downloadError: t.toasts.downloadError,
     error: t.toasts.error,
   });
 
   const handleDelete = async (id: string) => {
     await deleteExport.mutateAsync(id);
-  };
-
-  const handleDownload = (export_: Export) => {
-    if (export_.download_url) {
-      window.open(export_.download_url, '_blank');
-    }
   };
 
   const isLoadingAll = projectsLoading || isLoading;
