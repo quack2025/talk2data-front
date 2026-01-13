@@ -47,12 +47,16 @@ export function HorizontalBarChart({ data, title, showPercentages = true }: Hori
             axisLine={false}
           />
           <Tooltip 
-            formatter={(value: number, name: string, props) => [
-              showPercentages 
-                ? `${props.payload.percentage.toFixed(1)}% (${props.payload.value.toLocaleString()})`
-                : value.toLocaleString(),
-              ''
-            ]}
+            formatter={(value: number | undefined, name: string, props) => {
+              if (value === undefined || !props?.payload) return ['', ''];
+              const payload = props.payload;
+              return [
+                showPercentages 
+                  ? `${(payload.percentage ?? 0).toFixed(1)}% (${(payload.value ?? 0).toLocaleString()})`
+                  : (value ?? 0).toLocaleString(),
+                ''
+              ];
+            }}
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
               border: '1px solid hsl(var(--border))',
@@ -76,7 +80,10 @@ export function HorizontalBarChart({ data, title, showPercentages = true }: Hori
             <LabelList 
               dataKey={showPercentages ? "percentage" : "value"}
               position="right" 
-              formatter={(value: number) => showPercentages ? `${value.toFixed(1)}%` : value.toLocaleString()}
+              formatter={(value: number | undefined) => {
+                if (value === undefined || value === null) return '';
+                return showPercentages ? `${value.toFixed(1)}%` : value.toLocaleString();
+              }}
               style={{ fill: 'hsl(var(--foreground))', fontSize: 12, fontWeight: 500 }}
             />
           </Bar>
