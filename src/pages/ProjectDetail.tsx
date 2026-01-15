@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,7 @@ import {
   RefreshCw,
   Sparkles,
   ArrowRight,
+  Table2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -40,6 +41,7 @@ import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useLastProject } from '@/hooks/useLastProject';
 import { useExecutiveSummary } from '@/hooks/useExecutiveSummary';
+import { AggfileGeneratorModal } from '@/components/aggfile';
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -47,6 +49,7 @@ export default function ProjectDetail() {
   const { t, language } = useLanguage();
   const dateLocale = language === 'es' ? es : enUS;
   const { setLastProjectId } = useLastProject();
+  const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
 
   // Use the API hooks
   const { data: project, isLoading: projectLoading } = useProject(projectId!);
@@ -162,6 +165,15 @@ export default function ProjectDetail() {
               {t.projectDetail.uploadFiles}
             </Button>
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAggfileModalOpen(true)}
+              disabled={!hasReadyFiles}
+            >
+              <Table2 className="h-4 w-4 mr-2" />
+              {t.aggfile?.generateTables || 'Generar Tablas'}
+            </Button>
+            <Button
               size="sm"
               onClick={() => navigate(`/projects/${projectId}/chat`)}
               disabled={!hasReadyFiles}
@@ -173,7 +185,7 @@ export default function ProjectDetail() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <Card
             className="cursor-pointer hover:border-primary/50 transition-colors"
             onClick={() => navigate(`/projects/${projectId}/upload`)}
@@ -222,6 +234,27 @@ export default function ProjectDetail() {
             <CardContent>
               <CardTitle className="text-base">{t.projectDetail.exportCard}</CardTitle>
               <CardDescription>{t.projectDetail.exportCardDescription}</CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={`cursor-pointer transition-colors ${
+              hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+            }`}
+            onClick={() => hasReadyFiles && setAggfileModalOpen(true)}
+          >
+            <CardHeader className="pb-2">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Table2 className="h-5 w-5 text-primary" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CardTitle className="text-base">{t.aggfile?.generateTablesCard || 'Generar Tablas'}</CardTitle>
+              <CardDescription>
+                {hasReadyFiles 
+                  ? (t.aggfile?.generateTablesCardDescription || 'Excel con tablas cruzadas')
+                  : t.projectDetail.chatCardDisabled}
+              </CardDescription>
             </CardContent>
           </Card>
 
@@ -442,6 +475,13 @@ export default function ProjectDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Aggfile Generator Modal */}
+        <AggfileGeneratorModal
+          open={aggfileModalOpen}
+          onOpenChange={setAggfileModalOpen}
+          projectId={projectId!}
+        />
       </div>
     </AppLayout>
   );

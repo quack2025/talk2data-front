@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FileText, Download, Trash2, MoreVertical, FileSpreadsheet, Presentation, MessageSquare } from 'lucide-react';
+import { FileText, Download, Trash2, MoreVertical, FileSpreadsheet, Presentation, MessageSquare, Table2 } from 'lucide-react';
 import type { Export } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -17,6 +17,7 @@ const formatConfig = {
   pdf: { label: 'PDF', color: 'text-red-500', icon: FileText },
   excel: { label: 'Excel', color: 'text-green-500', icon: FileSpreadsheet },
   pptx: { label: 'PowerPoint', color: 'text-orange-500', icon: Presentation },
+  aggfile: { label: 'Aggfile', color: 'text-blue-500', icon: Table2 },
 };
 
 interface ExportCardProps {
