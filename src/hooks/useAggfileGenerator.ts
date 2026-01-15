@@ -204,9 +204,14 @@ export function useAggfileGenerator(projectId: string) {
     startProgress();
 
     try {
+      // When "all" is selected, send all variable names as an array
+      const analysisVars = state.selectedAnalysis === 'all'
+        ? state.analysisVariables.map(v => v.name)
+        : state.selectedAnalysis;
+
       const config: AggfileConfig = {
         banner_variables: state.selectedBanners,
-        analysis_variables: state.selectedAnalysis,
+        analysis_variables: analysisVars,
         format: {
           value_type: state.format.valueType,
           decimal_places: state.format.decimalPlaces,
