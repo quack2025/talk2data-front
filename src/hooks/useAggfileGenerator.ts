@@ -50,7 +50,7 @@ export function useAggfileGenerator(projectId: string) {
     setState((prev) => ({ ...prev, isLoadingBanners: true }));
     try {
       const response = await api.get<BannerVariablesResponse>(
-        `/api/v1/projects/${projectId}/exports/banner-variables`
+        `/projects/${projectId}/exports/banner-variables`
       );
       setState((prev) => ({
         ...prev,
@@ -73,7 +73,7 @@ export function useAggfileGenerator(projectId: string) {
     setState((prev) => ({ ...prev, isLoadingAnalysis: true }));
     try {
       const response = await api.get<AnalysisVariablesResponse>(
-        `/api/v1/projects/${projectId}/exports/analysis-variables`
+        `/projects/${projectId}/exports/analysis-variables`
       );
       setState((prev) => ({
         ...prev,
@@ -215,7 +215,7 @@ export function useAggfileGenerator(projectId: string) {
       };
 
       const response = await api.post<AggfileResponse>(
-        `/api/v1/projects/${projectId}/exports/aggfile`,
+        `/projects/${projectId}/exports/aggfile`,
         config
       );
 
