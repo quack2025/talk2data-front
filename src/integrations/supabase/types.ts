@@ -86,40 +86,31 @@ export type Database = {
       }
       exports: {
         Row: {
+          conversation_id: string | null
           created_at: string
-          format: string
+          export_type: string
+          generated_by: string
           id: string
-          options: Json | null
           project_id: string
-          s3_key: string | null
-          status: string
-          title: string
-          updated_at: string
-          user_id: string
+          storage_url: string
         }
         Insert: {
+          conversation_id?: string | null
           created_at?: string
-          format?: string
+          export_type: string
+          generated_by: string
           id?: string
-          options?: Json | null
           project_id: string
-          s3_key?: string | null
-          status?: string
-          title: string
-          updated_at?: string
-          user_id: string
+          storage_url: string
         }
         Update: {
+          conversation_id?: string | null
           created_at?: string
-          format?: string
+          export_type?: string
+          generated_by?: string
           id?: string
-          options?: Json | null
           project_id?: string
-          s3_key?: string | null
-          status?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
+          storage_url?: string
         }
         Relationships: [
           {
