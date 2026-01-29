@@ -1,12 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart3, ZoomIn, PieChart, TrendingUp, Gauge } from 'lucide-react';
+import { BarChart3, ZoomIn, PieChart, TrendingUp, Gauge, TableIcon } from 'lucide-react';
 import { DonutChart } from './DonutChart';
 import { HorizontalBarChart } from './HorizontalBarChart';
 import { VerticalBarChart } from './VerticalBarChart';
 import { LineChart } from './LineChart';
 import { NpsGauge } from './NpsGauge';
 import { DataTableWithProgress } from './DataTableWithProgress';
+import { CrosstabTable } from './CrosstabTable';
 import type { ChartData } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -63,6 +64,9 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         return <LineChart data={chart.data!} title={chart.title} />;
       case 'nps_gauge':
         return <NpsGauge data={chart.data!} title={chart.title} />;
+      case 'crosstab':
+        // Crosstab renders as a table, not a chart
+        return null;
       default:
         // Default to horizontal bar for unknown types
         return <HorizontalBarChart data={chart.data!} title={chart.title} />;
@@ -78,6 +82,8 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         return <TrendingUp className="h-5 w-5 text-primary" />;
       case 'nps_gauge':
         return <Gauge className="h-5 w-5 text-primary" />;
+      case 'crosstab':
+        return <TableIcon className="h-5 w-5 text-primary" />;
       default:
         return <BarChart3 className="h-5 w-5 text-primary" />;
     }
@@ -108,14 +114,20 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         {/* Chart */}
         {renderChart()}
 
-        {/* Table with progress bars */}
+        {/* Table with progress bars or crosstab */}
         {hasTable && (
-          <div className="pt-4 border-t">
-            <DataTableWithProgress
-              columns={chart.table!.columns}
-              rows={chart.table!.rows}
-              colors={chart.data?.colors}
-            />
+          <div className={chart.chart_type !== 'crosstab' ? 'pt-4 border-t' : ''}>
+            {chart.chart_type === 'crosstab' ? (
+              <CrosstabTable
+                table={chart.table!}
+              />
+            ) : (
+              <DataTableWithProgress
+                columns={chart.table!.columns}
+                rows={chart.table!.rows}
+                colors={chart.data?.colors}
+              />
+            )}
           </div>
         )}
       </CardContent>

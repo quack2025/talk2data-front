@@ -69,7 +69,7 @@ export interface Conversation {
   messages?: Message[];
 }
 
-export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge';
+export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab';
 
 export interface ChartDataStructured {
   labels: string[];
