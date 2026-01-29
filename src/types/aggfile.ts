@@ -23,6 +23,8 @@ export interface AggfileConfig {
     value_type: ValueFormat;
     decimal_places: number;
     include_bases: boolean;
+    include_significance: boolean;
+    significance_level: number;
   };
 }
 
@@ -46,6 +48,8 @@ export interface AggfileState {
     valueType: ValueFormat;
     decimalPlaces: number;
     includeBases: boolean;
+    includeSignificance: boolean;
+    significanceLevel: number;
   };
   result: AggfileResponse | null;
   error: string | null;

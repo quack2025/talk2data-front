@@ -22,6 +22,8 @@ const initialState: AggfileState = {
     valueType: 'percentage',
     decimalPlaces: DEFAULT_DECIMAL_PLACES,
     includeBases: true,
+    includeSignificance: false,
+    significanceLevel: 0.95,
   },
   result: null,
   error: null,
@@ -161,6 +163,13 @@ export function useAggfileGenerator(projectId: string) {
     }));
   }, []);
 
+  const setIncludeSignificance = useCallback((includeSignificance: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      format: { ...prev.format, includeSignificance },
+    }));
+  }, []);
+
   // Go to next step
   const goToNextStep = useCallback(() => {
     setState((prev) => {
@@ -216,6 +225,8 @@ export function useAggfileGenerator(projectId: string) {
           value_type: state.format.valueType,
           decimal_places: state.format.decimalPlaces,
           include_bases: state.format.includeBases,
+          include_significance: state.format.includeSignificance,
+          significance_level: state.format.significanceLevel,
         },
       };
 
@@ -300,6 +311,7 @@ export function useAggfileGenerator(projectId: string) {
     setValueType,
     setDecimalPlaces,
     setIncludeBases,
+    setIncludeSignificance,
     goToNextStep,
     goToPrevStep,
     generateAggfile,

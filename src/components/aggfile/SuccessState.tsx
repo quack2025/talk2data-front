@@ -10,6 +10,8 @@ interface SuccessStateProps {
     valueType: ValueFormat;
     decimalPlaces: number;
     includeBases: boolean;
+    includeSignificance: boolean;
+    significanceLevel: number;
   };
   onDownload: () => void;
   onClose: () => void;

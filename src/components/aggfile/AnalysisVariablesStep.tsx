@@ -18,6 +18,8 @@ interface AnalysisVariablesStepProps {
     valueType: ValueFormat;
     decimalPlaces: number;
     includeBases: boolean;
+    includeSignificance: boolean;
+    significanceLevel: number;
   };
   isLoading: boolean;
   onToggle: (name: string) => void;
@@ -25,6 +27,7 @@ interface AnalysisVariablesStepProps {
   onSetValueType: (type: ValueFormat) => void;
   onSetDecimalPlaces: (places: number) => void;
   onSetIncludeBases: (include: boolean) => void;
+  onSetIncludeSignificance: (include: boolean) => void;
   onBack: () => void;
   onGenerate: () => void;
   onFetch: () => void;
@@ -186,6 +189,18 @@ export function AnalysisVariablesStep({
             />
             <Label htmlFor="include-bases" className="cursor-pointer">
               {t.aggfile?.includeBases || 'Incluir fila de bases (n)'}
+            </Label>
+          </div>
+
+          {/* Include significance letters */}
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="include-significance"
+              checked={format.includeSignificance}
+              onCheckedChange={(checked) => onSetIncludeSignificance(checked === true)}
+            />
+            <Label htmlFor="include-significance" className="cursor-pointer">
+              Incluir letras de significancia (A, B, C)
             </Label>
           </div>
         </div>

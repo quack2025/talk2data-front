@@ -93,6 +93,7 @@ export function AggfileGeneratorModal({
               onSetValueType={generator.setValueType}
               onSetDecimalPlaces={generator.setDecimalPlaces}
               onSetIncludeBases={generator.setIncludeBases}
+              onSetIncludeSignificance={generator.setIncludeSignificance}
               onBack={generator.goToPrevStep}
               onGenerate={generator.generateAggfile}
               onFetch={generator.fetchAnalysisVariables}
