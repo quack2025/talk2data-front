@@ -243,6 +243,15 @@ export const translations = {
       missingValues: 'Valores perdidos',
       warnings: 'Advertencias',
       filtersApplied: 'Filtros aplicados',
+      // Error & retry
+      serverError: 'Ocurrió un error al procesar tu consulta. Por favor intenta de nuevo.',
+      serviceUnavailable: 'Servicio temporalmente no disponible. Intenta de nuevo en unos momentos.',
+      tryAgain: 'Intentar de nuevo',
+      retrying: 'Reintentando',
+      retryAttempt: 'Reintento',
+      of: 'de',
+      analyzingData: 'Analizando tus datos...',
+      complexQueryHint: 'Esto puede tomar un momento para consultas complejas',
     },
     // Exports
     exports: {
@@ -679,6 +688,15 @@ export const translations = {
       missingValues: 'Missing Values',
       warnings: 'Warnings',
       filtersApplied: 'Filters Applied',
+      // Error & retry
+      serverError: 'An error occurred while processing your query. Please try again.',
+      serviceUnavailable: 'Service temporarily unavailable. Please try again in a moment.',
+      tryAgain: 'Try again',
+      retrying: 'Retrying',
+      retryAttempt: 'Attempt',
+      of: 'of',
+      analyzingData: 'Analyzing your data...',
+      complexQueryHint: 'This may take a few moments for complex queries',
     },
     // Exports
     exports: {

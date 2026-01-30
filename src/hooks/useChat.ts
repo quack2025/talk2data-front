@@ -1,7 +1,7 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import type { Conversation, QueryResponse, Message, ChartData } from '@/types/database';
 
 interface ToastMessages {
@@ -68,13 +68,30 @@ export function useChat(projectId: string, toastMessages?: ToastMessages) {
   };
 }
 
+export interface QueryErrorState {
+  message: string;
+  isServerError: boolean;
+  isServiceUnavailable: boolean;
+  failedQuestion: string;
+}
+
+export interface RetryState {
+  attempt: number;
+  maxAttempts: number;
+  isRetrying: boolean;
+}
+
+const MAX_AUTO_RETRIES = 2;
+
 // Hook para manejar mensajes y queries
 export function useChatMessages(projectId: string, conversationId: string | null, toastMessages?: ToastMessages) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isThinking, setIsThinking] = useState(false);
   const [lastAnalysis, setLastAnalysis] = useState<QueryResponse | null>(null);
-  
+  const [queryError, setQueryError] = useState<QueryErrorState | null>(null);
+  const [retryState, setRetryState] = useState<RetryState>({ attempt: 0, maxAttempts: MAX_AUTO_RETRIES, isRetrying: false });
+
   // Cache de charts por message_id (persistente entre renders)
   const chartsCache = useRef<Record<string, ChartData[]>>({});
 
@@ -85,36 +102,62 @@ export function useChatMessages(projectId: string, conversationId: string | null
     enabled: !!conversationId,
   });
 
+  const executeQuery = useCallback(async (question: string, attempt: number): Promise<QueryResponse> => {
+    setIsThinking(true);
+    setQueryError(null);
+
+    if (attempt > 0) {
+      setRetryState({ attempt, maxAttempts: MAX_AUTO_RETRIES, isRetrying: true });
+    }
+
+    try {
+      const response = await api.post<QueryResponse>(
+        `/conversations/projects/${projectId}/query`,
+        {
+          question,
+          conversation_id: conversationId ?? undefined,
+        },
+        undefined,
+        0, // no retries at API level — we handle retries here for UI feedback
+      );
+
+      setRetryState({ attempt: 0, maxAttempts: MAX_AUTO_RETRIES, isRetrying: false });
+      return response;
+    } catch (err) {
+      const apiErr = err instanceof ApiError ? err : null;
+      const isServer = apiErr?.isServerError ?? false;
+      const isUnavailable = apiErr?.isServiceUnavailable ?? false;
+
+      // Auto-retry on server errors
+      if ((isServer || isUnavailable) && attempt < MAX_AUTO_RETRIES) {
+        await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+        return executeQuery(question, attempt + 1);
+      }
+
+      // All retries exhausted — surface the error
+      setQueryError({
+        message: (err as Error).message,
+        isServerError: isServer,
+        isServiceUnavailable: isUnavailable,
+        failedQuestion: question,
+      });
+      setRetryState({ attempt: 0, maxAttempts: MAX_AUTO_RETRIES, isRetrying: false });
+      throw err;
+    } finally {
+      setIsThinking(false);
+    }
+  }, [projectId, conversationId]);
+
   // Enviar mensaje/pregunta
   const sendMessage = useMutation({
-    mutationFn: async (question: string): Promise<QueryResponse> => {
-      setIsThinking(true);
-
-      try {
-        // Usar el endpoint correcto de query
-        const response = await api.post<QueryResponse>(
-          `/conversations/projects/${projectId}/query`,
-          {
-            question,
-            conversation_id: conversationId ?? undefined,
-          }
-        );
-
-        return response;
-      } finally {
-        setIsThinking(false);
-      }
-    },
+    mutationFn: (question: string) => executeQuery(question, 0),
     onSuccess: (data) => {
-      // Guardar el análisis más reciente para mostrar en el panel
       setLastAnalysis(data);
-      
-      // Guardar charts en cache si vienen en la respuesta
+
       if (data.charts && data.charts.length > 0 && data.message_id) {
         chartsCache.current[data.message_id] = data.charts;
       }
-      
-      // Invalidar queries para refrescar mensajes
+
       if (data.conversation_id) {
         queryClient.invalidateQueries({ queryKey: ['conversation', data.conversation_id] });
       }
@@ -129,9 +172,16 @@ export function useChatMessages(projectId: string, conversationId: string | null
     },
   });
 
+  // Manual retry for failed queries
+  const retryLastQuery = useCallback(() => {
+    if (queryError?.failedQuestion) {
+      sendMessage.mutate(queryError.failedQuestion);
+    }
+  }, [queryError, sendMessage]);
+
   // Obtener mensajes base del backend
   const baseMessages: Message[] = conversationQuery.data?.messages ?? [];
-  
+
   // Enriquecer mensajes con charts del cache
   const messages = useMemo(() => {
     return baseMessages.map(msg => ({
@@ -147,6 +197,10 @@ export function useChatMessages(projectId: string, conversationId: string | null
     isThinking,
     sendMessage,
     lastAnalysis,
+    queryError,
+    retryState,
+    retryLastQuery,
+    clearError: () => setQueryError(null),
     refetch: conversationQuery.refetch,
   };
 }

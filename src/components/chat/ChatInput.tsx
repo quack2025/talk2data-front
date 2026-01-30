@@ -3,14 +3,16 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
+import type { RetryState } from '@/hooks/useChat';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   isThinking?: boolean;
+  retryState?: RetryState;
 }
 
-export function ChatInput({ onSend, disabled, isThinking }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, isThinking, retryState }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { t } = useLanguage();
@@ -65,9 +67,21 @@ export function ChatInput({ onSend, disabled, isThinking }: ChatInputProps) {
         </Button>
       </div>
       {isThinking && (
-        <p className="text-xs text-muted-foreground text-center mt-2 animate-pulse">
-          {t.chat.analyzing}
-        </p>
+        <div className="flex flex-col items-center gap-1 mt-2">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+            <p className="text-xs text-muted-foreground">
+              {retryState?.isRetrying
+                ? `${t.chat.retrying} (${t.chat.retryAttempt} ${retryState.attempt + 1} ${t.chat.of} ${retryState.maxAttempts + 1})...`
+                : t.chat.analyzingData}
+            </p>
+          </div>
+          {!retryState?.isRetrying && (
+            <p className="text-[11px] text-muted-foreground/60">
+              {t.chat.complexQueryHint}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
