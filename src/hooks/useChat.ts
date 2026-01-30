@@ -2,7 +2,7 @@ import { useState, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { api, ApiError } from '@/lib/api';
-import type { Conversation, QueryResponse, Message, ChartData } from '@/types/database';
+import type { Conversation, QueryResponse, Message, ChartData, TableData, VariableInfo } from '@/types/database';
 
 interface ToastMessages {
   conversationError: string;
@@ -92,8 +92,11 @@ export function useChatMessages(projectId: string, conversationId: string | null
   const [queryError, setQueryError] = useState<QueryErrorState | null>(null);
   const [retryState, setRetryState] = useState<RetryState>({ attempt: 0, maxAttempts: MAX_AUTO_RETRIES, isRetrying: false });
 
-  // Cache de charts por message_id (persistente entre renders)
+  // Cache de datos por message_id (persistente entre renders)
   const chartsCache = useRef<Record<string, ChartData[]>>({});
+  const pythonCodeCache = useRef<Record<string, string>>({});
+  const tablesCache = useRef<Record<string, TableData[]>>({});
+  const variablesCache = useRef<Record<string, VariableInfo[]>>({});
 
   // Obtener conversación con mensajes
   const conversationQuery = useQuery({
@@ -154,8 +157,19 @@ export function useChatMessages(projectId: string, conversationId: string | null
     onSuccess: (data) => {
       setLastAnalysis(data);
 
-      if (data.charts && data.charts.length > 0 && data.message_id) {
-        chartsCache.current[data.message_id] = data.charts;
+      if (data.message_id) {
+        if (data.charts && data.charts.length > 0) {
+          chartsCache.current[data.message_id] = data.charts;
+        }
+        if (data.python_code) {
+          pythonCodeCache.current[data.message_id] = data.python_code;
+        }
+        if (data.tables && data.tables.length > 0) {
+          tablesCache.current[data.message_id] = data.tables;
+        }
+        if (data.variables_analyzed && data.variables_analyzed.length > 0) {
+          variablesCache.current[data.message_id] = data.variables_analyzed;
+        }
       }
 
       if (data.conversation_id) {
@@ -182,11 +196,14 @@ export function useChatMessages(projectId: string, conversationId: string | null
   // Obtener mensajes base del backend
   const baseMessages: Message[] = conversationQuery.data?.messages ?? [];
 
-  // Enriquecer mensajes con charts del cache
+  // Enriquecer mensajes con datos del cache
   const messages = useMemo(() => {
     return baseMessages.map(msg => ({
       ...msg,
       charts: msg.charts || chartsCache.current[msg.id] || undefined,
+      python_code: msg.python_code || pythonCodeCache.current[msg.id] || undefined,
+      tables: msg.tables || tablesCache.current[msg.id] || undefined,
+      variables_analyzed: msg.variables_analyzed || variablesCache.current[msg.id] || undefined,
     }));
   }, [baseMessages]);
 

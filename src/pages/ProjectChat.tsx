@@ -186,9 +186,11 @@ export default function ProjectChat() {
         </div>
 
         {/* Results Panel */}
-        <ResultsPanel 
-          hasResults={hasMessages} 
+        <ResultsPanel
+          hasResults={hasMessages}
           charts={lastAnalysis?.charts ?? []}
+          tables={lastAnalysis?.tables ?? []}
+          variablesAnalyzed={lastAnalysis?.variables_analyzed ?? []}
           analysisPerformed={Array.isArray(lastAnalysis?.analysis_performed) ? lastAnalysis.analysis_performed : []}
         />
       </div>

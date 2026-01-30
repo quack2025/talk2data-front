@@ -252,6 +252,18 @@ export const translations = {
       of: 'de',
       analyzingData: 'Analizando tus datos...',
       complexQueryHint: 'Esto puede tomar un momento para consultas complejas',
+      // Export Excel
+      exportExcel: 'Exportar a Excel',
+      exporting: 'Exportando...',
+      exportSuccess: 'Archivo Excel descargado',
+      exportError: 'Error al exportar',
+      // Python code
+      showCode: 'Ver código Python',
+      hideCode: 'Ocultar código',
+      copyCode: 'Copiar código',
+      codeCopied: 'Código copiado',
+      // Variables
+      analysisType: 'Tipo de análisis',
     },
     // Exports
     exports: {
@@ -697,6 +709,18 @@ export const translations = {
       of: 'of',
       analyzingData: 'Analyzing your data...',
       complexQueryHint: 'This may take a few moments for complex queries',
+      // Export Excel
+      exportExcel: 'Export to Excel',
+      exporting: 'Exporting...',
+      exportSuccess: 'Excel file downloaded',
+      exportError: 'Export error',
+      // Python code
+      showCode: 'Show Python code',
+      hideCode: 'Hide code',
+      copyCode: 'Copy code',
+      codeCopied: 'Code copied',
+      // Variables
+      analysisType: 'Analysis type',
     },
     // Exports
     exports: {

@@ -144,6 +144,34 @@ class ApiClient {
 
     return response.json();
   }
+  // Download a file as blob (for Excel exports, etc.)
+  async downloadBlob(endpoint: string, method: "GET" | "POST" = "POST", body?: unknown): Promise<Blob> {
+    const token = await this.getAuthToken();
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    if (body) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    const response = await this.executeRequest(`${this.baseUrl}${endpoint}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({ message: "Download error" }));
+      throw new ApiError(
+        errorBody.detail || errorBody.message || `Error ${response.status}`,
+        response.status,
+      );
+    }
+
+    return response.blob();
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

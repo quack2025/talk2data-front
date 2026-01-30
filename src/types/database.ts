@@ -91,6 +91,28 @@ export interface ChartData {
   table?: ChartTableData;
 }
 
+export interface TableData {
+  columns: string[];
+  rows: (string | number | null)[][];
+  title?: string;
+}
+
+export interface VariableInfo {
+  name: string;
+  label?: string;
+  type?: string;
+  analysis_type?: string;
+}
+
+export interface AnalysisMetadata {
+  analysis_type?: string;
+  variables_analyzed?: VariableInfo[];
+  sample_size?: number;
+  missing_values?: number;
+  warnings?: string[];
+  filters_applied?: Record<string, unknown>;
+}
+
 export interface Message {
   id: string;
   conversation_id: string;
@@ -98,6 +120,9 @@ export interface Message {
   content: string;
   analysis_executed?: Record<string, unknown>;
   charts?: ChartData[];
+  python_code?: string;
+  tables?: TableData[];
+  variables_analyzed?: VariableInfo[];
   created_at: string;
 }
 
@@ -108,6 +133,9 @@ export interface QueryResponse {
   analysis_performed?: Record<string, unknown>[];
   visualizations?: Record<string, unknown>;
   charts?: ChartData[];
+  python_code?: string;
+  tables?: TableData[];
+  variables_analyzed?: VariableInfo[];
 }
 
 export interface Export {
