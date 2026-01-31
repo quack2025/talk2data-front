@@ -45,20 +45,33 @@ src/
 ## Key Patterns
 
 ### API Client (`src/lib/api.ts`)
-Centralized `ApiClient` class. Auto-injects Supabase JWT. Supports JSON and multipart uploads.
+Centralized `ApiClient` class with:
+- Auto-injection of Supabase JWT tokens
+- `ApiError` class with `status`, `isServerError`, `isServiceUnavailable` for error classification
+- Automatic retry with backoff for 5xx errors and network failures (configurable via `retries` param)
+- Supports JSON requests, multipart uploads, and blob downloads
+
 ```typescript
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 api.get<T>(endpoint)
-api.post<T>(endpoint, body)
+api.post<T>(endpoint, body, headers?, retries?)
 api.uploadFile<T>(endpoint, formData)
+api.downloadBlob(endpoint, method?, body?)  // returns Blob for file downloads
 ```
+
 Backend base URL: `VITE_API_BASE_URL` (FastAPI on Railway).
+
+### Error Handling & Retry (`src/hooks/useChat.ts`, `src/pages/ProjectChat.tsx`)
+- `useChatMessages` auto-retries queries up to 2 times on 500/network errors with UI feedback
+- Exposes `queryError` (with `isServerError` / `isServiceUnavailable`), `retryState` (attempt counter), and `retryLastQuery()` for manual retry
+- `ProjectChat` renders contextual error messages (server error vs service unavailable) with "Try again" button
+- `ChatInput` shows retry counter and "complex query" hint during analysis
 
 ### Custom Hooks
 All data fetching uses React Query inside custom hooks:
 - `useProjects()` — Project CRUD
 - `useChat()` — Conversation management
-- `useChatMessages()` — Messages + query sending
+- `useChatMessages()` — Messages + query sending, error/retry state, caches charts/python_code/tables/variables per message
 - `useExecutiveSummary()` — Summary fetch/generation
 - `useProjectFiles()` — File management
 - `useExports()` — Export generation/retrieval
@@ -68,6 +81,30 @@ All data fetching uses React Query inside custom hooks:
 - `useUserPreferences()` — User preferences
 - `useLanguage()` — i18n hook
 - `useMobile()` — Responsive breakpoint
+
+### Chat Features (`src/components/chat/`)
+- **ChatMessage**: Renders user/assistant messages with markdown. For analysis messages:
+  - "Export to Excel" button → `POST /messages/{id}/export/excel` → blob download
+  - Collapsible Python code viewer (dark theme, copy-to-clipboard)
+  - "Analysis executed" badge
+- **ChatInput**: Input with thinking indicator, retry counter, and "complex query" hint
+- **ResultsPanel**: Three-tab panel (Result/Table/Variables):
+  - Accepts `tables: TableData[]` and `variablesAnalyzed: VariableInfo[]` directly from `QueryResponse`
+  - Falls back to extracting from `analysisPerformed` for backward compatibility
+  - Variables tab shows name, label, and analysis_type per variable
+- **ChatSidebar**: Conversation list navigation
+- **ChatSuggestions**: Suggested starter questions
+
+### Types (`src/types/database.ts`)
+Key domain types:
+```typescript
+TableData        // { columns, rows, title? }
+VariableInfo     // { name, label?, type?, analysis_type? }
+AnalysisMetadata // { analysis_type?, variables_analyzed?, sample_size?, missing_values?, warnings?, filters_applied? }
+Message          // includes python_code?, tables?, variables_analyzed?, charts?
+QueryResponse    // includes python_code?, tables?, variables_analyzed?, charts?, analysis_performed?
+ChartData        // { chart_type, title, chart_base64, ... }
+```
 
 ### Authentication
 Supabase Auth with `ProtectedRoute` / `PublicRoute` wrappers in `App.tsx`. Session stored in localStorage.
@@ -91,6 +128,20 @@ Supabase Auth with `ProtectedRoute` / `PublicRoute` wrappers in `App.tsx`. Sessi
 
 ### Path Aliases
 `@/` → `./src/` (configured in vite.config.ts and tsconfig.json)
+
+## Backend API Endpoints (used by frontend)
+
+```
+GET/POST   /projects
+GET/POST   /projects/{id}
+GET/POST   /conversations
+POST       /conversations/projects/{id}/query    → QueryResponse
+GET        /conversations/{id}                   → Conversation with messages
+POST       /messages/{id}/export/excel           → Blob (.xlsx download)
+GET/POST   /analysis/projects/{id}/summary
+POST       /exports
+GET/DELETE /exports/{id}
+```
 
 ## Environment Variables
 
@@ -119,3 +170,5 @@ npm run preview    # Preview production build
 - Dark mode via CSS class strategy (next-themes)
 - TypeScript strict mode is relaxed (no strictNullChecks)
 - Spanish is the default language; English supported
+- All user-facing strings go through `translations.ts` (ES/EN)
+- Error handling: use `ApiError` class for typed error classification; chat queries auto-retry on 5xx
