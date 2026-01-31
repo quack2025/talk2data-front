@@ -2,7 +2,7 @@ import { useState, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { api, ApiError } from '@/lib/api';
-import type { Conversation, QueryResponse, Message, ChartData, TableData, VariableInfo } from '@/types/database';
+import type { Conversation, QueryResponse, Message, ChartData, TableData, VariableInfo, RefinementAction } from '@/types/database';
 
 interface ToastMessages {
   conversationError: string;
@@ -186,6 +186,65 @@ export function useChatMessages(projectId: string, conversationId: string | null
     },
   });
 
+  // Refine a previous query result
+  const refineMessage = useMutation({
+    mutationFn: async ({
+      messageId,
+      action,
+      params,
+    }: {
+      messageId: string;
+      action: RefinementAction;
+      params: Record<string, unknown>;
+    }) => {
+      setIsThinking(true);
+      setQueryError(null);
+      try {
+        const response = await api.post<QueryResponse>(
+          `/conversations/${conversationId}/messages/${messageId}/refine`,
+          {
+            action,
+            params,
+            source_message_id: messageId,
+          }
+        );
+        return response;
+      } finally {
+        setIsThinking(false);
+      }
+    },
+    onSuccess: (data) => {
+      setLastAnalysis(data);
+
+      if (data.message_id) {
+        if (data.charts && data.charts.length > 0) {
+          chartsCache.current[data.message_id] = data.charts;
+        }
+        if (data.python_code) {
+          pythonCodeCache.current[data.message_id] = data.python_code;
+        }
+        if (data.tables && data.tables.length > 0) {
+          tablesCache.current[data.message_id] = data.tables;
+        }
+        if (data.variables_analyzed && data.variables_analyzed.length > 0) {
+          variablesCache.current[data.message_id] = data.variables_analyzed;
+        }
+      }
+
+      if (data.conversation_id) {
+        queryClient.invalidateQueries({ queryKey: ['conversation', data.conversation_id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['conversations', projectId] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: toastMessages?.queryError ?? 'Error processing refinement',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Manual retry for failed queries
   const retryLastQuery = useCallback(() => {
     if (queryError?.failedQuestion) {
@@ -213,6 +272,7 @@ export function useChatMessages(projectId: string, conversationId: string | null
     isLoading: conversationQuery.isLoading,
     isThinking,
     sendMessage,
+    refineMessage,
     lastAnalysis,
     queryError,
     retryState,

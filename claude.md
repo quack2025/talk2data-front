@@ -23,19 +23,21 @@ src/
 ├── pages/              # 14 route pages
 ├── components/
 │   ├── ui/             # shadcn/Radix primitives
-│   ├── chat/           # Chat interface (sidebar, messages, input, results)
-│   ├── charts/         # VerticalBar, HorizontalBar, Donut, Line, NpsGauge, CrosstabTable
+│   ├── chat/           # Chat interface (sidebar, messages, input, results, RefineActions)
+│   ├── charts/         # VerticalBar, HorizontalBar, Donut, Line, NpsGauge, CrosstabTable, CompareMeansChart
 │   ├── projects/       # Project CRUD, cards, table, filters
 │   ├── analysis/       # AutoDetectPanel, GroupedAnalysisResults
 │   ├── summary/        # Executive summary components
 │   ├── exports/        # Export generation UI
-│   ├── aggfile/        # Aggfile/crosstab generator wizard
+│   ├── aggfile/        # 4-step wizard (Banner→Stubs→Configure→Preview) + TemplatesPanel
+│   ├── grouping/       # AutoDetectPanel, ManualGrouper, VariableGroupsManager
+│   ├── waves/          # WaveManager, WaveComparisonChart
 │   ├── upload/         # File upload (react-dropzone)
 │   ├── settings/       # User settings UI
-│   └── layout/         # AppLayout wrapper
-├── hooks/              # 12 custom hooks (useProjects, useChat, useChatMessages, etc.)
+│   └── layout/         # AppLayout wrapper + API Docs link
+├── hooks/              # 15 custom hooks (useProjects, useChat, useVariableGroups, useWaves, etc.)
 ├── contexts/           # LanguageContext, SummaryNotificationContext
-├── types/              # database.ts, aggfile.ts, autodetect.ts, userPreferences.ts
+├── types/              # database.ts, aggfile.ts, variableGroups.ts, waves.ts, autodetect.ts
 ├── i18n/               # translations.ts + language detection
 ├── lib/                # api.ts (ApiClient), chartColors.ts, utils.ts
 ├── integrations/       # Supabase client setup
@@ -71,13 +73,15 @@ Backend base URL: `VITE_API_BASE_URL` (FastAPI on Railway).
 All data fetching uses React Query inside custom hooks:
 - `useProjects()` — Project CRUD
 - `useChat()` — Conversation management
-- `useChatMessages()` — Messages + query sending, error/retry state, caches charts/python_code/tables/variables per message
+- `useChatMessages()` — Messages + query sending + refineMessage, error/retry state, caches per message
 - `useExecutiveSummary()` — Summary fetch/generation
 - `useProjectFiles()` — File management
 - `useExports()` — Export generation/retrieval
-- `useAggfileGenerator()` — Crosstab wizard
+- `useAggfileGenerator()` — 4-step wizard with GenerateTablesConfig builder, preview, templates
 - `useAutoDetect()` — Variable auto-detection
 - `useGroupedAnalysis()` — Grouped analysis results
+- `useVariableGroups()` — Variable group CRUD + auto-detect
+- `useWaves()` — Wave CRUD + comparison
 - `useUserPreferences()` — User preferences
 - `useLanguage()` — i18n hook
 - `useMobile()` — Responsive breakpoint
@@ -124,7 +128,7 @@ Supabase Auth with `ProtectedRoute` / `PublicRoute` wrappers in `App.tsx`. Sessi
 | `/settings` | User settings |
 
 ### Chart Types
-`bar`, `horizontal_bar`, `line`, `pie`, `donut`, `nps_gauge`, `crosstab` — colors via `getChartColor(index)` from `lib/chartColors.ts`.
+`bar`, `horizontal_bar`, `line`, `pie`, `donut`, `nps_gauge`, `crosstab`, `compare_means` — colors via `getChartColor(index)` from `lib/chartColors.ts`.
 
 ### Path Aliases
 `@/` → `./src/` (configured in vite.config.ts and tsconfig.json)
@@ -135,12 +139,24 @@ Supabase Auth with `ProtectedRoute` / `PublicRoute` wrappers in `App.tsx`. Sessi
 GET/POST   /projects
 GET/POST   /projects/{id}
 GET/POST   /conversations
-POST       /conversations/projects/{id}/query    → QueryResponse
-GET        /conversations/{id}                   → Conversation with messages
-POST       /messages/{id}/export/excel           → Blob (.xlsx download)
+POST       /conversations/projects/{id}/query         → QueryResponse
+GET        /conversations/{id}                        → Conversation with messages
+POST       /conversations/{id}/messages/{mid}/refine  → QueryResponse (refinement)
+POST       /messages/{id}/export/excel                → Blob (.xlsx download)
 GET/POST   /analysis/projects/{id}/summary
 POST       /exports
 GET/DELETE /exports/{id}
+POST       /projects/{id}/generate-tables/preview     → GenerateTablesPreviewResponse
+POST       /projects/{id}/generate-tables              → GenerateTablesResponse
+POST       /projects/{id}/generate-tables/export       → Blob (.xlsx)
+GET/POST   /projects/{id}/table-templates              → Template CRUD
+PUT/DELETE /projects/{id}/table-templates/{tid}
+GET/POST   /variable-groups/projects/{id}/variable-groups       → Variable Group CRUD
+POST       /variable-groups/projects/{id}/variable-groups/auto-detect → AutoDetectResponse
+PUT/DELETE /variable-groups/{gid}
+GET/POST   /projects/{id}/waves                        → Wave CRUD
+POST       /projects/{id}/waves/compare                → WaveComparisonResult
+PUT/DELETE /projects/{id}/waves/{wid}
 ```
 
 ## Environment Variables

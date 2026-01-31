@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -132,13 +133,24 @@ export function AppSidebar() {
             </TooltipContent>
           </Tooltip>
         ) : (
-          <Link
-            to="/settings"
-            className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
-          >
-            <Settings className="h-5 w-5 shrink-0" />
-            <span>{t.sidebar.settings}</span>
-          </Link>
+          <>
+            <Link
+              to="/settings"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
+            >
+              <Settings className="h-5 w-5 shrink-0" />
+              <span>{t.sidebar.settings}</span>
+            </Link>
+            <a
+              href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/docs`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
+            >
+              <ExternalLink className="h-5 w-5 shrink-0" />
+              <span>API Docs</span>
+            </a>
+          </>
         )}
 
         <Button

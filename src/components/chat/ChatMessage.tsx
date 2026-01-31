@@ -3,19 +3,22 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Bot, User, BarChart3, FileSpreadsheet, Loader2, Code2, Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
-import type { Message } from '@/types/database';
+import type { Message, RefinementAction } from '@/types/database';
 import { format } from 'date-fns';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { RefineActions } from './RefineActions';
 
 interface ChatMessageProps {
   message: Message;
+  onRefine?: (messageId: string, action: RefinementAction, params: Record<string, unknown>) => void;
+  isRefining?: boolean;
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, onRefine, isRefining = false }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -177,6 +180,15 @@ export function ChatMessage({ message }: ChatMessageProps) {
               {exporting ? t.chat.exporting : t.chat.exportExcel}
             </Button>
           </div>
+        )}
+
+        {/* Refine actions */}
+        {hasAnalysis && onRefine && (
+          <RefineActions
+            message={message}
+            onRefine={(action, params) => onRefine(message.id, action, params)}
+            disabled={isRefining}
+          />
         )}
 
         <span className="text-xs text-muted-foreground mt-1">

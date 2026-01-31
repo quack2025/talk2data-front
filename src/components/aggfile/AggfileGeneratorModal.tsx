@@ -8,6 +8,8 @@ import {
 import { useAggfileGenerator } from '@/hooks/useAggfileGenerator';
 import { BannerVariablesStep } from './BannerVariablesStep';
 import { AnalysisVariablesStep } from './AnalysisVariablesStep';
+import { ConfigureStep } from './ConfigureStep';
+import { PreviewStep } from './PreviewStep';
 import { GeneratingState } from './GeneratingState';
 import { SuccessState } from './SuccessState';
 import { ErrorState } from './ErrorState';
@@ -38,9 +40,13 @@ export function AggfileGeneratorModal({
   const getStepInfo = () => {
     switch (generator.step) {
       case 'banners':
-        return { step: 1, total: 2 };
-      case 'analysis':
-        return { step: 2, total: 2 };
+        return { step: 1, total: 4 };
+      case 'stubs':
+        return { step: 2, total: 4 };
+      case 'configure':
+        return { step: 3, total: 4 };
+      case 'preview':
+        return { step: 4, total: 4 };
       default:
         return null;
     }
@@ -48,19 +54,26 @@ export function AggfileGeneratorModal({
 
   const stepInfo = getStepInfo();
 
+  const analysisCount =
+    generator.selectedAnalysis === 'all'
+      ? generator.analysisVariables.length
+      : generator.selectedAnalysis.length;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg h-[80vh] max-h-[700px] flex flex-col p-0 gap-0">
         <DialogHeader className="px-4 pt-4 pb-2 shrink-0">
           <div className="flex items-center justify-between">
-            <DialogTitle>{t.aggfile?.title || 'Generar Tablas Cruzadas'}</DialogTitle>
+            <DialogTitle>
+              {t.aggfile?.title || 'Generar Tablas Cruzadas'}
+            </DialogTitle>
             {stepInfo && (
               <span className="text-sm text-muted-foreground">
                 {t.aggfile?.step || 'Paso'} {stepInfo.step}/{stepInfo.total}
               </span>
             )}
           </div>
-          {(generator.step === 'banners' || generator.step === 'analysis') && (
+          {stepInfo && (
             <DialogDescription>
               {t.aggfile?.description ||
                 'Genera un archivo Excel con tablas cruzadas para tu estudio'}
@@ -78,25 +91,55 @@ export function AggfileGeneratorModal({
               onToggle={generator.toggleBanner}
               onNext={generator.goToNextStep}
               onFetch={generator.fetchBannerVariables}
-              canProceed={generator.canProceedToAnalysis}
+              canProceed={generator.canProceedToStubs}
             />
           )}
 
-          {generator.step === 'analysis' && (
+          {generator.step === 'stubs' && (
             <AnalysisVariablesStep
               variables={generator.analysisVariables}
               selectedAnalysis={generator.selectedAnalysis}
-              format={generator.format}
               isLoading={generator.isLoadingAnalysis}
               onToggle={generator.toggleAnalysis}
               onSetMode={generator.setAnalysisMode}
+              onBack={generator.goToPrevStep}
+              onNext={generator.goToNextStep}
+              onFetch={generator.fetchAnalysisVariables}
+              canProceed={generator.canProceedToConfigure}
+            />
+          )}
+
+          {generator.step === 'configure' && (
+            <ConfigureStep
+              projectId={projectId}
+              analysisTypes={generator.analysisTypes}
+              format={generator.format}
+              title={generator.title}
+              currentConfig={generator.buildConfig()}
+              onToggleAnalysisType={generator.toggleAnalysisType}
               onSetValueType={generator.setValueType}
               onSetDecimalPlaces={generator.setDecimalPlaces}
               onSetIncludeBases={generator.setIncludeBases}
               onSetIncludeSignificance={generator.setIncludeSignificance}
+              onSetSignificanceLevel={generator.setSignificanceLevel}
+              onSetTitle={generator.setTitle}
               onBack={generator.goToPrevStep}
-              onGenerate={generator.generateAggfile}
-              onFetch={generator.fetchAnalysisVariables}
+              onNext={generator.goToNextStep}
+              canProceed={generator.canProceedToPreview}
+            />
+          )}
+
+          {generator.step === 'preview' && (
+            <PreviewStep
+              preview={generator.preview}
+              isLoading={generator.isLoadingPreview}
+              error={generator.error}
+              selectedBannersCount={generator.selectedBanners.length}
+              selectedAnalysisCount={analysisCount}
+              onFetchPreview={generator.fetchPreview}
+              onBack={generator.goToPrevStep}
+              onGenerate={generator.generateTables}
+              onExportExcel={generator.exportToExcel}
               canGenerate={generator.canGenerate}
             />
           )}
@@ -104,20 +147,18 @@ export function AggfileGeneratorModal({
           {generator.step === 'generating' && (
             <GeneratingState
               progress={generator.progress}
-              nQuestions={
-                generator.selectedAnalysis === 'all'
-                  ? generator.analysisVariables.length
-                  : generator.selectedAnalysis.length
-              }
+              nQuestions={analysisCount}
               nBanners={generator.selectedBanners.length}
             />
           )}
 
-          {generator.step === 'success' && generator.result && (
+          {generator.step === 'success' && (
             <SuccessState
               result={generator.result}
+              generateTablesResult={generator.generateTablesResult}
               format={generator.format}
               onDownload={generator.downloadResult}
+              onExportExcel={generator.exportToExcel}
               onClose={handleClose}
             />
           )}

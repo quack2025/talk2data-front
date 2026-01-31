@@ -1,6 +1,8 @@
 export { AggfileGeneratorModal } from './AggfileGeneratorModal';
 export { BannerVariablesStep } from './BannerVariablesStep';
 export { AnalysisVariablesStep } from './AnalysisVariablesStep';
+export { ConfigureStep } from './ConfigureStep';
+export { PreviewStep } from './PreviewStep';
 export { GeneratingState } from './GeneratingState';
 export { SuccessState } from './SuccessState';
 export { ErrorState } from './ErrorState';

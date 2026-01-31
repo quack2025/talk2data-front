@@ -6,6 +6,7 @@ import { HorizontalBarChart } from './HorizontalBarChart';
 import { VerticalBarChart } from './VerticalBarChart';
 import { LineChart } from './LineChart';
 import { NpsGauge } from './NpsGauge';
+import { CompareMeansChart } from './CompareMeansChart';
 import { DataTableWithProgress } from './DataTableWithProgress';
 import { CrosstabTable } from './CrosstabTable';
 import type { ChartData } from '@/types/database';
@@ -64,6 +65,8 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         return <LineChart data={chart.data!} title={chart.title} />;
       case 'nps_gauge':
         return <NpsGauge data={chart.data!} title={chart.title} />;
+      case 'compare_means':
+        return <CompareMeansChart data={chart.data!} title={chart.title} />;
       case 'crosstab':
         // Crosstab renders as a table, not a chart
         return null;
@@ -82,6 +85,8 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         return <TrendingUp className="h-5 w-5 text-primary" />;
       case 'nps_gauge':
         return <Gauge className="h-5 w-5 text-primary" />;
+      case 'compare_means':
+        return <BarChart3 className="h-5 w-5 text-primary" />;
       case 'crosstab':
         return <TableIcon className="h-5 w-5 text-primary" />;
       default:

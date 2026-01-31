@@ -4,50 +4,33 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
 import { VariableCheckbox } from './VariableCheckbox';
 import { ChevronLeft } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import type { AnalysisVariable, ValueFormat } from '@/types/aggfile';
+import type { AnalysisVariable } from '@/types/aggfile';
 
 interface AnalysisVariablesStepProps {
   variables: AnalysisVariable[];
   selectedAnalysis: string[] | 'all';
-  format: {
-    valueType: ValueFormat;
-    decimalPlaces: number;
-    includeBases: boolean;
-    includeSignificance: boolean;
-    significanceLevel: number;
-  };
   isLoading: boolean;
   onToggle: (name: string) => void;
   onSetMode: (mode: 'all' | 'selected') => void;
-  onSetValueType: (type: ValueFormat) => void;
-  onSetDecimalPlaces: (places: number) => void;
-  onSetIncludeBases: (include: boolean) => void;
-  onSetIncludeSignificance: (include: boolean) => void;
   onBack: () => void;
-  onGenerate: () => void;
+  onNext: () => void;
   onFetch: () => void;
-  canGenerate: boolean;
+  canProceed: boolean;
 }
 
 export function AnalysisVariablesStep({
   variables,
   selectedAnalysis,
-  format,
   isLoading,
   onToggle,
   onSetMode,
-  onSetValueType,
-  onSetDecimalPlaces,
-  onSetIncludeBases,
   onBack,
-  onGenerate,
+  onNext,
   onFetch,
-  canGenerate,
+  canProceed,
 }: AnalysisVariablesStepProps) {
   const { t } = useLanguage();
 
@@ -74,21 +57,18 @@ export function AnalysisVariablesStep({
     <div className="flex flex-col h-full">
       <div className="px-4 pt-4 pb-2 space-y-1">
         <h3 className="font-semibold">
-          {t.aggfile?.step2Title || 'Configura las preguntas y formato'}
+          {t.aggfile?.step2Title || 'Selecciona las preguntas a analizar'}
         </h3>
         <p className="text-sm text-muted-foreground">
           {t.aggfile?.step2Description ||
-            'Elige qué preguntas cruzar y cómo mostrar los resultados'}
+            'Elige qué preguntas cruzar con las variables de banner'}
         </p>
       </div>
 
       <ScrollArea className="flex-1 px-4">
-        <div className="space-y-6 pb-4">
+        <div className="space-y-4 pb-4">
           {/* Analysis mode selection */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">
-              {t.aggfile?.questionsLabel || 'Preguntas a analizar'}
-            </h4>
             <RadioGroup
               value={isAllMode ? 'all' : 'selected'}
               onValueChange={(v) => onSetMode(v as 'all' | 'selected')}
@@ -110,7 +90,7 @@ export function AnalysisVariablesStep({
 
           {/* Variable list (only when "selected" mode) */}
           {!isAllMode && (
-            <div className="space-y-2 pl-6">
+            <div className="space-y-2 pl-4">
               {variables.map((variable) => (
                 <VariableCheckbox
                   key={variable.name}
@@ -126,83 +106,6 @@ export function AnalysisVariablesStep({
               ))}
             </div>
           )}
-
-          <Separator />
-
-          {/* Format options */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">
-              {t.aggfile?.formatLabel || 'Formato de valores'}
-            </h4>
-            <RadioGroup
-              value={format.valueType}
-              onValueChange={(v) => onSetValueType(v as ValueFormat)}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="percentage" id="percentage" />
-                <Label htmlFor="percentage" className="cursor-pointer">
-                  {t.aggfile?.percentages || 'Porcentajes'} (%)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="decimal" id="decimal" />
-                <Label htmlFor="decimal" className="cursor-pointer">
-                  {t.aggfile?.decimals || 'Decimales'} (0.XX)
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="count" id="count" />
-                <Label htmlFor="count" className="cursor-pointer">
-                  {t.aggfile?.frequencies || 'Frecuencias'} (n)
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Decimal places */}
-          {format.valueType !== 'count' && (
-            <div className="space-y-2">
-              <Label>{t.aggfile?.decimalPlaces || 'Decimales'}</Label>
-              <RadioGroup
-                value={String(format.decimalPlaces)}
-                onValueChange={(v) => onSetDecimalPlaces(Number(v))}
-                className="flex gap-4"
-              >
-                {[0, 1, 2].map((n) => (
-                  <div key={n} className="flex items-center space-x-1">
-                    <RadioGroupItem value={String(n)} id={`dec-${n}`} />
-                    <Label htmlFor={`dec-${n}`} className="cursor-pointer">
-                      {n}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-          )}
-
-          {/* Include bases */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="include-bases"
-              checked={format.includeBases}
-              onCheckedChange={(checked) => onSetIncludeBases(checked === true)}
-            />
-            <Label htmlFor="include-bases" className="cursor-pointer">
-              {t.aggfile?.includeBases || 'Incluir fila de bases (n)'}
-            </Label>
-          </div>
-
-          {/* Include significance letters */}
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="include-significance"
-              checked={format.includeSignificance}
-              onCheckedChange={(checked) => onSetIncludeSignificance(checked === true)}
-            />
-            <Label htmlFor="include-significance" className="cursor-pointer">
-              Incluir letras de significancia (A, B, C)
-            </Label>
-          </div>
         </div>
       </ScrollArea>
 
@@ -211,8 +114,8 @@ export function AnalysisVariablesStep({
           <ChevronLeft className="h-4 w-4" />
           {t.common.back}
         </Button>
-        <Button onClick={onGenerate} disabled={!canGenerate} className="flex-1">
-          {t.aggfile?.generate || 'Generar Excel'}
+        <Button onClick={onNext} disabled={!canProceed} className="flex-1">
+          {t.common.continue}
         </Button>
       </div>
     </div>

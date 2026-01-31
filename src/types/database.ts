@@ -69,13 +69,14 @@ export interface Conversation {
   messages?: Message[];
 }
 
-export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab';
+export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab' | 'compare_means';
 
 export interface ChartDataStructured {
   labels: string[];
   values: number[];
   percentages?: number[];
   colors?: string[];
+  error_bars?: number[];
 }
 
 export interface ChartTableData {
@@ -136,6 +137,21 @@ export interface QueryResponse {
   python_code?: string;
   tables?: TableData[];
   variables_analyzed?: VariableInfo[];
+}
+
+// Refinement types for post-query modification
+export type RefinementAction =
+  | 'add_significance'
+  | 'change_banner'
+  | 'add_filter'
+  | 'change_analysis_type'
+  | 'add_crosstab'
+  | 'export_excel';
+
+export interface RefinementRequest {
+  action: RefinementAction;
+  params: Record<string, unknown>;
+  source_message_id: string;
 }
 
 export interface Export {

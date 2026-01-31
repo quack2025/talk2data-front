@@ -8,6 +8,7 @@ import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
 import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw } from 'lucide-react';
+import type { RefinementAction } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 
@@ -26,7 +27,7 @@ export default function ProjectChat() {
   };
 
   const { conversations, isLoading: conversationsLoading, createConversation, error: conversationsError } = useChat(projectId!, toastMessages);
-  const { messages, isLoading: messagesLoading, isThinking, sendMessage, lastAnalysis, queryError, retryState, retryLastQuery, clearError } = useChatMessages(projectId!, activeConversationId, toastMessages);
+  const { messages, isLoading: messagesLoading, isThinking, sendMessage, refineMessage, lastAnalysis, queryError, retryState, retryLastQuery, clearError } = useChatMessages(projectId!, activeConversationId, toastMessages);
 
   // Auto-select first conversation or create new one
   useEffect(() => {
@@ -67,6 +68,10 @@ export default function ProjectChat() {
     } else {
       sendMessage.mutate(content);
     }
+  };
+
+  const handleRefine = (messageId: string, action: RefinementAction, params: Record<string, unknown>) => {
+    refineMessage.mutate({ messageId, action, params });
   };
 
   const hasMessages = messages.length > 0;
@@ -110,7 +115,12 @@ export default function ProjectChat() {
             ) : hasMessages ? (
               <div className="py-4">
                 {messages.map((message) => (
-                  <ChatMessage key={message.id} message={message} />
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    onRefine={handleRefine}
+                    isRefining={isThinking}
+                  />
                 ))}
                 {isThinking && (
                   <div className="flex gap-3 p-4">
