@@ -42,6 +42,9 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useLastProject } from '@/hooks/useLastProject';
 import { useExecutiveSummary } from '@/hooks/useExecutiveSummary';
 import { AggfileGeneratorModal } from '@/components/aggfile';
+import { VariableGroupsManager } from '@/components/grouping';
+import { WaveManager } from '@/components/waves';
+import { useProjectVariables } from '@/hooks/useProjectVariables';
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -55,6 +58,7 @@ export default function ProjectDetail() {
   const { data: project, isLoading: projectLoading } = useProject(projectId!);
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
   const { data: summary, isLoading: summaryLoading } = useExecutiveSummary(projectId!);
+  const { data: variableNames = [] } = useProjectVariables(projectId);
 
   // Track last used project
   useEffect(() => {
@@ -475,6 +479,43 @@ export default function ProjectDetail() {
             )}
           </CardContent>
         </Card>
+
+        {/* Variable Groups Section */}
+        {hasReadyFiles && variableNames.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t.grouping?.title || 'Grupos de Variables'}</CardTitle>
+              <CardDescription>
+                {t.grouping?.autoDetectDescription || 'Organiza las variables en grupos para análisis más estructurados'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <VariableGroupsManager
+                projectId={projectId!}
+                availableVariables={variableNames}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Wave Manager Section (only for tracking studies) */}
+        {hasReadyFiles && project.is_tracking && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t.waves?.title || 'Waves / Tracking'}</CardTitle>
+              <CardDescription>
+                {t.waves?.description || 'Gestiona las olas del estudio y compara resultados entre periodos'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WaveManager
+                projectId={projectId!}
+                availableFiles={files?.map(f => ({ id: f.id, name: f.original_name })) || []}
+                availableVariables={variableNames}
+              />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Aggfile Generator Modal */}
         <AggfileGeneratorModal

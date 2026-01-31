@@ -184,7 +184,14 @@ export function ManualGrouper({
               </div>
               <div className="space-y-1">
                 <Label>{groupingT?.groupType || 'Tipo'}</Label>
-                <Select value={groupType} onValueChange={setGroupType}>
+                <Select 
+                  value={groupType} 
+                  onValueChange={(value) => {
+                    if (GROUP_TYPES.includes(value as typeof GROUP_TYPES[number])) {
+                      setGroupType(value as 'awareness' | 'custom' | 'grid' | 'ranking' | 'scale');
+                    }
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
