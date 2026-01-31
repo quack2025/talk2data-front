@@ -3,59 +3,52 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { BarChart3, Table as TableIcon, Variable, AlertCircle, Hash, Users, FileWarning, ZoomIn, PieChart } from 'lucide-react';
+import { BarChart3, Table as TableIcon, Variable } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import type { ChartData } from '@/types/database';
+import type { ChartData, TableData, VariableInfo } from '@/types/database';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import { ChartWithTable, DonutChart, HorizontalBarChart } from '@/components/charts';
+import { ChartWithTable } from '@/components/charts';
 import { ProgressBar } from '@/components/charts/ProgressBar';
 import { getChartColor } from '@/lib/chartColors';
-
-// Types for backend data
-interface TableData {
-  columns: string[];
-  rows: (string | number | null)[][];
-  title?: string;
-}
-
-interface VariableInfo {
-  name: string;
-  label?: string;
-  type?: string;
-}
-
-interface AnalysisMetadata {
-  analysis_type?: string;
-  variables_analyzed?: VariableInfo[];
-  sample_size?: number;
-  missing_values?: number;
-  warnings?: string[];
-  filters_applied?: Record<string, unknown>;
-}
-
-interface AnalysisPerformedItem {
-  table_data?: TableData;
-  analysis_metadata?: AnalysisMetadata;
-  [key: string]: unknown;
-}
 
 interface ResultsPanelProps {
   hasResults: boolean;
   charts?: ChartData[];
-  analysisPerformed?: AnalysisPerformedItem[];
+  tables?: TableData[];
+  variablesAnalyzed?: VariableInfo[];
+  analysisPerformed?: Record<string, unknown>[];
 }
 
-export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsPanelProps) {
+export function ResultsPanel({ hasResults, charts, tables, variablesAnalyzed, analysisPerformed }: ResultsPanelProps) {
   const [activeTab, setActiveTab] = useState('result');
   const [selectedChart, setSelectedChart] = useState<ChartData | null>(null);
   const { t } = useLanguage();
-  // Check what data is available - with defensive checks
+
+  // Use direct tables prop; fall back to extracting from analysisPerformed for backward compat
+  const tablesData: TableData[] = (() => {
+    if (tables && tables.length > 0) return tables;
+    if (!Array.isArray(analysisPerformed)) return [];
+    return analysisPerformed
+      .filter(a => a && typeof a === 'object' && a.table_data)
+      .map(a => a.table_data as TableData);
+  })();
+
+  // Use direct variablesAnalyzed prop; fall back to analysisPerformed metadata
+  const variables: VariableInfo[] = (() => {
+    if (variablesAnalyzed && variablesAnalyzed.length > 0) return variablesAnalyzed;
+    if (!Array.isArray(analysisPerformed)) return [];
+    const vars: VariableInfo[] = [];
+    for (const a of analysisPerformed) {
+      const meta = a?.analysis_metadata as { variables_analyzed?: VariableInfo[] } | undefined;
+      if (meta?.variables_analyzed) {
+        vars.push(...meta.variables_analyzed);
+      }
+    }
+    return vars;
+  })();
+
   const hasCharts = charts && Array.isArray(charts) && charts.length > 0;
-  const analysisArray = Array.isArray(analysisPerformed) ? analysisPerformed : [];
-  const tablesData = analysisArray.filter(a => a && typeof a === 'object' && a.table_data);
-  const metadataItems = analysisArray.filter(a => a && typeof a === 'object' && a.analysis_metadata);
 
   if (!hasResults) {
     return (
@@ -108,21 +101,21 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
             >
               <Variable className="h-4 w-4" />
               {t.chat.variables}
-              {metadataItems.length > 0 && (
+              {variables.length > 0 && (
                 <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                  {metadataItems.length}
+                  {variables.length}
                 </Badge>
               )}
             </TabsTrigger>
           </TabsList>
         </div>
 
-        {/* Result/Chart Tab - Shows charts from message.charts */}
+        {/* Result/Chart Tab */}
         <TabsContent value="result" className="flex-1 p-6 overflow-auto">
           {hasCharts ? (
             <div className="space-y-6">
               {charts.map((chart, index) => (
-                <ChartWithTable 
+                <ChartWithTable
                   key={index}
                   chart={chart}
                   index={index}
@@ -143,16 +136,15 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
           )}
         </TabsContent>
 
-        {/* Table Tab - Shows table_data from analysis_performed */}
+        {/* Table Tab */}
         <TabsContent value="table" className="flex-1 p-6 overflow-auto">
           {tablesData.length > 0 ? (
             <div className="space-y-6">
-              {tablesData.map((analysis, index) => {
-                const tableData = analysis.table_data!;
-                const percentColIndex = tableData.columns.findIndex(col => 
+              {tablesData.map((tableData, index) => {
+                const percentColIndex = tableData.columns.findIndex(col =>
                   col.toLowerCase().includes('percent') || col === '%'
                 );
-                
+
                 return (
                   <Card key={index}>
                     {tableData.title && (
@@ -181,7 +173,7 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
                                 {row.map((cell, cellIndex) => {
                                   const isPercentCell = cellIndex === percentColIndex;
                                   const color = getChartColor(rowIndex);
-                                  
+
                                   let percentValue = 0;
                                   if (isPercentCell && cell !== null && cell !== undefined) {
                                     if (typeof cell === 'string') {
@@ -227,112 +219,43 @@ export function ResultsPanel({ hasResults, charts, analysisPerformed }: ResultsP
           )}
         </TabsContent>
 
-        {/* Variables Tab - Shows analysis_metadata from analysis_performed */}
+        {/* Variables Tab */}
         <TabsContent value="variables" className="flex-1 p-6 overflow-auto">
-          {metadataItems.length > 0 ? (
-            <div className="space-y-4">
-              {metadataItems.map((analysis, index) => {
-                const metadata = analysis.analysis_metadata!;
-                return (
-                  <Card key={index}>
-                    <CardContent className="py-4 space-y-4">
-                      {/* Analysis Type */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                          <Variable className="h-5 w-5" />
+          {variables.length > 0 ? (
+            <Card>
+              <CardContent className="py-4">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Variable className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-lg">{t.chat.variablesAnalyzed}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {variables.length} {t.chat.variables.toLowerCase()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {variables.map((variable, vIndex) => (
+                      <div key={vIndex} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{variable.name}</span>
+                          {variable.label && (
+                            <span className="text-xs text-muted-foreground">{variable.label}</span>
+                          )}
                         </div>
-                        <div>
-                          <p className="font-semibold text-lg">
-                            {metadata.analysis_type
-                              ?.replace(/_/g, ' ')
-                              .replace(/\b\w/g, l => l.toUpperCase()) || 'Analysis'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Variables Analyzed */}
-                      {metadata.variables_analyzed && metadata.variables_analyzed.length > 0 && (
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium text-muted-foreground">
-                            {t.chat.variablesAnalyzed}
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {metadata.variables_analyzed.map((variable, vIndex) => (
-                              <Badge key={vIndex} variant="secondary" className="text-sm">
-                                {variable.name}
-                                {variable.label && (
-                                  <span className="ml-1 text-muted-foreground">
-                                    ({variable.label})
-                                  </span>
-                                )}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Stats Grid */}
-                      <div className="grid grid-cols-2 gap-4 pt-2">
-                        {metadata.sample_size != null && (
-                          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                            <Users className="h-4 w-4 text-primary" />
-                            <div>
-                              <p className="text-xs text-muted-foreground">{t.chat.sampleSize}</p>
-                              <p className="font-semibold">{Number(metadata.sample_size).toLocaleString()}</p>
-                            </div>
-                          </div>
-                        )}
-                        {metadata.missing_values != null && (
-                          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                            <Hash className="h-4 w-4 text-orange-500" />
-                            <div>
-                              <p className="text-xs text-muted-foreground">{t.chat.missingValues}</p>
-                              <p className="font-semibold">{Number(metadata.missing_values).toLocaleString()}</p>
-                            </div>
-                          </div>
+                        {(variable.analysis_type || variable.type) && (
+                          <Badge variant="outline" className="text-xs">
+                            {variable.analysis_type || variable.type}
+                          </Badge>
                         )}
                       </div>
-
-                      {/* Warnings */}
-                      {metadata.warnings && metadata.warnings.length > 0 && (
-                        <div className="space-y-2 pt-2">
-                          <p className="text-sm font-medium text-orange-600 flex items-center gap-1">
-                            <FileWarning className="h-4 w-4" />
-                            {t.chat.warnings}
-                          </p>
-                          <div className="space-y-1">
-                            {metadata.warnings.map((warning, wIndex) => (
-                              <div
-                                key={wIndex}
-                                className="flex items-start gap-2 text-sm text-orange-600 bg-orange-50 dark:bg-orange-950/30 p-2 rounded"
-                              >
-                                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                                <span>{warning}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Filters Applied */}
-                      {metadata.filters_applied && Object.keys(metadata.filters_applied).length > 0 && (
-                        <div className="space-y-2 pt-2">
-                          <p className="text-sm font-medium text-muted-foreground">{t.chat.filtersApplied}</p>
-                          <div className="text-sm bg-muted/50 p-3 rounded-lg">
-                            {Object.entries(metadata.filters_applied).map(([key, value]) => (
-                              <div key={key} className="flex justify-between">
-                                <span className="text-muted-foreground">{key}:</span>
-                                <span className="font-medium">{String(value)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             <Card>
               <CardContent className="py-12">

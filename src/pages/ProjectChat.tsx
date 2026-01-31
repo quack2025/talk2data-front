@@ -7,7 +7,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
-import { Loader2, MessageSquare } from 'lucide-react';
+import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 
@@ -26,7 +26,7 @@ export default function ProjectChat() {
   };
 
   const { conversations, isLoading: conversationsLoading, createConversation, error: conversationsError } = useChat(projectId!, toastMessages);
-  const { messages, isLoading: messagesLoading, isThinking, sendMessage, lastAnalysis } = useChatMessages(projectId!, activeConversationId, toastMessages);
+  const { messages, isLoading: messagesLoading, isThinking, sendMessage, lastAnalysis, queryError, retryState, retryLastQuery, clearError } = useChatMessages(projectId!, activeConversationId, toastMessages);
 
   // Auto-select first conversation or create new one
   useEffect(() => {
@@ -114,15 +114,58 @@ export default function ProjectChat() {
                 ))}
                 {isThinking && (
                   <div className="flex gap-3 p-4">
-                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     </div>
-                    <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5">
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-foreground/30 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="flex flex-col gap-1">
+                      <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1">
+                            <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-2 h-2 bg-primary/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                          <span className="text-xs text-muted-foreground ml-1">
+                            {retryState.isRetrying
+                              ? `${t.chat.retrying} (${retryState.attempt + 1}/${retryState.maxAttempts + 1})...`
+                              : t.chat.analyzingData}
+                          </span>
+                        </div>
                       </div>
+                      {!retryState.isRetrying && (
+                        <span className="text-[11px] text-muted-foreground/60 ml-1">
+                          {t.chat.complexQueryHint}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {queryError && !isThinking && (
+                  <div className="flex gap-3 p-4">
+                    <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                      {queryError.isServiceUnavailable ? (
+                        <WifiOff className="h-4 w-4 text-destructive" />
+                      ) : (
+                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2 max-w-[85%]">
+                      <div className="bg-destructive/10 border border-destructive/20 rounded-2xl rounded-bl-md px-4 py-3">
+                        <p className="text-sm text-destructive font-medium">
+                          {queryError.isServiceUnavailable
+                            ? t.chat.serviceUnavailable
+                            : t.chat.serverError}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-fit gap-2 text-xs"
+                        onClick={() => { clearError(); retryLastQuery(); }}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        {t.chat.tryAgain}
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -138,13 +181,16 @@ export default function ProjectChat() {
             onSend={handleSendMessage}
             disabled={false}
             isThinking={isThinking}
+            retryState={retryState}
           />
         </div>
 
         {/* Results Panel */}
-        <ResultsPanel 
-          hasResults={hasMessages} 
+        <ResultsPanel
+          hasResults={hasMessages}
           charts={lastAnalysis?.charts ?? []}
+          tables={lastAnalysis?.tables ?? []}
+          variablesAnalyzed={lastAnalysis?.variables_analyzed ?? []}
           analysisPerformed={Array.isArray(lastAnalysis?.analysis_performed) ? lastAnalysis.analysis_performed : []}
         />
       </div>

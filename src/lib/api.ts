@@ -3,10 +3,25 @@ import { supabase } from "@/integrations/supabase/client";
 // FastAPI Backend URL - will be configured via environment or secrets
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
+export class ApiError extends Error {
+  status: number;
+  isServerError: boolean;
+  isServiceUnavailable: boolean;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.isServerError = status >= 500;
+    this.isServiceUnavailable = status === 0 || status === 502 || status === 503 || status === 504;
+  }
+}
+
 interface RequestOptions {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   body?: unknown;
   headers?: Record<string, string>;
+  retries?: number;
 }
 
 class ApiClient {
@@ -21,11 +36,20 @@ class ApiClient {
     return session?.access_token ?? null;
   }
 
+  private async executeRequest(url: string, init: RequestInit): Promise<Response> {
+    try {
+      return await fetch(url, init);
+    } catch {
+      // Network error — backend unreachable
+      throw new ApiError("Service temporarily unavailable", 0);
+    }
+  }
+
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const { method = "GET", body, headers = {} } = options;
+    const { method = "GET", body, headers = {}, retries = 0 } = options;
 
     const token = await this.getAuthToken();
-    
+
     const requestHeaders: Record<string, string> = {
       "Content-Type": "application/json",
       ...headers,
@@ -35,18 +59,43 @@ class ApiClient {
       requestHeaders["Authorization"] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const url = `${this.baseUrl}${endpoint}`;
+    const init: RequestInit = {
       method,
       headers: requestHeaders,
       body: body ? JSON.stringify(body) : undefined,
-    });
+    };
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: "Error de conexión" }));
-      throw new Error(error.detail || error.message || `Error ${response.status}`);
+    let lastError: ApiError | null = null;
+    const maxAttempts = 1 + retries;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const response = await this.executeRequest(url, init);
+
+        if (!response.ok) {
+          const errorBody = await response.json().catch(() => ({ message: "Connection error" }));
+          throw new ApiError(
+            errorBody.detail || errorBody.message || `Error ${response.status}`,
+            response.status,
+          );
+        }
+
+        return await response.json();
+      } catch (err) {
+        lastError = err instanceof ApiError
+          ? err
+          : new ApiError((err as Error).message || "Unknown error", 0);
+
+        // Only retry on server errors (5xx) or network failures
+        if (attempt < maxAttempts - 1 && (lastError.isServerError || lastError.status === 0)) {
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          continue;
+        }
+      }
     }
 
-    return response.json();
+    throw lastError!;
   }
 
   // Convenience methods
@@ -54,8 +103,8 @@ class ApiClient {
     return this.request<T>(endpoint, { method: "GET", headers });
   }
 
-  post<T>(endpoint: string, body?: unknown, headers?: Record<string, string>) {
-    return this.request<T>(endpoint, { method: "POST", body, headers });
+  post<T>(endpoint: string, body?: unknown, headers?: Record<string, string>, retries?: number) {
+    return this.request<T>(endpoint, { method: "POST", body, headers, retries });
   }
 
   put<T>(endpoint: string, body?: unknown, headers?: Record<string, string>) {
@@ -73,24 +122,55 @@ class ApiClient {
   // File upload with multipart/form-data
   async uploadFile<T>(endpoint: string, formData: FormData): Promise<T> {
     const token = await this.getAuthToken();
-    
+
     const headers: Record<string, string> = {};
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const response = await this.executeRequest(`${this.baseUrl}${endpoint}`, {
       method: "POST",
       headers,
       body: formData,
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: "Error de conexión" }));
-      throw new Error(error.detail || error.message || `Error ${response.status}`);
+      const errorBody = await response.json().catch(() => ({ message: "Connection error" }));
+      throw new ApiError(
+        errorBody.detail || errorBody.message || `Error ${response.status}`,
+        response.status,
+      );
     }
 
     return response.json();
+  }
+  // Download a file as blob (for Excel exports, etc.)
+  async downloadBlob(endpoint: string, method: "GET" | "POST" = "POST", body?: unknown): Promise<Blob> {
+    const token = await this.getAuthToken();
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    if (body) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    const response = await this.executeRequest(`${this.baseUrl}${endpoint}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({ message: "Download error" }));
+      throw new ApiError(
+        errorBody.detail || errorBody.message || `Error ${response.status}`,
+        response.status,
+      );
+    }
+
+    return response.blob();
   }
 }
 
