@@ -246,8 +246,11 @@ export const translations = {
       // Error & retry
       serverError: 'Ocurrió un error al procesar tu consulta. Por favor intenta de nuevo.',
       serviceUnavailable: 'Servicio temporalmente no disponible. Intenta de nuevo en unos momentos.',
+      connectionError: 'No se pudo conectar con el servidor. Verifica tu conexión a internet.',
+      timeoutError: 'La consulta tardó demasiado. Intenta con una pregunta más simple.',
       tryAgain: 'Intentar de nuevo',
       retrying: 'Reintentando',
+      retryWait: 'El servidor está procesando...',
       retryAttempt: 'Reintento',
       of: 'de',
       analyzingData: 'Analizando tus datos...',
@@ -781,8 +784,11 @@ export const translations = {
       // Error & retry
       serverError: 'An error occurred while processing your query. Please try again.',
       serviceUnavailable: 'Service temporarily unavailable. Please try again in a moment.',
+      connectionError: 'Could not connect to server. Check your internet connection.',
+      timeoutError: 'Query took too long. Try a simpler question.',
       tryAgain: 'Try again',
       retrying: 'Retrying',
+      retryWait: 'Server is processing...',
       retryAttempt: 'Attempt',
       of: 'of',
       analyzingData: 'Analyzing your data...',

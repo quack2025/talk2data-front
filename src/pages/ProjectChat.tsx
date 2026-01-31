@@ -137,7 +137,7 @@ export default function ProjectChat() {
                           </div>
                           <span className="text-xs text-muted-foreground ml-1">
                             {retryState.isRetrying
-                              ? `${t.chat.retrying} (${retryState.attempt + 1}/${retryState.maxAttempts + 1})...`
+                              ? `${t.chat.retrying} (${retryState.attempt + 1}/${retryState.maxAttempts + 1})... ${t.chat.retryWait}`
                               : t.chat.analyzingData}
                           </span>
                         </div>
@@ -164,8 +164,15 @@ export default function ProjectChat() {
                         <p className="text-sm text-destructive font-medium">
                           {queryError.isServiceUnavailable
                             ? t.chat.serviceUnavailable
-                            : t.chat.serverError}
+                            : queryError.message?.includes('timed out') || queryError.message?.includes('timeout')
+                              ? t.chat.timeoutError
+                              : t.chat.serverError}
                         </p>
+                        {queryError.message && !queryError.isServiceUnavailable && (
+                          <p className="text-xs text-destructive/70 mt-1.5">
+                            {queryError.message}
+                          </p>
+                        )}
                       </div>
                       <Button
                         variant="outline"
