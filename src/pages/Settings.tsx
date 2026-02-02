@@ -31,80 +31,111 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 export default function Settings() {
   const { t } = useLanguage();
   const { data: preferences, isLoading: preferencesLoading, error: preferencesError } = useUserPreferences();
-  const { data: defaultPromptData, isLoading: promptLoading } = useDefaultPrompt();
+  const { data: defaultPromptData, isLoading: promptLoading, error: promptError } = useDefaultPrompt();
   const updatePreferences = useUpdatePreferences();
 
   // Local form state
   const [formData, setFormData] = useState<UserPreferences>(DEFAULT_PREFERENCES);
   const [customPrompt, setCustomPrompt] = useState<string>('');
 
-  // Initialize form with fetched data
+  // Fallback placeholders when backend fails
+  const fallbackPlaceholders = [
+    '{study_context}',
+    '{questionnaire}',
+    '{n_cases}',
+    '{variables}',
+    '{aggregated_data}',
+    '{response_style}',
+    '{tone}',
+    '{language}',
+  ];
+
+  const fallbackDefaultPrompt = `You are an expert market research analyst. Generate an executive summary based on the following study data.
+
+Study Context: {study_context}
+
+Questionnaire: {questionnaire}
+
+Number of Respondents: {n_cases}
+
+Variables: {variables}
+
+Aggregated Data: {aggregated_data}
+
+Response Style: {response_style}
+Tone: {tone}
+Language: {language}
+
+Provide a comprehensive executive summary highlighting key findings, trends, and actionable insights.`;
+
+  // Use fallbacks when API fails
+  const effectiveDefaultPrompt = defaultPromptData?.default_prompt || fallbackDefaultPrompt;
+  const effectivePlaceholders = defaultPromptData?.available_placeholders || fallbackPlaceholders;
+
+  // Initialize form with fetched data or defaults
   useEffect(() => {
     if (preferences) {
       setFormData(preferences);
-      setCustomPrompt(preferences.custom_summary_prompt || defaultPromptData?.default_prompt || '');
+      setCustomPrompt(preferences.custom_summary_prompt || effectiveDefaultPrompt);
+    } else if (!preferencesLoading) {
+      // Use defaults if no preferences exist (404 case)
+      setFormData(DEFAULT_PREFERENCES);
+      setCustomPrompt(effectiveDefaultPrompt);
     }
-  }, [preferences, defaultPromptData]);
+  }, [preferences, preferencesLoading, effectiveDefaultPrompt]);
 
   // Update prompt when default loads
   useEffect(() => {
-    if (defaultPromptData && !preferences?.custom_summary_prompt) {
-      setCustomPrompt(defaultPromptData.default_prompt);
+    if (effectiveDefaultPrompt && !preferences?.custom_summary_prompt && !preferencesLoading) {
+      setCustomPrompt(effectiveDefaultPrompt);
     }
-  }, [defaultPromptData, preferences?.custom_summary_prompt]);
+  }, [effectiveDefaultPrompt, preferences?.custom_summary_prompt, preferencesLoading]);
 
   // Compute if there are unsaved changes
   const hasChanges = useMemo(() => {
-    if (!preferences) return false;
+    const originalPrefs = preferences || DEFAULT_PREFERENCES;
 
     const prefsChanged =
-      formData.response_style !== preferences.response_style ||
-      formData.tone !== preferences.tone ||
-      formData.language !== preferences.language ||
-      formData.auto_visualizations !== preferences.auto_visualizations ||
-      formData.confidence_level !== preferences.confidence_level;
+      formData.response_style !== originalPrefs.response_style ||
+      formData.tone !== originalPrefs.tone ||
+      formData.language !== originalPrefs.language ||
+      formData.auto_visualizations !== originalPrefs.auto_visualizations ||
+      formData.confidence_level !== originalPrefs.confidence_level;
 
-    const originalPrompt = preferences.custom_summary_prompt || defaultPromptData?.default_prompt || '';
+    const originalPrompt = preferences?.custom_summary_prompt || effectiveDefaultPrompt;
     const promptChanged = customPrompt !== originalPrompt;
 
     return prefsChanged || promptChanged;
-  }, [formData, preferences, customPrompt, defaultPromptData]);
+  }, [formData, preferences, customPrompt, effectiveDefaultPrompt]);
 
-  const handleSave = () => {
-    const isUsingDefault = customPrompt === defaultPromptData?.default_prompt;
-    
-    updatePreferences.mutate({
-      response_style: formData.response_style,
-      tone: formData.tone,
-      language: formData.language,
-      auto_visualizations: formData.auto_visualizations,
-      confidence_level: formData.confidence_level,
-      custom_summary_prompt: isUsingDefault ? null : customPrompt,
-    });
+  const handleSave = async () => {
+    try {
+      const isUsingDefault = customPrompt === effectiveDefaultPrompt;
+      
+      await updatePreferences.mutateAsync({
+        response_style: formData.response_style,
+        tone: formData.tone,
+        language: formData.language,
+        auto_visualizations: formData.auto_visualizations,
+        confidence_level: formData.confidence_level,
+        custom_summary_prompt: isUsingDefault ? null : customPrompt,
+      });
+    } catch (error) {
+      // Error is already handled by the mutation's onError
+      console.error('Failed to save preferences:', error);
+    }
   };
 
   const handleResetPrompt = () => {
-    if (defaultPromptData) {
-      setCustomPrompt(defaultPromptData.default_prompt);
-    }
+    setCustomPrompt(effectiveDefaultPrompt);
   };
 
   const isLoading = preferencesLoading || promptLoading;
 
-  if (preferencesError) {
-    return (
-      <AppLayout>
-        <div className="container max-w-4xl py-8">
-          <Card className="border-destructive">
-            <CardContent className="flex items-center gap-3 py-6">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              <p className="text-destructive">{t.toasts.error}: {(preferencesError as Error).message}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </AppLayout>
-    );
-  }
+  // Only show critical error if both endpoints fail AND it's not a 404
+  const isCriticalError = preferencesError && 
+    !(preferencesError as any)?.message?.includes('not found') &&
+    !(preferencesError as any)?.message?.includes('404');
 
   return (
     <AppLayout>
@@ -117,7 +148,7 @@ export default function Settings() {
           </div>
           <div className="flex items-center gap-3">
             {hasChanges && (
-              <Badge variant="outline" className="text-amber-600 border-amber-600">
+              <Badge variant="outline" className="text-warning border-warning">
                 {t.userPreferences.unsavedChanges}
               </Badge>
             )}
@@ -132,7 +163,14 @@ export default function Settings() {
           </div>
         </div>
 
-        {isLoading ? (
+        {isCriticalError ? (
+          <Card className="border-destructive">
+            <CardContent className="flex items-center gap-3 py-6">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <p className="text-destructive">{t.toasts.error}: {(preferencesError as Error).message}</p>
+            </CardContent>
+          </Card>
+        ) : isLoading ? (
           <div className="space-y-6">
             {[1, 2, 3, 4, 5].map((i) => (
               <Card key={i}>
@@ -310,16 +348,14 @@ export default function Settings() {
               </CardContent>
             </Card>
 
-            {/* Prompt Editor */}
-            {defaultPromptData && (
-              <PromptEditor
-                value={customPrompt}
-                defaultPrompt={defaultPromptData.default_prompt}
-                placeholders={defaultPromptData.available_placeholders}
-                onChange={setCustomPrompt}
-                onReset={handleResetPrompt}
-              />
-            )}
+            {/* Prompt Editor - always show with fallbacks */}
+            <PromptEditor
+              value={customPrompt}
+              defaultPrompt={effectiveDefaultPrompt}
+              placeholders={effectivePlaceholders}
+              onChange={setCustomPrompt}
+              onReset={handleResetPrompt}
+            />
           </div>
         )}
       </div>
