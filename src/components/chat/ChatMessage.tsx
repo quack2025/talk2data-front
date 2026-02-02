@@ -11,6 +11,7 @@ import { api } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { RefineActions } from './RefineActions';
+import { ChartWithTable } from '@/components/charts/ChartWithTable';
 
 interface ChatMessageProps {
   message: Message;
@@ -103,22 +104,14 @@ export function ChatMessage({ message, onRefine, isRefining = false }: ChatMessa
               <BarChart3 className="h-4 w-4" />
               <span className="text-xs font-medium">{t.chat.visualizations}</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-3">
               {message.charts.map((chart, index) => (
-                <div 
-                  key={index} 
-                  className="border rounded-lg p-3 bg-card shadow-sm overflow-hidden"
-                >
-                  <h4 className="text-xs font-medium text-foreground mb-2 truncate">
-                    {chart.title}
-                  </h4>
-                  <img 
-                    src={`data:image/png;base64,${chart.chart_base64}`}
-                    alt={chart.title}
-                    className="w-full h-auto rounded"
-                    loading="lazy"
-                  />
-                </div>
+                <ChartWithTable
+                  key={index}
+                  chart={chart}
+                  index={index}
+                  onZoom={() => {}}
+                />
               ))}
             </div>
           </div>
