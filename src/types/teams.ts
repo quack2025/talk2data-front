@@ -14,15 +14,18 @@ export interface Team {
 export interface TeamMember {
   id: string;
   team_id: string;
-  user_id: string;
+  user_id?: string | null;
+  invited_email?: string | null;
   role: TeamRole;
   invited_by?: string;
   invited_at: string;
   accepted_at?: string;
-  // Joined from profiles
+  // Joined from profiles (when user exists)
   user_email?: string;
   user_name?: string;
   user_avatar?: string;
+  // Computed
+  is_pending?: boolean;
 }
 
 export interface TeamWithMembers extends Team {
