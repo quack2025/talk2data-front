@@ -11,6 +11,8 @@ export function useUserPreferences() {
   return useQuery({
     queryKey: PREFERENCES_KEY,
     queryFn: () => api.get<UserPreferences>('/users/me/preferences'),
+    retry: false, // Don't retry on failure - use fallbacks instead
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 }
 
@@ -18,6 +20,8 @@ export function useDefaultPrompt() {
   return useQuery({
     queryKey: DEFAULT_PROMPT_KEY,
     queryFn: () => api.get<DefaultPromptResponse>('/users/me/preferences/default-prompt'),
+    retry: false, // Don't retry - backend has a bug, use fallbacks
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes since it rarely changes
   });
 }
 
