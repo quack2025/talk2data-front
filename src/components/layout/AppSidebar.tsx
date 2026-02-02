@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Loader2,
   ExternalLink,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -43,6 +44,11 @@ export function AppSidebar() {
       title: t.sidebar.export,
       href: "/exports",
       icon: FileDown,
+    },
+    {
+      title: t.sidebar.teams || 'Equipos',
+      href: "/teams",
+      icon: Users,
     },
   ];
 

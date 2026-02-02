@@ -21,6 +21,7 @@ import Exports from "./pages/Exports";
 import Upload from "./pages/Upload";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
+import Teams from "./pages/Teams";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -209,6 +210,15 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/teams"
+              element={
+                <ProtectedRoute>
+                  <Teams />
                 </ProtectedRoute>
               }
             />
