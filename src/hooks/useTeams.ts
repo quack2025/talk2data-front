@@ -40,13 +40,16 @@ export function useTeams() {
             id: m.id,
             team_id: m.team_id,
             user_id: m.user_id,
+            invited_email: m.invited_email,
             role: m.role as TeamRole,
             invited_by: m.invited_by,
             invited_at: m.invited_at,
             accepted_at: m.accepted_at,
-            user_email: m.profiles?.email,
+            // For existing users, use profile data; for pending invites, use invited_email
+            user_email: m.profiles?.email || m.invited_email,
             user_name: m.profiles?.full_name,
             user_avatar: m.profiles?.avatar_url,
+            is_pending: !m.user_id && !!m.invited_email,
           }));
 
           const myMembership = mappedMembers.find(m => m.user_id === user.id);
@@ -100,13 +103,15 @@ export function useTeam(teamId: string | undefined) {
         id: m.id,
         team_id: m.team_id,
         user_id: m.user_id,
+        invited_email: m.invited_email,
         role: m.role as TeamRole,
         invited_by: m.invited_by,
         invited_at: m.invited_at,
         accepted_at: m.accepted_at,
-        user_email: m.profiles?.email,
+        user_email: m.profiles?.email || m.invited_email,
         user_name: m.profiles?.full_name,
         user_avatar: m.profiles?.avatar_url,
+        is_pending: !m.user_id && !!m.invited_email,
       }));
 
       const myMembership = mappedMembers.find(m => m.user_id === user.id);
@@ -243,44 +248,68 @@ export function useInviteMember() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Find user by email in profiles
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
+      const normalizedEmail = email.trim().toLowerCase();
 
-      if (!profile) {
-        throw new Error(t.teams?.userNotFound || 'Usuario no encontrado. Debe tener una cuenta registrada.');
-      }
-
-      // Check if already a member
-      const { data: existingMember } = await supabase
+      // Check if there's already a pending invitation for this email
+      const { data: existingPending } = await supabase
         .from('team_members')
         .select('id')
         .eq('team_id', teamId)
-        .eq('user_id', profile.id)
+        .eq('invited_email', normalizedEmail)
         .single();
 
-      if (existingMember) {
-        throw new Error(t.teams?.alreadyMember || 'Este usuario ya es miembro del equipo.');
+      if (existingPending) {
+        throw new Error(t.teams?.alreadyInvited || 'Este email ya tiene una invitación pendiente.');
       }
 
-      const { error } = await supabase.from('team_members').insert({
-        team_id: teamId,
-        user_id: profile.id,
-        role,
-        invited_by: user.id,
-        accepted_at: new Date().toISOString(), // Auto-accept for now
-      });
+      // Try to find user by email in profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .single();
 
-      if (error) throw error;
+      if (profile) {
+        // User exists - check if already a member
+        const { data: existingMember } = await supabase
+          .from('team_members')
+          .select('id')
+          .eq('team_id', teamId)
+          .eq('user_id', profile.id)
+          .single();
+
+        if (existingMember) {
+          throw new Error(t.teams?.alreadyMember || 'Este usuario ya es miembro del equipo.');
+        }
+
+        // Add existing user as member
+        const { error } = await supabase.from('team_members').insert({
+          team_id: teamId,
+          user_id: profile.id,
+          role,
+          invited_by: user.id,
+          accepted_at: new Date().toISOString(),
+        });
+
+        if (error) throw error;
+      } else {
+        // User doesn't exist - create pending invitation by email
+        const { error } = await supabase.from('team_members').insert({
+          team_id: teamId,
+          invited_email: normalizedEmail,
+          role,
+          invited_by: user.id,
+          // No accepted_at - pending invitation
+        });
+
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TEAMS_KEY });
       toast({
-        title: t.teams?.memberAdded || 'Miembro añadido',
-        description: t.teams?.memberAddedDesc || 'El usuario ha sido añadido al equipo.',
+        title: t.teams?.memberAdded || 'Invitación enviada',
+        description: t.teams?.memberAddedDesc || 'El usuario ha sido invitado al equipo.',
       });
     },
     onError: (error: Error) => {
