@@ -10,11 +10,11 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, title, showHeader = true }: AppLayoutProps) {
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-dvh bg-background">
       <AppSidebar />
-      <div className="flex flex-1 flex-col min-w-0 h-full">
+      <div className="flex flex-1 flex-col min-w-0">
         {showHeader && <AppHeader title={title} />}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        <main className="flex-1 min-h-0 overflow-auto">
           {children}
         </main>
       </div>
