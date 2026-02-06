@@ -208,7 +208,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col overflow-hidden">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader className="shrink-0">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex gap-1">
@@ -231,9 +231,10 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0 px-1 -mx-1">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 px-1">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 gap-4">
+            <ScrollArea className="flex-1 min-h-0 pr-4">
+              <div className="space-y-4">
               
               {/* Step 1: Basic Information */}
               {step === 1 && (
@@ -631,57 +632,58 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                   />
                 </>
               )}
+              </div>
+            </ScrollArea>
 
-              {/* Footer */}
-              <DialogFooter className="pt-4 gap-2">
-                {step === 1 ? (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => handleClose(false)}
-                    >
-                      {t.createProject.cancel}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleNextStep}
-                      className="gap-2"
-                    >
-                      {t.common.continue}
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handlePrevStep}
-                      className="gap-2"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      {t.common.back}
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={createProject.isPending}
-                    >
-                      {createProject.isPending ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          {t.createProject.creating}
-                        </>
-                      ) : (
-                        t.createProject.create
-                      )}
-                    </Button>
-                  </>
-                )}
-              </DialogFooter>
-            </form>
-          </Form>
-        </ScrollArea>
+            {/* Footer - fixed at bottom */}
+            <DialogFooter className="pt-4 gap-2 shrink-0 border-t mt-auto">
+              {step === 1 ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleClose(false)}
+                  >
+                    {t.createProject.cancel}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="gap-2"
+                  >
+                    {t.common.continue}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handlePrevStep}
+                    className="gap-2"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    {t.common.back}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createProject.isPending}
+                  >
+                    {createProject.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        {t.createProject.creating}
+                      </>
+                    ) : (
+                      t.createProject.create
+                    )}
+                  </Button>
+                </>
+              )}
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
