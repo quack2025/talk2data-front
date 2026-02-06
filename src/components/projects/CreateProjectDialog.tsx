@@ -233,8 +233,8 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 gap-4">
-            <ScrollArea type="always" className="flex-1 min-h-0 pr-4">
-              <div className="space-y-4">
+            <ScrollArea type="always" className="flex-1 min-h-0">
+              <div className="space-y-4 px-1 py-1 pr-4">
               
               {/* Step 1: Basic Information */}
               {step === 1 && (
