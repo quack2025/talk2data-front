@@ -1,46 +1,61 @@
 
 
-## Plan: Corregir bordes cortados en inputs del diálogo "Create Project"
+## Plan: Data Preparation (Preparacion de Datos)
 
-### Problema Identificado
+### Resumen
 
-En la captura de pantalla se observa que los bordes de las cajas de texto (Input y Textarea) aparecen cortados en los lados izquierdo y derecho. Esto ocurre porque:
+Nueva seccion en la pagina de detalle del proyecto que permite al usuario gestionar reglas de preparacion de datos (cleaning, weight, net, recode, computed). Incluye crear, editar, eliminar, reordenar y activar/desactivar reglas, ademas de una vista previa del impacto.
 
-1. El `ScrollArea` solo tiene `pr-4` (padding derecho) para la barra de scroll
-2. No hay padding en el lado izquierdo ni en la parte superior/inferior
-3. Cuando un input tiene focus, su `ring` (anillo de enfoque) se extiende más allá del borde y queda recortado por el `overflow-hidden` del contenedor
+### Archivos a crear
 
-### Solución Propuesta
+**1. `src/types/dataPrep.ts`** - Tipos TypeScript
+- `DataPrepRule`, `DataPrepRuleCreate`, `DataPrepPreviewResponse`, `DataPrepSummary`
+- Tipo union para `rule_type`: `'cleaning' | 'weight' | 'net' | 'recode' | 'computed'`
 
-Modificar el padding del `ScrollArea` para que tenga espacio en ambos lados, permitiendo que los bordes y el focus ring de los inputs se muestren completamente.
+**2. `src/hooks/useDataPrep.ts`** - Hook de API
+- Sigue el patron de `useWaves.ts` (useState + callbacks)
+- Funciones: `fetchRules`, `createRule`, `updateRule`, `deleteRule`, `reorderRules`, `previewRules`, `fetchSummary`
+- Todas llaman a `api.get/post/put/delete` con ruta `/projects/{projectId}/data-prep`
 
-### Cambios Técnicos
+**3. `src/components/dataprep/DataPrepManager.tsx`** - Componente principal
+- Props: `projectId: string`
+- Lista de reglas con drag-reorder visual (usando botones arriba/abajo para simplicidad, sin libreria de drag)
+- Toggle de activar/desactivar por regla (Switch)
+- Botones de editar y eliminar por regla
+- Boton "Preview" que muestra el impacto (filas afectadas, columnas nuevas, warnings)
+- Badge con el resumen de reglas activas
 
-**Archivo:** `src/components/projects/CreateProjectDialog.tsx`
+**4. `src/components/dataprep/DataPrepRuleDialog.tsx`** - Dialog crear/editar regla
+- Formulario con nombre, tipo de regla (Select), configuracion (JSON editor basico con Textarea), y toggle activo
+- Sigue el patron del dialog de WaveManager
 
-Cambiar el className del ScrollArea de:
-```tsx
-<ScrollArea type="always" className="flex-1 min-h-0 pr-4">
-  <div className="space-y-4">
-```
+**5. `src/components/dataprep/DataPrepPreview.tsx`** - Componente de vista previa
+- Muestra: filas originales, filas finales, filas afectadas, columnas agregadas, warnings
+- Card con estadisticas y lista de advertencias
 
-A:
-```tsx
-<ScrollArea type="always" className="flex-1 min-h-0">
-  <div className="space-y-4 px-1">
-```
+**6. `src/components/dataprep/index.ts`** - Barrel export
 
-Este cambio:
-- Elimina el `pr-4` del ScrollArea (ya que el componente ScrollArea maneja internamente el espacio para la barra de scroll)
-- Añade `px-1` al contenedor interior para dar un pequeño margen horizontal que permita ver los bordes y focus rings completos
+### Archivos a modificar
 
-### Alternativa más conservadora
+**7. `src/pages/ProjectDetail.tsx`**
+- Importar `DataPrepManager`
+- Agregar nueva seccion Card entre "Variable Groups" y "Wave Manager" (visible solo cuando `hasReadyFiles`)
+- Icono: `Wrench` o `SlidersHorizontal` de lucide-react
 
-Si la barra de scroll se ve muy pegada al contenido:
-```tsx
-<ScrollArea type="always" className="flex-1 min-h-0 -mr-4 pr-4">
-  <div className="space-y-4 px-1">
-```
+**8. `src/i18n/translations.ts`**
+- Agregar bloque `dataPrep` en ambos idiomas (es/en) con textos para: titulo, descripcion, tipos de regla, botones, mensajes de preview, confirmacion de eliminacion
 
-Esto usa margin negativo para expandir el área del scroll mientras mantiene el padding visual.
+### Detalles tecnicos
+
+- **Patron de hook**: useState + useCallback (igual que `useWaves.ts`), no useQuery/TanStack para consistencia
+- **Reordenar**: Botones de flecha arriba/abajo que llaman a `PUT /data-prep/reorder` con el array de IDs reordenado
+- **Toggle activo**: Llama a `PUT /data-prep/{ruleId}` con `{ is_active: !current }`
+- **Preview**: `POST /data-prep/preview` sin body (dry-run de todas las reglas activas)
+- **Config editor**: Textarea con JSON, validacion basica de parse antes de enviar
+- **Tipos de regla con iconos**:
+  - cleaning: `Eraser`
+  - weight: `Scale`
+  - net: `Network`
+  - recode: `ArrowLeftRight`
+  - computed: `Calculator`
 
