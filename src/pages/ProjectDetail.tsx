@@ -44,6 +44,7 @@ import { useExecutiveSummary } from '@/hooks/useExecutiveSummary';
 import { AggfileGeneratorModal } from '@/components/aggfile';
 import { VariableGroupsManager } from '@/components/grouping';
 import { WaveManager } from '@/components/waves';
+import { DataPrepManager } from '@/components/dataprep';
 import { useProjectVariables } from '@/hooks/useProjectVariables';
 
 export default function ProjectDetail() {
@@ -494,6 +495,21 @@ export default function ProjectDetail() {
                 projectId={projectId!}
                 availableVariables={variableNames}
               />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Data Preparation Section */}
+        {hasReadyFiles && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t.dataPrep?.title || 'Preparación de Datos'}</CardTitle>
+              <CardDescription>
+                {t.dataPrep?.description || 'Gestiona reglas de limpieza, ponderación y recodificación'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataPrepManager projectId={projectId!} />
             </CardContent>
           </Card>
         )}
