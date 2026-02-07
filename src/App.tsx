@@ -22,6 +22,7 @@ import Upload from "./pages/Upload";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
 import Teams from "./pages/Teams";
+import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -101,8 +102,12 @@ const App = () => (
         <BrowserRouter>
           <SummaryNotificationProvider>
           <Routes>
-            {/* Redirect root to projects */}
-            <Route path="/" element={<Navigate to="/projects" replace />} />
+            {/* Landing page */}
+            <Route path="/" element={
+              <PublicRoute>
+                <Landing />
+              </PublicRoute>
+            } />
             
             {/* Auth */}
             <Route
