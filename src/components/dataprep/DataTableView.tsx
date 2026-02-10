@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -13,7 +13,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -58,8 +58,14 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
   const [prepared, setPrepared] = useState(false);
   const [distOpen, setDistOpen] = useState(false);
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
+  const [colSearch, setColSearch] = useState('');
 
-  const visibleColumns = tableData?.columns.filter(c => !hiddenCols.has(c.name)) ?? [];
+  const allColumns = tableData?.columns ?? [];
+  const visibleColumns = allColumns.filter(c => !hiddenCols.has(c.name));
+  const filteredColumns = allColumns.filter(col => {
+    const q = colSearch.toLowerCase();
+    return col.name.toLowerCase().includes(q) || (col.label && col.label.toLowerCase().includes(q));
+  });
 
   const toggleColumn = (colName: string) => {
     setHiddenCols(prev => {
@@ -71,7 +77,6 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
   };
 
   const showAllColumns = () => setHiddenCols(new Set());
-  const allColumns = tableData?.columns ?? [];
 
   useEffect(() => {
     fetchData(offset, LIMIT, prepared);
@@ -153,9 +158,22 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="max-h-80 overflow-y-auto w-64">
-                <DropdownMenuLabel className="flex items-center justify-between">
-                  <span>{dt?.selectColumns || 'Select columns'}</span>
+              <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={() => setColSearch('')}>
+                <div className="px-2 py-1.5">
+                  <div className="flex items-center gap-1.5 rounded-md border border-input bg-background px-2 h-7">
+                    <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <input
+                      className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+                      placeholder={dt?.searchColumns || 'Search columns...'}
+                      value={colSearch}
+                      onChange={(e) => setColSearch(e.target.value)}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="flex items-center justify-between py-1">
+                  <span className="text-xs">{dt?.selectColumns || 'Select columns'}</span>
                   {hiddenCols.size > 0 && (
                     <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5" onClick={showAllColumns}>
                       {dt?.showAll || 'Show all'}
@@ -163,21 +181,29 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                   )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {allColumns.map((col) => (
-                  <DropdownMenuCheckboxItem
-                    key={col.name}
-                    checked={!hiddenCols.has(col.name)}
-                    onCheckedChange={() => toggleColumn(col.name)}
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <span className="font-mono text-xs">{col.name}</span>
-                    {col.label && (
-                      <span className="ml-1.5 text-muted-foreground text-xs truncate max-w-[140px]">
-                        {col.label}
-                      </span>
-                    )}
-                  </DropdownMenuCheckboxItem>
-                ))}
+                <div className="max-h-60 overflow-y-auto">
+                  {filteredColumns.length === 0 ? (
+                    <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                      {dt?.noColumnsFound || 'No columns found'}
+                    </div>
+                  ) : (
+                    filteredColumns.map((col) => (
+                      <DropdownMenuCheckboxItem
+                        key={col.name}
+                        checked={!hiddenCols.has(col.name)}
+                        onCheckedChange={() => toggleColumn(col.name)}
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <span className="font-mono text-xs">{col.name}</span>
+                        {col.label && (
+                          <span className="ml-1.5 text-muted-foreground text-xs truncate max-w-[140px]">
+                            {col.label}
+                          </span>
+                        )}
+                      </DropdownMenuCheckboxItem>
+                    ))
+                  )}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
