@@ -122,13 +122,17 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
 
   const renderCellValue = (row: Record<string, unknown>, col: ColumnMeta) => {
     const raw = row[col.name];
-    const label = row[`${col.name}__label`] as string | undefined;
+    // Try backend-provided label first, then resolve from column value_labels
+    let label = row[`${col.name}__label`] as string | undefined;
+    if (!label && col.value_labels && raw != null) {
+      label = col.value_labels[String(raw)];
+    }
 
     if (raw == null || raw === '' || (typeof raw === 'number' && isNaN(raw))) {
       return <span className="italic text-muted-foreground">—</span>;
     }
 
-    if (col.type === 'categorical' && label) {
+    if (label) {
       return (
         <span>
           {label}{' '}
