@@ -33,10 +33,13 @@ import { useDataPrep } from '@/hooks/useDataPrep';
 import { DataPrepRuleDialog } from './DataPrepRuleDialog';
 import { DataPrepPreview } from './DataPrepPreview';
 import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType } from '@/types/dataPrep';
+import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import { toast } from 'sonner';
 
 interface DataPrepManagerProps {
   projectId: string;
+  availableVariables?: string[];
+  variableLabels?: VariableLabelMap;
 }
 
 const RULE_TYPE_ICONS: Record<DataPrepRuleType, React.ElementType> = {
@@ -47,7 +50,7 @@ const RULE_TYPE_ICONS: Record<DataPrepRuleType, React.ElementType> = {
   computed: Calculator,
 };
 
-export function DataPrepManager({ projectId }: DataPrepManagerProps) {
+export function DataPrepManager({ projectId, availableVariables = [], variableLabels = {} }: DataPrepManagerProps) {
   const { t } = useLanguage();
   const dp = t.dataPrep;
   const {
@@ -294,6 +297,8 @@ export function DataPrepManager({ projectId }: DataPrepManagerProps) {
         onOpenChange={setShowDialog}
         editingRule={editingRule}
         onSave={handleSave}
+        availableVariables={availableVariables}
+        variableLabels={variableLabels}
       />
 
       {/* Delete confirmation */}
