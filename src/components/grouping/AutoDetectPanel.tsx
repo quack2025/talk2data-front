@@ -33,11 +33,15 @@ export function AutoDetectPanel({
   onSaveGroups,
   isSaving = false,
 }: AutoDetectPanelProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [expandedIndices, setExpandedIndices] = useState<Set<number>>(new Set());
 
   const groupingT = t.grouping;
+  const getTypeLabel = (type: string) => {
+    const label = GROUP_TYPE_LABELS[type];
+    return label ? label[language] : type;
+  };
 
   useEffect(() => {
     if (autoDetectResult?.suggestions) {
@@ -186,6 +190,7 @@ export function AutoDetectPanel({
                 onToggleSelect={() => toggleSelection(index)}
                 onToggleExpand={() => toggleExpand(index)}
                 getConfidenceBadge={getConfidenceBadge}
+                getTypeLabel={getTypeLabel}
                 groupingT={groupingT}
               />
             ))}
@@ -204,6 +209,7 @@ function SuggestionCard({
   onToggleSelect,
   onToggleExpand,
   getConfidenceBadge,
+  getTypeLabel,
   groupingT,
 }: {
   suggestion: VariableGroupSuggestion;
@@ -213,6 +219,7 @@ function SuggestionCard({
   onToggleSelect: () => void;
   onToggleExpand: () => void;
   getConfidenceBadge: (c: number) => 'default' | 'secondary' | 'outline';
+  getTypeLabel: (type: string) => string;
   groupingT: any;
 }) {
   return (
@@ -232,7 +239,7 @@ function SuggestionCard({
                 </CardTitle>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline" className="text-xs">
-                    {GROUP_TYPE_LABELS[suggestion.group_type] || suggestion.group_type}
+                    {getTypeLabel(suggestion.group_type)}
                   </Badge>
                   <Badge
                     variant={getConfidenceBadge(suggestion.confidence)}

@@ -42,7 +42,7 @@ export function VariableGroupsManager({
   projectId,
   availableVariables,
 }: VariableGroupsManagerProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const groupingT = t.grouping;
   const {
     groups,
@@ -217,6 +217,7 @@ export function VariableGroupsManager({
                 onEdit={() => handleEdit(group)}
                 onDelete={() => setDeletingGroup(group)}
                 groupingT={groupingT}
+                language={language}
               />
             ))}
           </div>
@@ -270,6 +271,7 @@ function GroupCard({
   onEdit,
   onDelete,
   groupingT,
+  language,
 }: {
   group: VariableGroup;
   isExpanded: boolean;
@@ -277,6 +279,7 @@ function GroupCard({
   onEdit: () => void;
   onDelete: () => void;
   groupingT: any;
+  language: 'es' | 'en';
 }) {
   return (
     <Card>
@@ -295,7 +298,7 @@ function GroupCard({
               <CardTitle className="text-sm font-medium">{group.name}</CardTitle>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">
-                  {GROUP_TYPE_LABELS[group.group_type] || group.group_type}
+                  {GROUP_TYPE_LABELS[group.group_type]?.[language] || group.group_type}
                 </Badge>
                 <span className="text-xs text-muted-foreground">
                   {group.variables.length} vars

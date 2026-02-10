@@ -54,7 +54,7 @@ export function ManualGrouper({
   editingGroup,
   isSaving = false,
 }: ManualGrouperProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const groupingT = t.grouping;
 
   const [name, setName] = useState(editingGroup?.name || '');
@@ -198,7 +198,7 @@ export function ManualGrouper({
                   <SelectContent>
                     {GROUP_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>
-                        {GROUP_TYPE_LABELS[type] || type}
+                        {GROUP_TYPE_LABELS[type]?.[language] || type}
                       </SelectItem>
                     ))}
                   </SelectContent>
