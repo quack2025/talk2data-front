@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,8 +29,6 @@ import {
   Network,
   ArrowLeftRight,
   Calculator,
-  Table2,
-  ListChecks,
   CheckCircle2,
   SkipForward,
   RotateCcw,
@@ -42,7 +39,6 @@ import { DataPrepRuleDialog } from './DataPrepRuleDialog';
 import type { RulePrefill } from './DataPrepRuleDialog';
 import { DataPrepPreview } from './DataPrepPreview';
 import { DataPrepAIInput } from './DataPrepAIInput';
-import { DataTableView } from './DataTableView';
 import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType, DataPrepPreviewResponse } from '@/types/dataPrep';
 import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import { toast } from 'sonner';
@@ -88,7 +84,6 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
   const [editingRule, setEditingRule] = useState<DataPrepRule | null>(null);
   const [deletingRule, setDeletingRule] = useState<DataPrepRule | null>(null);
   const [rulePrefill, setRulePrefill] = useState<RulePrefill | null>(null);
-  const [activeTab, setActiveTab] = useState('rules');
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
 
   useEffect(() => {
@@ -192,7 +187,7 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
           )}
         </div>
         <div className="flex gap-2">
-          {activeTab === 'rules' && rules.length > 0 && (
+          {rules.length > 0 && (
             <Button
               variant="outline"
               size="sm"
@@ -214,20 +209,8 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="rules" className="gap-1.5">
-            <ListChecks className="h-4 w-4" />
-            {dt?.rulesTab || 'Rules'}
-          </TabsTrigger>
-          <TabsTrigger value="data" className="gap-1.5">
-            <Table2 className="h-4 w-4" />
-            {dt?.dataTabLabel || 'Data'}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="rules" className="space-y-4 mt-3">
+      {/* Rules content (no more internal tabs) */}
+      <div className="space-y-4 mt-3">
           {/* AI Input */}
           <DataPrepAIInput projectId={projectId} onRuleCreated={fetchRules} availableVariables={availableVariables} variableLabels={variableLabels} />
 
@@ -342,18 +325,7 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
               })}
             </div>
           )}
-        </TabsContent>
-
-        <TabsContent value="data" className="mt-3">
-          <DataTableView
-            projectId={projectId}
-            onCreateRule={(prefill) => {
-              openCreateWithPrefill(prefill);
-              setActiveTab('rules');
-            }}
-          />
-        </TabsContent>
-      </Tabs>
+      </div>
 
       {/* Data Readiness Gate Footer */}
       <div className="border-t pt-4 mt-4">
