@@ -510,7 +510,7 @@ export default function ProjectDetail() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DataPrepManager projectId={projectId!} />
+              <DataPrepManager projectId={projectId!} availableVariables={variableNames} variableLabels={variableLabels} />
             </CardContent>
           </Card>
         )}
