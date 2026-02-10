@@ -3,6 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 // FastAPI Backend URL - will be configured via environment or secrets
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
+/** Extract a human-readable message from FastAPI error responses */
+function extractErrorMessage(errorBody: Record<string, unknown>, fallbackStatus: number): string {
+  const detail = errorBody.detail;
+  if (typeof detail === 'string') return detail;
+  // FastAPI validation error array: [{msg, loc, type}, ...]
+  if (Array.isArray(detail) && detail.length > 0) {
+    const first = detail[0];
+    if (first && typeof first === 'object' && 'msg' in first) {
+      const loc = Array.isArray(first.loc) ? first.loc.join(' → ') : '';
+      return loc ? `${first.msg} (${loc})` : String(first.msg);
+    }
+  }
+  if (typeof errorBody.message === 'string') return errorBody.message;
+  if (detail) return JSON.stringify(detail);
+  return `Error ${fallbackStatus}`;
+}
+
 export class ApiError extends Error {
   status: number;
   isServerError: boolean;
@@ -75,15 +92,7 @@ class ApiClient {
 
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({ message: "Connection error" }));
-          const detail = errorBody.detail;
-          const errorMessage = typeof detail === 'string'
-            ? detail
-            : typeof errorBody.message === 'string'
-              ? errorBody.message
-              : detail
-                ? JSON.stringify(detail)
-                : `Error ${response.status}`;
-          throw new ApiError(errorMessage, response.status);
+          throw new ApiError(extractErrorMessage(errorBody, response.status), response.status);
         }
 
         return await response.json();
@@ -141,15 +150,7 @@ class ApiClient {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({ message: "Connection error" }));
-      const detail = errorBody.detail;
-      const errorMessage = typeof detail === 'string'
-        ? detail
-        : typeof errorBody.message === 'string'
-          ? errorBody.message
-          : detail
-            ? JSON.stringify(detail)
-            : `Error ${response.status}`;
-      throw new ApiError(errorMessage, response.status);
+      throw new ApiError(extractErrorMessage(errorBody, response.status), response.status);
     }
 
     return response.json();
@@ -174,15 +175,7 @@ class ApiClient {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({ message: "Download error" }));
-      const detail = errorBody.detail;
-      const errorMessage = typeof detail === 'string'
-        ? detail
-        : typeof errorBody.message === 'string'
-          ? errorBody.message
-          : detail
-            ? JSON.stringify(detail)
-            : `Error ${response.status}`;
-      throw new ApiError(errorMessage, response.status);
+      throw new ApiError(extractErrorMessage(errorBody, response.status), response.status);
     }
 
     return response.blob();
