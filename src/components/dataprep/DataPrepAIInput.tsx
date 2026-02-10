@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sparkles, Send, Loader2, Check, X } from 'lucide-react';
+import { Sparkles, Send, Loader2, Check, X, CornerDownLeft } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ import type { DataPrepPreviewResponse } from '@/types/dataPrep';
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  isClarification?: boolean;
   ruleData?: {
     rule: Record<string, unknown>;
     preview?: DataPrepPreviewResponse;
@@ -41,10 +42,12 @@ export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables =
   const ai = (dp as Record<string, unknown>).ai as Record<string, string> | undefined;
 
   const [input, setInput] = useState('');
+  const [replyInput, setReplyInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingRule, setPendingRule] = useState<Record<string, unknown> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const replyInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -52,14 +55,15 @@ export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables =
     }
   }, [messages, isLoading]);
 
-  const handleSubmit = async () => {
-    const text = input.trim();
+  const handleSubmit = async (overrideText?: string) => {
+    const text = (overrideText ?? input).trim();
     if (!text || isLoading) return;
 
     const userMsg: ChatMessage = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
+    setReplyInput('');
     setIsLoading(true);
 
     try {
@@ -96,7 +100,7 @@ export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables =
       } else if (response.status === 'clarification_needed') {
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: response.clarification_message || '' },
+          { role: 'assistant', content: response.clarification_message || '', isClarification: true },
         ]);
       } else {
         setMessages((prev) => [
@@ -129,10 +133,15 @@ export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables =
     }
   };
 
+  const handleReply = (text: string) => {
+    handleSubmit(text);
+  };
+
   const clearConversation = () => {
     setMessages([]);
     setPendingRule(null);
     setInput('');
+    setReplyInput('');
   };
 
   const ruleTypeBadgeLabel = (type: string) => {
@@ -162,7 +171,7 @@ export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables =
           />
           <Button
             size="sm"
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={!input.trim() || isLoading}
             className="h-9 px-3 shrink-0"
           >
@@ -281,15 +290,36 @@ export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables =
               </div>
             </ScrollArea>
 
-            {messages.length > 0 && !pendingRule && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-0 right-0 h-6 text-xs text-muted-foreground"
-                onClick={clearConversation}
-              >
-                {t.common.close}
-              </Button>
+            {/* Inline reply input - shown when conversation is active and no pending rule */}
+            {!pendingRule && !isLoading && messages.length > 0 && (
+              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50">
+                <CornerDownLeft className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <Input
+                  ref={replyInputRef}
+                  value={replyInput}
+                  onChange={(e) => setReplyInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && replyInput.trim() && handleReply(replyInput)}
+                  placeholder={ai?.replyPlaceholder || 'Type your reply...'}
+                  className="h-8 text-sm"
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  onClick={() => handleReply(replyInput)}
+                  disabled={!replyInput.trim()}
+                  className="h-8 px-3 shrink-0"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 shrink-0 text-muted-foreground"
+                  onClick={clearConversation}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             )}
           </div>
         )}

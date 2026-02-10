@@ -613,6 +613,8 @@ export const translations = {
         createRule: 'Crear Regla',
         rowsAffected: 'Filas afectadas',
         columnsAdded: 'Columnas añadidas',
+        replyPlaceholder: 'Escribe tu respuesta...',
+        reply: 'Responder',
       },
       form: {
         selectVariable: 'Seleccionar variable',
@@ -1354,6 +1356,8 @@ export const translations = {
         createRule: 'Create Rule',
         rowsAffected: 'Rows affected',
         columnsAdded: 'Columns added',
+        replyPlaceholder: 'Type your reply...',
+        reply: 'Reply',
       },
       form: {
         selectVariable: 'Select variable',
