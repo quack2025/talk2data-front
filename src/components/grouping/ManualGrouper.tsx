@@ -262,6 +262,7 @@ export function ManualGrouper({
                         key={v}
                         className="w-full text-left px-2 py-1 text-xs font-mono rounded hover:bg-accent transition-colors"
                         onClick={() => addVariable(v)}
+                        title={variableLabels[v] ? `${v} (${variableLabels[v]})` : v}
                       >
                         <span className="font-mono">{v}</span>
                         {variableLabels[v] && <span className="text-muted-foreground ml-1 font-sans truncate">({variableLabels[v]})</span>}
@@ -299,8 +300,9 @@ export function ManualGrouper({
                       <div
                         key={v}
                         className="flex items-center justify-between px-2 py-1 rounded hover:bg-accent group"
+                        title={variableLabels[v] ? `${v} (${variableLabels[v]})` : v}
                       >
-                        <span className="text-xs font-mono">{v}</span>
+                        <span className="text-xs font-mono shrink-0">{v}</span>
                         {variableLabels[v] && <span className="text-xs text-muted-foreground ml-1 truncate">({variableLabels[v]})</span>}
                         <button
                           className="opacity-0 group-hover:opacity-100 transition-opacity"
