@@ -33,6 +33,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useDataPrep } from '@/hooks/useDataPrep';
 import { DataPrepRuleDialog } from './DataPrepRuleDialog';
 import { DataPrepPreview } from './DataPrepPreview';
+import { DataPrepAIInput } from './DataPrepAIInput';
 import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType, DataPrepPreviewResponse } from '@/types/dataPrep';
 import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import { toast } from 'sonner';
@@ -185,6 +186,9 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
           </Button>
         </div>
       </div>
+
+      {/* AI Input */}
+      <DataPrepAIInput projectId={projectId} onRuleCreated={fetchRules} />
 
       {error && (
         <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
