@@ -148,6 +148,11 @@ export const translations = {
       ready: 'Listo',
       error: 'Error',
       studyContextDescription: 'Contexto configurado para el análisis con IA',
+      tabOverview: 'Resumen',
+      tabData: 'Datos',
+      tabContext: 'Contexto',
+      tabFiles: 'Archivos',
+      goToDataPrep: 'Ir a preparación',
     },
     // Project Upload
     projectUpload: {
@@ -910,6 +915,11 @@ export const translations = {
       ready: 'Ready',
       error: 'Error',
       studyContextDescription: 'Context configured for AI analysis',
+      tabOverview: 'Overview',
+      tabData: 'Data',
+      tabContext: 'Context',
+      tabFiles: 'Files',
+      goToDataPrep: 'Go to data prep',
     },
     // Project Upload
     projectUpload: {
