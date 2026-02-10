@@ -84,6 +84,7 @@ export function DataPrepRuleDialog({
 }: DataPrepRuleDialogProps) {
   const { t, language } = useLanguage();
   const dp = t.dataPrep;
+  const f = (dp as Record<string, unknown>).form as Record<string, string> | undefined;
 
   // Common fields
   const [name, setName] = useState('');
@@ -138,7 +139,7 @@ export function DataPrepRuleDialog({
     return labels[type];
   };
 
-  const l = (key: string, fallback: string) => (dp as any)?.[key] || fallback;
+  
 
   useEffect(() => {
     if (!open) return;
@@ -377,7 +378,7 @@ export function DataPrepRuleDialog({
   }) => (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="h-8 text-sm">
-        <SelectValue placeholder={placeholder || l('selectVariable', language === 'es' ? 'Seleccionar variable' : 'Select variable')} />
+        <SelectValue placeholder={f?.selectVariable || 'Select variable'} />
       </SelectTrigger>
       <SelectContent>
         {availableVariables.map((v) => (
@@ -392,11 +393,11 @@ export function DataPrepRuleDialog({
   const renderCleaningFields = () => (
     <div className="space-y-3">
       <div className="space-y-1">
-        <Label className="text-xs">{l('variable', language === 'es' ? 'Variable' : 'Variable')}</Label>
+        <Label className="text-xs">{f?.variable || 'Variable'}</Label>
         <VariableSelect value={cleanVariable} onValueChange={setCleanVariable} />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">{l('operator', language === 'es' ? 'Operador' : 'Operator')}</Label>
+        <Label className="text-xs">{f?.operator || 'Operator'}</Label>
         <Select value={cleanOperator} onValueChange={setCleanOperator}>
           <SelectTrigger className="h-8 text-sm">
             <SelectValue />
@@ -414,8 +415,8 @@ export function DataPrepRuleDialog({
         <div className="space-y-1">
           <Label className="text-xs">
             {LIST_OPERATORS.includes(cleanOperator)
-              ? l('valuesCsv', language === 'es' ? 'Valores (separados por coma)' : 'Values (comma separated)')
-              : l('value', language === 'es' ? 'Valor' : 'Value')}
+              ? (f?.valuesCsv || 'Values (comma separated)')
+              : (f?.value || 'Value')}
           </Label>
           <Input
             value={cleanValue}
@@ -426,17 +427,17 @@ export function DataPrepRuleDialog({
         </div>
       )}
       <div className="space-y-1">
-        <Label className="text-xs">{l('action', language === 'es' ? 'Acción' : 'Action')}</Label>
+        <Label className="text-xs">{f?.action || 'Action'}</Label>
         <Select value={cleanAction} onValueChange={setCleanAction}>
           <SelectTrigger className="h-8 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="drop" className="text-sm">
-              {language === 'es' ? 'Eliminar casos' : 'Drop cases'}
+              {f?.actionDrop || 'Drop cases'}
             </SelectItem>
             <SelectItem value="filter" className="text-sm">
-              {language === 'es' ? 'Filtrar (mantener)' : 'Filter (keep)'}
+              {f?.actionFilter || 'Filter (keep)'}
             </SelectItem>
           </SelectContent>
         </Select>
@@ -447,20 +448,20 @@ export function DataPrepRuleDialog({
   const renderNetFields = () => (
     <div className="space-y-3">
       <div className="space-y-1">
-        <Label className="text-xs">{l('variable', 'Variable')}</Label>
+        <Label className="text-xs">{f?.variable || 'Variable'}</Label>
         <VariableSelect value={netVariable} onValueChange={setNetVariable} />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">{language === 'es' ? 'Nombre del Net' : 'Net name'}</Label>
+        <Label className="text-xs">{f?.netName || 'Net name'}</Label>
         <Input
           value={netName}
           onChange={(e) => setNetName(e.target.value)}
-          placeholder={language === 'es' ? 'Ej: Top 2 Box' : 'E.g. Top 2 Box'}
+          placeholder={f?.netNamePlaceholder || 'E.g. Top 2 Box'}
           className="h-8 text-sm"
         />
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">{language === 'es' ? 'Códigos' : 'Codes'}</Label>
+        <Label className="text-xs">{f?.codes || 'Codes'}</Label>
         <Input
           value={netCodes}
           onChange={(e) => setNetCodes(e.target.value)}
@@ -468,7 +469,7 @@ export function DataPrepRuleDialog({
           className="h-8 text-sm"
         />
         <p className="text-xs text-muted-foreground">
-          {language === 'es' ? 'Los códigos que componen este Net / Top Box' : 'The codes that make up this Net / Top Box'}
+          {f?.codesHint || 'The codes that make up this Net / Top Box'}
         </p>
       </div>
     </div>
@@ -483,23 +484,23 @@ export function DataPrepRuleDialog({
     return (
       <div className="space-y-3">
         <div className="space-y-1">
-          <Label className="text-xs">{l('variable', 'Variable')}</Label>
+          <Label className="text-xs">{f?.variable || 'Variable'}</Label>
           <VariableSelect value={recodeVariable} onValueChange={setRecodeVariable} />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">{language === 'es' ? 'Nuevo nombre de variable' : 'New variable name'}</Label>
+          <Label className="text-xs">{f?.newVariableName || 'New variable name'}</Label>
           <Input
             value={recodeNewVarName}
             onChange={(e) => setRecodeNewVarName(e.target.value)}
-            placeholder={language === 'es' ? 'Dejar vacío para auto' : 'Leave empty for auto'}
+            placeholder={f?.newVarPlaceholder || 'Leave empty for auto'}
             className="h-8 text-sm"
           />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs font-medium">{language === 'es' ? 'Mapeos' : 'Mappings'}</Label>
+            <Label className="text-xs font-medium">{f?.mappings || 'Mappings'}</Label>
             <Button variant="outline" size="sm" className="h-6 text-xs" onClick={addMapping}>
-              <Plus className="h-3 w-3 mr-1" /> {language === 'es' ? 'Agregar' : 'Add'}
+              <Plus className="h-3 w-3 mr-1" /> {f?.add || 'Add'}
             </Button>
           </div>
           {recodeMappings.map((m, i) => (
@@ -521,7 +522,7 @@ export function DataPrepRuleDialog({
               <Input
                 value={m.label}
                 onChange={(e) => updateMapping(i, 'label', e.target.value)}
-                placeholder={language === 'es' ? 'Etiqueta' : 'Label'}
+                placeholder={f?.labelField || 'Label'}
                 className="h-7 text-xs flex-1"
               />
               {recodeMappings.length > 1 && (
@@ -545,7 +546,7 @@ export function DataPrepRuleDialog({
     return (
       <div className="space-y-3">
         <div className="space-y-1">
-          <Label className="text-xs">{language === 'es' ? 'Nombre de variable' : 'Variable name'}</Label>
+          <Label className="text-xs">{f?.computedVarName || 'Variable name'}</Label>
           <Input
             value={computedName}
             onChange={(e) => setComputedName(e.target.value)}
@@ -554,7 +555,7 @@ export function DataPrepRuleDialog({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">{language === 'es' ? 'Etiqueta' : 'Label'}</Label>
+          <Label className="text-xs">{f?.computedLabel || 'Label'}</Label>
           <Input
             value={computedLabel}
             onChange={(e) => setComputedLabel(e.target.value)}
@@ -563,7 +564,7 @@ export function DataPrepRuleDialog({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">{language === 'es' ? 'Combinar condiciones' : 'Combine conditions'}</Label>
+          <Label className="text-xs">{f?.combineConditions || 'Combine conditions'}</Label>
           <Select value={computedCombine} onValueChange={setComputedCombine}>
             <SelectTrigger className="h-8 text-sm">
               <SelectValue />
@@ -576,9 +577,9 @@ export function DataPrepRuleDialog({
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs font-medium">{language === 'es' ? 'Condiciones' : 'Conditions'}</Label>
+            <Label className="text-xs font-medium">{f?.conditions || 'Conditions'}</Label>
             <Button variant="outline" size="sm" className="h-6 text-xs" onClick={addCondition}>
-              <Plus className="h-3 w-3 mr-1" /> {language === 'es' ? 'Agregar' : 'Add'}
+              <Plus className="h-3 w-3 mr-1" /> {f?.add || 'Add'}
             </Button>
           </div>
           {computedConditions.map((c, i) => (
@@ -599,7 +600,7 @@ export function DataPrepRuleDialog({
               <Input
                 value={c.value}
                 onChange={(e) => updateCondition(i, 'value', e.target.value)}
-                placeholder={language === 'es' ? 'Valor' : 'Value'}
+                placeholder={f?.value || 'Value'}
                 className="h-8 text-xs w-20"
               />
               {computedConditions.length > 1 && (
@@ -625,16 +626,14 @@ export function DataPrepRuleDialog({
         <div className="flex items-start gap-2 rounded-md bg-muted/50 p-3">
           <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground">
-            {language === 'es'
-              ? 'Define objetivos de ponderación por variable. Formato: código:porcentaje. Ejemplo: 1:50, 2:50'
-              : 'Define weighting targets per variable. Format: code:percentage. Example: 1:50, 2:50'}
+            {f?.weightHint || 'Define weighting targets per variable. Format: code:percentage. Example: 1:50, 2:50'}
           </p>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs font-medium">{language === 'es' ? 'Objetivos' : 'Targets'}</Label>
+            <Label className="text-xs font-medium">{f?.targets || 'Targets'}</Label>
             <Button variant="outline" size="sm" className="h-6 text-xs" onClick={addTarget}>
-              <Plus className="h-3 w-3 mr-1" /> {language === 'es' ? 'Agregar variable' : 'Add variable'}
+              <Plus className="h-3 w-3 mr-1" /> {f?.addVariable || 'Add variable'}
             </Button>
           </div>
           {weightTargets.map((wt, i) => (
@@ -658,15 +657,15 @@ export function DataPrepRuleDialog({
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1">
-            <Label className="text-xs">{language === 'es' ? 'Máx. iteraciones' : 'Max iterations'}</Label>
+            <Label className="text-xs">{f?.maxIterations || 'Max iterations'}</Label>
             <Input value={weightMaxIter} onChange={(e) => setWeightMaxIter(e.target.value)} type="number" className="h-8 text-sm" />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">{language === 'es' ? 'Peso máx.' : 'Max weight'}</Label>
+            <Label className="text-xs">{f?.maxWeight || 'Max weight'}</Label>
             <Input value={weightMaxWeight} onChange={(e) => setWeightMaxWeight(e.target.value)} type="number" step="0.1" className="h-8 text-sm" />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">{language === 'es' ? 'Peso mín.' : 'Min weight'}</Label>
+            <Label className="text-xs">{f?.minWeight || 'Min weight'}</Label>
             <Input value={weightMinWeight} onChange={(e) => setWeightMinWeight(e.target.value)} type="number" step="0.01" className="h-8 text-sm" />
           </div>
         </div>
