@@ -48,10 +48,10 @@ export interface AutoDetectResponse {
   detection_methods_used: string[];
 }
 
-export const GROUP_TYPE_LABELS: Record<string, string> = {
-  awareness: 'Conocimiento',
-  grid: 'Batería / Grid',
-  ranking: 'Ranking',
-  scale: 'Escala',
-  custom: 'Personalizado',
+export const GROUP_TYPE_LABELS: Record<string, { es: string; en: string }> = {
+  awareness: { es: 'Conocimiento', en: 'Awareness' },
+  grid: { es: 'Batería / Grid', en: 'Grid / Battery' },
+  ranking: { es: 'Ranking', en: 'Ranking' },
+  scale: { es: 'Escala', en: 'Scale' },
+  custom: { es: 'Personalizado', en: 'Custom' },
 };
