@@ -13,7 +13,9 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search, Download } from 'lucide-react';
+import { api } from '@/lib/api';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -59,6 +61,7 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
   const [distOpen, setDistOpen] = useState(false);
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
   const [colSearch, setColSearch] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
 
   const allColumns = tableData?.columns ?? [];
   const visibleColumns = allColumns.filter(c => !hiddenCols.has(c.name));
@@ -89,6 +92,29 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
     },
     [fetchDistribution]
   );
+
+  const handleExportExcel = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      const blob = await api.downloadBlob(
+        `/projects/${projectId}/data-prep/export-excel?prepared=${prepared}`,
+        'GET'
+      );
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `data_${prepared ? 'prepared' : 'original'}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success(dt?.exportSuccess || 'Excel file downloaded');
+    } catch (e) {
+      toast.error(dt?.exportError || 'Export failed');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [projectId, prepared, dt]);
 
   const totalRows = tableData?.total_rows || 0;
   const totalCols = tableData?.columns.length || 0;
@@ -219,6 +245,23 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
+          )}
+          {/* Export to Excel */}
+          {totalRows > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 text-xs"
+              disabled={isExporting}
+              onClick={handleExportExcel}
+            >
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
+              {dt?.exportExcel || 'Export to Excel'}
+            </Button>
           )}
         </div>
 

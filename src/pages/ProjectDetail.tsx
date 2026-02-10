@@ -268,26 +268,26 @@ export default function ProjectDetail() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full justify-start h-12 bg-transparent border-b rounded-none p-0 gap-0">
-            <TabsTrigger value="overview" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground">
+            <TabsTrigger value="overview" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
               <LayoutDashboard className="h-4 w-4" />
               {t.projectDetail.tabOverview}
             </TabsTrigger>
-            <TabsTrigger value="data" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground">
+            <TabsTrigger value="data" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
               <SlidersHorizontal className="h-4 w-4" />
               {t.projectDetail.tabData}
               {hasReadyFiles && (
                 <span className={`ml-1 h-2 w-2 rounded-full ${dataPrepDot}`} />
               )}
             </TabsTrigger>
-            <TabsTrigger value="explorer" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground">
+            <TabsTrigger value="explorer" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
               <Database className="h-4 w-4" />
               {t.projectDetail.tabExplorer}
             </TabsTrigger>
-            <TabsTrigger value="context" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground">
+            <TabsTrigger value="context" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
               <BookOpen className="h-4 w-4" />
               {t.projectDetail.tabContext}
             </TabsTrigger>
-            <TabsTrigger value="files" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground">
+            <TabsTrigger value="files" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
               <FolderOpen className="h-4 w-4" />
               {t.projectDetail.tabFiles}
               {hasFiles && (
