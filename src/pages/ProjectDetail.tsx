@@ -51,6 +51,7 @@ import { AggfileGeneratorModal } from '@/components/aggfile';
 import { VariableGroupsManager } from '@/components/grouping';
 import { WaveManager } from '@/components/waves';
 import { DataPrepManager } from '@/components/dataprep';
+import { DataTableView } from '@/components/dataprep/DataTableView';
 import { useProjectVariables } from '@/hooks/useProjectVariables';
 import { useDataPrep, type DataPrepStatus } from '@/hooks/useDataPrep';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -278,6 +279,10 @@ export default function ProjectDetail() {
                 <span className={`ml-1 h-2 w-2 rounded-full ${dataPrepDot}`} />
               )}
             </TabsTrigger>
+            <TabsTrigger value="explorer" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground">
+              <Database className="h-4 w-4" />
+              {t.projectDetail.tabExplorer}
+            </TabsTrigger>
             <TabsTrigger value="context" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground">
               <BookOpen className="h-4 w-4" />
               {t.projectDetail.tabContext}
@@ -495,6 +500,27 @@ export default function ProjectDetail() {
               <Card>
                 <CardContent className="flex flex-col items-center gap-3 py-12">
                   <SlidersHorizontal className="h-10 w-10 text-muted-foreground" />
+                  <p className="text-muted-foreground">{t.projectDetail.chatCardDisabled}</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Tab: Data Explorer */}
+          <TabsContent value="explorer" className="space-y-6 mt-4">
+            {hasReadyFiles ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <DataTableView
+                    projectId={projectId!}
+                    onCreateRule={() => setActiveTab('data')}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center gap-3 py-12">
+                  <Database className="h-10 w-10 text-muted-foreground" />
                   <p className="text-muted-foreground">{t.projectDetail.chatCardDisabled}</p>
                 </CardContent>
               </Card>
