@@ -145,7 +145,7 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
                   <Columns3 className="h-3.5 w-3.5" />
-                  {dt?.columns || 'Columns'}
+                  {dt?.columnSelector || 'Column Selector'}
                   {hiddenCols.size > 0 && (
                     <Badge variant="secondary" className="h-4 px-1 text-[10px]">
                       {allColumns.length - hiddenCols.size}/{allColumns.length}
