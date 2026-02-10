@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog,
@@ -31,6 +32,9 @@ import {
   Calculator,
   Table2,
   ListChecks,
+  CheckCircle2,
+  SkipForward,
+  RotateCcw,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDataPrep } from '@/hooks/useDataPrep';
@@ -47,6 +51,7 @@ interface DataPrepManagerProps {
   projectId: string;
   availableVariables?: string[];
   variableLabels?: VariableLabelMap;
+  onStatusChange?: (status: 'pending' | 'confirmed' | 'skipped') => void;
 }
 
 const RULE_TYPE_ICONS: Record<DataPrepRuleType, React.ElementType> = {
@@ -57,7 +62,7 @@ const RULE_TYPE_ICONS: Record<DataPrepRuleType, React.ElementType> = {
   computed: Calculator,
 };
 
-export function DataPrepManager({ projectId, availableVariables = [], variableLabels = {} }: DataPrepManagerProps) {
+export function DataPrepManager({ projectId, availableVariables = [], variableLabels = {}, onStatusChange }: DataPrepManagerProps) {
   const { t } = useLanguage();
   const dp = t.dataPrep;
   const {
@@ -66,6 +71,7 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
     preview,
     isPreviewLoading,
     error,
+    dataPrepStatus,
     fetchRules,
     createRule,
     updateRule,
@@ -73,6 +79,9 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
     reorderRules,
     previewRules,
     clearPreview,
+    confirmDataReady,
+    skipDataPrep,
+    reopenDataPrep,
   } = useDataPrep(projectId);
 
   const [showDialog, setShowDialog] = useState(false);
@@ -80,6 +89,7 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
   const [deletingRule, setDeletingRule] = useState<DataPrepRule | null>(null);
   const [rulePrefill, setRulePrefill] = useState<RulePrefill | null>(null);
   const [activeTab, setActiveTab] = useState('rules');
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
 
   useEffect(() => {
     fetchRules();
@@ -345,6 +355,62 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
         </TabsContent>
       </Tabs>
 
+      {/* Data Readiness Gate Footer */}
+      <div className="border-t pt-4 mt-4">
+        {dataPrepStatus === 'pending' ? (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              {dp?.gateBanner || 'Revisa y confirma la preparación de datos antes de iniciar el análisis'}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSkipConfirm(true)}
+              >
+                <SkipForward className="mr-2 h-4 w-4" />
+                {dp?.skipPrep || 'No requiere preparación'}
+              </Button>
+              {rules.length > 0 && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    confirmDataReady();
+                    onStatusChange?.('confirmed');
+                    toast.success(dp?.statusConfirmed || 'Datos confirmados');
+                  }}
+                >
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  {dp?.confirmReady || 'Confirmar datos listos'}
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge variant={dataPrepStatus === 'confirmed' ? 'default' : 'secondary'} className="gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                {dataPrepStatus === 'confirmed'
+                  ? (dp?.statusConfirmed || 'Datos confirmados')
+                  : (dp?.statusSkipped || 'Sin preparación requerida')}
+              </Badge>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                reopenDataPrep();
+                onStatusChange?.('pending');
+              }}
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              {dp?.reopenPrep || 'Reabrir preparación'}
+            </Button>
+          </div>
+        )}
+      </div>
+
       {/* Create/Edit dialog */}
       <DataPrepRuleDialog
         open={showDialog}
@@ -376,6 +442,35 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
             <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>
               {t.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Skip confirmation */}
+      <AlertDialog
+        open={showSkipConfirm}
+        onOpenChange={setShowSkipConfirm}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {dp?.skipConfirmTitle || '¿Confirmar sin preparación?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {dp?.skipConfirmDescription ||
+                'Al continuar sin reglas de preparación, el análisis usará los datos tal como fueron cargados.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              skipDataPrep();
+              onStatusChange?.('skipped');
+              setShowSkipConfirm(false);
+              toast.success(dp?.statusSkipped || 'Sin preparación requerida');
+            }}>
+              {t.common.confirm}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

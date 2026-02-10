@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,8 @@ import {
   Sparkles,
   ArrowRight,
   Table2,
+  AlertTriangle,
+  ShieldCheck,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -46,6 +48,14 @@ import { VariableGroupsManager } from '@/components/grouping';
 import { WaveManager } from '@/components/waves';
 import { DataPrepManager } from '@/components/dataprep';
 import { useProjectVariables } from '@/hooks/useProjectVariables';
+import { useDataPrep, type DataPrepStatus } from '@/hooks/useDataPrep';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -60,6 +70,16 @@ export default function ProjectDetail() {
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
   const { data: summary, isLoading: summaryLoading } = useExecutiveSummary(projectId!);
   const { data: variableNames = [], variableLabels } = useProjectVariables(projectId);
+  const { dataPrepStatus } = useDataPrep(projectId!);
+  const [localDataPrepStatus, setLocalDataPrepStatus] = useState<DataPrepStatus>(dataPrepStatus);
+
+  useEffect(() => {
+    setLocalDataPrepStatus(dataPrepStatus);
+  }, [dataPrepStatus]);
+
+  const handleDataPrepStatusChange = useCallback((status: DataPrepStatus) => {
+    setLocalDataPrepStatus(status);
+  }, []);
 
   // Track last used project
   useEffect(() => {
@@ -104,6 +124,8 @@ export default function ProjectDetail() {
   const hasFiles = files && files.length > 0;
   const hasReadyFiles = project.status === 'ready';
   const hasSummary = !!summary;
+  const isDataReady = localDataPrepStatus !== 'pending';
+  const canAccessAnalysis = hasReadyFiles && isDataReady;
 
   // Check if project has study context configured
   const hasStudyContext = project.study_objective || project.country || 
@@ -169,25 +191,57 @@ export default function ProjectDetail() {
               <Upload className="h-4 w-4 mr-2" />
               {t.projectDetail.uploadFiles}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setAggfileModalOpen(true)}
-              disabled={!hasReadyFiles}
-            >
-              <Table2 className="h-4 w-4 mr-2" />
-              {t.aggfile?.generateTables || 'Generar Tablas'}
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => navigate(`/projects/${projectId}/chat`)}
-              disabled={!hasReadyFiles}
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              {t.projectDetail.openChat}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAggfileModalOpen(true)}
+                      disabled={!canAccessAnalysis}
+                    >
+                      <Table2 className="h-4 w-4 mr-2" />
+                      {t.aggfile?.generateTables || 'Generar Tablas'}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!isDataReady && hasReadyFiles && (
+                  <TooltipContent>{t.dataPrep?.gateTooltip || 'Confirma la preparación de datos primero'}</TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate(`/projects/${projectId}/chat`)}
+                      disabled={!canAccessAnalysis}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      {t.projectDetail.openChat}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!isDataReady && hasReadyFiles && (
+                  <TooltipContent>{t.dataPrep?.gateTooltip || 'Confirma la preparación de datos primero'}</TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
+
+        {/* Data Readiness Banner */}
+        {hasReadyFiles && !isDataReady && (
+          <Alert className="border-amber-500/50 bg-amber-500/10">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              {t.dataPrep?.gateBanner || 'Revisa y confirma la preparación de datos antes de iniciar el análisis'}
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Quick Actions */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -208,9 +262,9 @@ export default function ProjectDetail() {
 
           <Card
             className={`cursor-pointer transition-colors ${
-              hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+              canAccessAnalysis ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
             }`}
-            onClick={() => hasReadyFiles && navigate(`/projects/${projectId}/chat`)}
+            onClick={() => canAccessAnalysis && navigate(`/projects/${projectId}/chat`)}
           >
             <CardHeader className="pb-2">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -220,7 +274,11 @@ export default function ProjectDetail() {
             <CardContent>
               <CardTitle className="text-base">{t.projectDetail.chatCard}</CardTitle>
               <CardDescription>
-                {hasReadyFiles ? t.projectDetail.chatCardDescription : t.projectDetail.chatCardDisabled}
+                {!hasReadyFiles 
+                  ? t.projectDetail.chatCardDisabled 
+                  : !isDataReady 
+                    ? (t.dataPrep?.gateTooltip || 'Confirma la preparación de datos primero')
+                    : t.projectDetail.chatCardDescription}
               </CardDescription>
             </CardContent>
           </Card>
@@ -244,9 +302,9 @@ export default function ProjectDetail() {
 
           <Card
             className={`cursor-pointer transition-colors ${
-              hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+              canAccessAnalysis ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
             }`}
-            onClick={() => hasReadyFiles && setAggfileModalOpen(true)}
+            onClick={() => canAccessAnalysis && setAggfileModalOpen(true)}
           >
             <CardHeader className="pb-2">
               <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -256,9 +314,11 @@ export default function ProjectDetail() {
             <CardContent>
               <CardTitle className="text-base">{t.aggfile?.generateTablesCard || 'Generar Tablas'}</CardTitle>
               <CardDescription>
-                {hasReadyFiles 
-                  ? (t.aggfile?.generateTablesCardDescription || 'Excel con tablas cruzadas')
-                  : t.projectDetail.chatCardDisabled}
+                {!hasReadyFiles 
+                  ? t.projectDetail.chatCardDisabled
+                  : !isDataReady
+                    ? (t.dataPrep?.gateTooltip || 'Confirma la preparación de datos primero')
+                    : (t.aggfile?.generateTablesCardDescription || 'Excel con tablas cruzadas')}
               </CardDescription>
             </CardContent>
           </Card>
@@ -510,7 +570,7 @@ export default function ProjectDetail() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DataPrepManager projectId={projectId!} availableVariables={variableNames} variableLabels={variableLabels} />
+              <DataPrepManager projectId={projectId!} availableVariables={variableNames} variableLabels={variableLabels} onStatusChange={handleDataPrepStatusChange} />
             </CardContent>
           </Card>
         )}

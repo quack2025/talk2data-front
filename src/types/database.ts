@@ -30,6 +30,7 @@ export interface Project {
   wave_number?: number;
   additional_context?: string;
   report_language?: string;
+  data_prep_status?: 'pending' | 'confirmed' | 'skipped';
 }
 
 export interface ProjectUpdateData {

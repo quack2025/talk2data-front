@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { ChatMessage } from '@/components/chat/ChatMessage';
@@ -11,13 +11,25 @@ import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw } from 'lucid
 import type { RefinementAction } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { useDataPrep } from '@/hooks/useDataPrep';
+import { toast } from 'sonner';
 
 export default function ProjectChat() {
   const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
+  const { dataPrepStatus } = useDataPrep(projectId!);
+
+  // Guard: redirect if data prep not confirmed
+  useEffect(() => {
+    if (dataPrepStatus === 'pending') {
+      toast.info(t.dataPrep?.gateTooltip || 'Confirma la preparación de datos primero');
+      navigate(`/projects/${projectId}`, { replace: true });
+    }
+  }, [dataPrepStatus, projectId, navigate, t]);
 
   const toastMessages = {
     conversationError: t.toasts.conversationError,

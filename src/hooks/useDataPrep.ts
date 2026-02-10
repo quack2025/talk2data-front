@@ -7,6 +7,18 @@ import type {
   DataPrepSummary,
 } from '@/types/dataPrep';
 
+export type DataPrepStatus = 'pending' | 'confirmed' | 'skipped';
+
+const DATA_PREP_STATUS_KEY = (projectId: string) => `data_prep_status_${projectId}`;
+
+function getStoredStatus(projectId: string): DataPrepStatus {
+  return (localStorage.getItem(DATA_PREP_STATUS_KEY(projectId)) as DataPrepStatus) || 'pending';
+}
+
+function setStoredStatus(projectId: string, status: DataPrepStatus) {
+  localStorage.setItem(DATA_PREP_STATUS_KEY(projectId), status);
+}
+
 export function useDataPrep(projectId: string) {
   const [rules, setRules] = useState<DataPrepRule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +26,7 @@ export function useDataPrep(projectId: string) {
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [summary, setSummary] = useState<DataPrepSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dataPrepStatus, setDataPrepStatus] = useState<DataPrepStatus>(() => getStoredStatus(projectId));
 
   const fetchRules = useCallback(async () => {
     setIsLoading(true);
@@ -130,6 +143,25 @@ export function useDataPrep(projectId: string) {
     setPreview(null);
   }, []);
 
+  const confirmDataReady = useCallback(() => {
+    setStoredStatus(projectId, 'confirmed');
+    setDataPrepStatus('confirmed');
+    // TODO: Replace with API call when backend is ready
+    // api.patch(`/projects/${projectId}`, { data_prep_status: 'confirmed' });
+  }, [projectId]);
+
+  const skipDataPrep = useCallback(() => {
+    setStoredStatus(projectId, 'skipped');
+    setDataPrepStatus('skipped');
+    // TODO: Replace with API call when backend is ready
+    // api.patch(`/projects/${projectId}`, { data_prep_status: 'skipped' });
+  }, [projectId]);
+
+  const reopenDataPrep = useCallback(() => {
+    setStoredStatus(projectId, 'pending');
+    setDataPrepStatus('pending');
+  }, [projectId]);
+
   return {
     rules,
     isLoading,
@@ -137,6 +169,7 @@ export function useDataPrep(projectId: string) {
     isPreviewLoading,
     summary,
     error,
+    dataPrepStatus,
     fetchRules,
     createRule,
     updateRule,
@@ -145,5 +178,8 @@ export function useDataPrep(projectId: string) {
     previewRules,
     fetchSummary,
     clearPreview,
+    confirmDataReady,
+    skipDataPrep,
+    reopenDataPrep,
   };
 }
