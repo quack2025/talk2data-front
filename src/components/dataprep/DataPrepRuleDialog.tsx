@@ -26,10 +26,16 @@ import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType, DataPrepPrevie
 import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import { DataPrepPreview } from './DataPrepPreview';
 
+export interface RulePrefill {
+  rule_type: string;
+  config: Record<string, unknown>;
+}
+
 interface DataPrepRuleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingRule: DataPrepRule | null;
+  prefill?: RulePrefill | null;
   onSave: (data: DataPrepRuleCreate) => Promise<void>;
   onPreview?: (data: DataPrepRuleCreate) => Promise<DataPrepPreviewResponse>;
   availableVariables?: string[];
@@ -70,6 +76,7 @@ export function DataPrepRuleDialog({
   open,
   onOpenChange,
   editingRule,
+  prefill,
   onSave,
   onPreview,
   availableVariables = [],
@@ -140,10 +147,14 @@ export function DataPrepRuleDialog({
       setRuleType(editingRule.rule_type);
       setIsActive(editingRule.is_active);
       populateFromConfig(editingRule.rule_type, editingRule.config);
+    } else if (prefill) {
+      resetAll();
+      setRuleType(prefill.rule_type as DataPrepRuleType);
+      populateFromConfig(prefill.rule_type as DataPrepRuleType, prefill.config);
     } else {
       resetAll();
     }
-  }, [open, editingRule]);
+  }, [open, editingRule, prefill]);
 
   const resetAll = () => {
     setName('');
