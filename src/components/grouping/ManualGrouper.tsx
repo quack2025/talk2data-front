@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { GROUP_TYPE_LABELS } from '@/types/variableGroups';
+import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import type {
   SubGroupDefinition,
   VariableGroupCreate,
@@ -39,6 +40,7 @@ interface ManualGrouperProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   availableVariables: string[];
+  variableLabels?: VariableLabelMap;
   onSave: (group: VariableGroupCreate) => Promise<void>;
   editingGroup?: VariableGroup | null;
   isSaving?: boolean;
@@ -50,12 +52,18 @@ export function ManualGrouper({
   open,
   onOpenChange,
   availableVariables,
+  variableLabels = {},
   onSave,
   editingGroup,
   isSaving = false,
 }: ManualGrouperProps) {
   const { t, language } = useLanguage();
   const groupingT = t.grouping;
+
+  const getVarDisplay = (name: string) => {
+    const label = variableLabels[name];
+    return label ? `${name} (${label})` : name;
+  };
 
   const [name, setName] = useState(editingGroup?.name || '');
   const [description, setDescription] = useState(editingGroup?.description || '');
@@ -72,9 +80,10 @@ export function ManualGrouper({
   const unselectedVars = availableVariables.filter(
     (v) => !selectedVars.includes(v)
   );
-  const filteredAvailable = unselectedVars.filter((v) =>
-    v.toLowerCase().includes(filterText.toLowerCase())
-  );
+  const filteredAvailable = unselectedVars.filter((v) => {
+    const search = filterText.toLowerCase();
+    return v.toLowerCase().includes(search) || (variableLabels[v]?.toLowerCase().includes(search) ?? false);
+  });
 
   const addVariable = (varName: string) => {
     setSelectedVars((prev) => [...prev, varName]);
@@ -254,7 +263,8 @@ export function ManualGrouper({
                         className="w-full text-left px-2 py-1 text-xs font-mono rounded hover:bg-accent transition-colors"
                         onClick={() => addVariable(v)}
                       >
-                        {v}
+                        <span className="font-mono">{v}</span>
+                        {variableLabels[v] && <span className="text-muted-foreground ml-1 font-sans truncate">({variableLabels[v]})</span>}
                       </button>
                     ))}
                     {filteredAvailable.length === 0 && (
@@ -291,6 +301,7 @@ export function ManualGrouper({
                         className="flex items-center justify-between px-2 py-1 rounded hover:bg-accent group"
                       >
                         <span className="text-xs font-mono">{v}</span>
+                        {variableLabels[v] && <span className="text-xs text-muted-foreground ml-1 truncate">({variableLabels[v]})</span>}
                         <button
                           className="opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => removeVariable(v)}
