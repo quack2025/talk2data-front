@@ -59,7 +59,7 @@ export default function ProjectDetail() {
   const { data: project, isLoading: projectLoading } = useProject(projectId!);
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
   const { data: summary, isLoading: summaryLoading } = useExecutiveSummary(projectId!);
-  const { data: variableNames = [] } = useProjectVariables(projectId);
+  const { data: variableNames = [], variableLabels } = useProjectVariables(projectId);
 
   // Track last used project
   useEffect(() => {
@@ -494,6 +494,7 @@ export default function ProjectDetail() {
               <VariableGroupsManager
                 projectId={projectId!}
                 availableVariables={variableNames}
+                variableLabels={variableLabels}
               />
             </CardContent>
           </Card>

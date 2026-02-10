@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -36,11 +37,13 @@ import { toast } from 'sonner';
 interface VariableGroupsManagerProps {
   projectId: string;
   availableVariables: string[];
+  variableLabels?: VariableLabelMap;
 }
 
 export function VariableGroupsManager({
   projectId,
   availableVariables,
+  variableLabels = {},
 }: VariableGroupsManagerProps) {
   const { t, language } = useLanguage();
   const groupingT = t.grouping;
@@ -232,6 +235,7 @@ export function VariableGroupsManager({
           if (!open) setEditingGroup(null);
         }}
         availableVariables={availableVariables}
+        variableLabels={variableLabels}
         onSave={handleSaveManualGroup}
         editingGroup={editingGroup}
         isSaving={isSaving}
