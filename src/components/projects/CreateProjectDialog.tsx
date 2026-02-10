@@ -51,18 +51,36 @@ interface CreateProjectDialogProps {
 }
 
 // G8 countries + Latin America + Other
-const COUNTRIES = [
-  // G8 Countries
-  'Estados Unidos', 'Reino Unido', 'Francia', 'Alemania', 'Italia', 
-  'Canadá', 'Japón', 'Rusia',
-  // Latin America
-  'Argentina', 'Bolivia', 'Brasil', 'Chile', 'Colombia', 'Costa Rica', 
-  'Ecuador', 'El Salvador', 'España', 'Guatemala', 'Honduras', 'México', 
-  'Nicaragua', 'Panamá', 'Paraguay', 'Perú', 'República Dominicana', 
-  'Uruguay', 'Venezuela',
-  // Other
-  'Otro'
-];
+const COUNTRIES: Record<string, { es: string; en: string }> = {
+  US: { es: 'Estados Unidos', en: 'United States' },
+  GB: { es: 'Reino Unido', en: 'United Kingdom' },
+  FR: { es: 'Francia', en: 'France' },
+  DE: { es: 'Alemania', en: 'Germany' },
+  IT: { es: 'Italia', en: 'Italy' },
+  CA: { es: 'Canadá', en: 'Canada' },
+  JP: { es: 'Japón', en: 'Japan' },
+  RU: { es: 'Rusia', en: 'Russia' },
+  AR: { es: 'Argentina', en: 'Argentina' },
+  BO: { es: 'Bolivia', en: 'Bolivia' },
+  BR: { es: 'Brasil', en: 'Brazil' },
+  CL: { es: 'Chile', en: 'Chile' },
+  CO: { es: 'Colombia', en: 'Colombia' },
+  CR: { es: 'Costa Rica', en: 'Costa Rica' },
+  EC: { es: 'Ecuador', en: 'Ecuador' },
+  SV: { es: 'El Salvador', en: 'El Salvador' },
+  ES: { es: 'España', en: 'Spain' },
+  GT: { es: 'Guatemala', en: 'Guatemala' },
+  HN: { es: 'Honduras', en: 'Honduras' },
+  MX: { es: 'México', en: 'Mexico' },
+  NI: { es: 'Nicaragua', en: 'Nicaragua' },
+  PA: { es: 'Panamá', en: 'Panama' },
+  PY: { es: 'Paraguay', en: 'Paraguay' },
+  PE: { es: 'Perú', en: 'Peru' },
+  DO: { es: 'República Dominicana', en: 'Dominican Republic' },
+  UY: { es: 'Uruguay', en: 'Uruguay' },
+  VE: { es: 'Venezuela', en: 'Venezuela' },
+  OTHER: { es: 'Otro', en: 'Other' },
+};
 
 const INDUSTRIES = [
   'FMCG', 'Automotive', 'Banking & Finance', 'Healthcare', 'Technology',
@@ -346,14 +364,14 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                           ) : (
                             <Select 
                               onValueChange={(value) => {
-                                if (value === 'Otro') {
+                                if (value === 'OTHER') {
                                   setShowCustomCountry(true);
                                   field.onChange('');
                                 } else {
-                                  field.onChange(value);
+                                  field.onChange(COUNTRIES[value][language]);
                                 }
                               }} 
-                              value={field.value}
+                              value={Object.keys(COUNTRIES).find(k => COUNTRIES[k][language] === field.value) || field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
@@ -361,9 +379,9 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {COUNTRIES.map(country => (
-                                  <SelectItem key={country} value={country}>
-                                    {country}
+                                {Object.entries(COUNTRIES).map(([code, names]) => (
+                                  <SelectItem key={code} value={code}>
+                                    {names[language]}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
