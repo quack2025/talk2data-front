@@ -20,16 +20,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, ArrowRight, Info, Loader2 } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Info, Loader2, Eye } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
-import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType } from '@/types/dataPrep';
+import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType, DataPrepPreviewResponse } from '@/types/dataPrep';
 import type { VariableLabelMap } from '@/hooks/useProjectVariables';
+import { DataPrepPreview } from './DataPrepPreview';
 
 interface DataPrepRuleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingRule: DataPrepRule | null;
   onSave: (data: DataPrepRuleCreate) => Promise<void>;
+  onPreview?: (data: DataPrepRuleCreate) => Promise<DataPrepPreviewResponse>;
   availableVariables?: string[];
   variableLabels?: VariableLabelMap;
 }
@@ -69,6 +71,7 @@ export function DataPrepRuleDialog({
   onOpenChange,
   editingRule,
   onSave,
+  onPreview,
   availableVariables = [],
   variableLabels = {},
 }: DataPrepRuleDialogProps) {
@@ -80,6 +83,8 @@ export function DataPrepRuleDialog({
   const [ruleType, setRuleType] = useState<DataPrepRuleType>('cleaning');
   const [isActive, setIsActive] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [previewResult, setPreviewResult] = useState<DataPrepPreviewResponse | null>(null);
 
   // Cleaning
   const [cleanVariable, setCleanVariable] = useState('');
@@ -144,6 +149,7 @@ export function DataPrepRuleDialog({
     setName('');
     setRuleType('cleaning');
     setIsActive(true);
+    setPreviewResult(null);
     setCleanVariable(''); setCleanOperator('equals'); setCleanValue(''); setCleanAction('drop');
     setNetVariable(''); setNetName(''); setNetCodes('');
     setRecodeVariable(''); setRecodeNewVarName('');
@@ -310,6 +316,25 @@ export function DataPrepRuleDialog({
   };
 
   const canSave = name.trim().length > 0;
+
+  const handlePreview = async () => {
+    if (!onPreview || !canSave) return;
+    setIsPreviewing(true);
+    setPreviewResult(null);
+    try {
+      const result = await onPreview({
+        name: name.trim(),
+        rule_type: ruleType,
+        config: buildConfig(),
+        is_active: isActive,
+      });
+      setPreviewResult(result);
+    } catch {
+      // error handled upstream
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
 
   const getVarDisplay = (v: string) => variableLabels[v] ? `${v} (${variableLabels[v]})` : v;
 
@@ -708,10 +733,32 @@ export function DataPrepRuleDialog({
 
             {/* Type-specific fields */}
             {renderTypeFields()}
+
+            {/* Preview result */}
+            {previewResult && (
+              <div className="mt-4">
+                <DataPrepPreview preview={previewResult} />
+              </div>
+            )}
           </div>
         </div>
 
         <DialogFooter className="px-6 py-4 border-t shrink-0">
+          {onPreview && (
+            <Button
+              variant="outline"
+              onClick={handlePreview}
+              disabled={!canSave || isPreviewing}
+              className="mr-auto"
+            >
+              {isPreviewing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Eye className="mr-2 h-4 w-4" />
+              )}
+              {dp?.preview || 'Preview'}
+            </Button>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t.common.cancel}
           </Button>

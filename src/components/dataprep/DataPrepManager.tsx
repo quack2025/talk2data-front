@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { api } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -32,7 +33,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { useDataPrep } from '@/hooks/useDataPrep';
 import { DataPrepRuleDialog } from './DataPrepRuleDialog';
 import { DataPrepPreview } from './DataPrepPreview';
-import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType } from '@/types/dataPrep';
+import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType, DataPrepPreviewResponse } from '@/types/dataPrep';
 import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import { toast } from 'sonner';
 
@@ -84,6 +85,16 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
       await createRule(data);
       toast.success(dp?.ruleCreated || 'Regla creada');
     }
+  };
+
+  const handlePreview = async (data: DataPrepRuleCreate) => {
+    // Temporarily create/update, preview, then revert if needed
+    // For now, use the global preview endpoint
+    const response = await api.post<DataPrepPreviewResponse>(
+      `/projects/${projectId}/data-prep/preview`,
+      { rule: data }
+    );
+    return response;
   };
 
   const handleDelete = async () => {
@@ -297,6 +308,7 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
         onOpenChange={setShowDialog}
         editingRule={editingRule}
         onSave={handleSave}
+        onPreview={handlePreview}
         availableVariables={availableVariables}
         variableLabels={variableLabels}
       />
