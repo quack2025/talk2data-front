@@ -13,7 +13,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search, Download, Tags } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search, Download, Tags, EyeOff } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import {
@@ -380,6 +380,17 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                           }
                         >
                           {dt?.createRecode || 'Create Recode'}
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          onClick={() =>
+                            onCreateRule({
+                              rule_type: 'exclude_columns',
+                              config: { columns: [col.name] },
+                            })
+                          }
+                        >
+                          <EyeOff className="mr-2 h-4 w-4" />
+                          {dt?.excludeColumn || 'Exclude Column'}
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>
