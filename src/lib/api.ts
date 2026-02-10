@@ -75,10 +75,15 @@ class ApiClient {
 
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({ message: "Connection error" }));
-          throw new ApiError(
-            errorBody.detail || errorBody.message || `Error ${response.status}`,
-            response.status,
-          );
+          const detail = errorBody.detail;
+          const errorMessage = typeof detail === 'string'
+            ? detail
+            : typeof errorBody.message === 'string'
+              ? errorBody.message
+              : detail
+                ? JSON.stringify(detail)
+                : `Error ${response.status}`;
+          throw new ApiError(errorMessage, response.status);
         }
 
         return await response.json();
@@ -136,10 +141,15 @@ class ApiClient {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({ message: "Connection error" }));
-      throw new ApiError(
-        errorBody.detail || errorBody.message || `Error ${response.status}`,
-        response.status,
-      );
+      const detail = errorBody.detail;
+      const errorMessage = typeof detail === 'string'
+        ? detail
+        : typeof errorBody.message === 'string'
+          ? errorBody.message
+          : detail
+            ? JSON.stringify(detail)
+            : `Error ${response.status}`;
+      throw new ApiError(errorMessage, response.status);
     }
 
     return response.json();
@@ -164,10 +174,15 @@ class ApiClient {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({ message: "Download error" }));
-      throw new ApiError(
-        errorBody.detail || errorBody.message || `Error ${response.status}`,
-        response.status,
-      );
+      const detail = errorBody.detail;
+      const errorMessage = typeof detail === 'string'
+        ? detail
+        : typeof errorBody.message === 'string'
+          ? errorBody.message
+          : detail
+            ? JSON.stringify(detail)
+            : `Error ${response.status}`;
+      throw new ApiError(errorMessage, response.status);
     }
 
     return response.blob();
