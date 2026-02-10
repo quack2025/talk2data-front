@@ -1,107 +1,101 @@
 
 
-## Plan: Data Readiness Gate (Checkpoint antes del Chat)
+## Plan: Reorganizar ProjectDetail con navegacion por tabs
 
-### Concepto
+### Diagnostico actual
 
-Agregar un estado de "Data Readiness" al proyecto que actua como checkpoint obligatorio antes de poder acceder al Chat. El usuario debe pasar por Data Preparation y tomar una decision explicita: aplicar reglas o confirmar que no se necesita preparacion. Esto replica el flujo de "DP sign-off" que usan las agencias de investigacion de mercados.
+La pagina actual tiene ~600 lineas y muestra 8+ secciones en scroll vertical continuo. El usuario debe hacer scroll extenso para llegar a Data Preparation (que es obligatorio) y luego volver arriba para las Quick Actions. Esto rompe el flujo logico.
 
-NO es un wizard pesado. Es un gate ligero con dos caminos:
-- **Camino rapido**: "Los datos estan listos, no necesitan preparacion" (1 clic)
-- **Camino completo**: Crear reglas de limpieza/ponderacion/recodificacion y confirmar
+### Propuesta: Header fijo + Tabs internos
 
-### Flujo del usuario
+En lugar de crear rutas separadas (que fragmentarian demasiado la experiencia y perderian contexto), la mejor opcion es un **header fijo con tabs** que organicen el contenido en paneles. Esto da visibilidad sin scroll excesivo y mantiene la navegacion dentro del proyecto coherente.
 
 ```text
-Upload SPSS
-    |
-    v
-Executive Summary (auto-generado)
-    |
-    v
-Project Detail
-    |
-    v
-[Data Preparation section - OBLIGATORIO]
-    |
-    +-- Opcion A: Revisar datos, crear reglas, luego "Confirmar datos listos"
-    |
-    +-- Opcion B: Revisar datos, clic en "No requiere preparacion"
-    |
-    v
-Chat DESBLOQUEADO (badge "Data Ready" visible)
++------------------------------------------+
+| Breadcrumb                               |
+| Header (nombre, status, botones)         |
+| Banner Data Readiness (si pending)       |
++------------------------------------------+
+| [Resumen] [Datos] [Contexto] [Archivos]  |  <-- Tabs
++------------------------------------------+
+|                                          |
+|  Contenido del tab activo                |
+|                                          |
++------------------------------------------+
 ```
 
-### Cambios en la experiencia
+### Distribucion de tabs
 
-1. **Boton de Chat bloqueado** hasta que el proyecto tenga `data_prep_status = 'confirmed'`
-2. **Banner informativo** en ProjectDetail cuando el status es `pending`, guiando al usuario a Data Preparation
-3. **Dos botones nuevos** en DataPrepManager:
-   - "Confirmar datos listos" (cuando hay reglas activas aplicadas)
-   - "No requiere preparacion" (para confirmar explicitamente que los datos estan bien tal cual)
-4. **Badge visual** en el proyecto indicando el estado de preparacion
+**Tab 1 - Resumen (default)**
+- Quick Actions (Chat, Tables, Export, Settings) - como cards compactos en una fila
+- Executive Summary preview
+- Badge de estado de Data Prep (link al tab Datos)
+
+**Tab 2 - Datos**
+- Data Preparation (con gate de confirmacion)
+- Variable Groups
+- Waves (si aplica)
+
+**Tab 3 - Contexto**
+- Study Context (objetivo, pais, industria, metodologia, etc.)
+- Link a Settings para editar
+
+**Tab 4 - Archivos**
+- Lista de archivos del proyecto
+- Boton de upload
+
+### Beneficios vs pantallas separadas
+
+| Criterio | Tabs (propuesto) | Rutas separadas |
+|----------|-----------------|-----------------|
+| Contexto del proyecto | Siempre visible en header | Se pierde al navegar |
+| Velocidad de navegacion | Instantanea (sin carga) | Requiere fetch por ruta |
+| Complejidad de codigo | Moderada (1 archivo) | Alta (4+ archivos nuevos) |
+| Visibilidad de Data Prep | 1 clic (tab "Datos") | 1 clic (ruta dedicada) |
+| Mobile | Tabs scrolleables | Mejor en teoria |
 
 ### Seccion tecnica
 
-**1. Backend: nuevo campo en el proyecto**
+**Archivo: `src/pages/ProjectDetail.tsx`**
 
-El ingeniero de backend debe agregar un campo al modelo de proyecto:
+Cambios principales:
 
-- `data_prep_status`: enum con valores `'pending' | 'confirmed' | 'skipped'`
-- Default: `'pending'` (se setea cuando el proyecto pasa a status `ready`)
-- Endpoint: `PATCH /api/v1/projects/{project_id}` con `{ data_prep_status: 'confirmed' | 'skipped' }`
+1. **Estructura general**: El header (breadcrumb, nombre, status, botones, banner) permanece fuera de los tabs, siempre visible. El contenido debajo se organiza con el componente `Tabs` de shadcn/ui.
 
-Alternativamente, si no quieren modificar el modelo de proyecto, se puede manejar con un endpoint dedicado:
-- `POST /api/v1/projects/{project_id}/data-prep/confirm` (body: `{ status: 'confirmed' | 'skipped' }`)
-- `GET /api/v1/projects/{project_id}/data-prep/status` (retorna el estado actual)
+2. **Tabs component**: Usar `Tabs` con `TabsList` y `TabsTrigger` para las 4 pestanas. El tab activo por defecto sera "overview" (Resumen).
 
-**2. Frontend: tipo del proyecto (`src/types/database.ts` o similar)**
+3. **Tab "Resumen" (overview)**:
+   - Quick Actions grid (las 5 cards actuales)
+   - Executive Summary preview card
+   - Un mini-badge o link que indica el estado de Data Prep con enlace al tab "data"
 
-Agregar `data_prep_status?: 'pending' | 'confirmed' | 'skipped'` a la interfaz del proyecto.
+4. **Tab "Datos" (data)**:
+   - DataPrepManager (con su gate de confirmacion incluido)
+   - VariableGroupsManager
+   - WaveManager (condicional si `project.is_tracking`)
 
-**3. Frontend: `src/hooks/useDataPrep.ts`**
+5. **Tab "Contexto" (context)**:
+   - Study Context card (objetivo, pais, industria, etc.)
+   - Boton para ir a Settings a editar
 
-Agregar dos funciones al hook:
-- `confirmDataReady()` — llama al endpoint para marcar como `confirmed`
-- `skipDataPrep()` — llama al endpoint para marcar como `skipped`
-- `dataPrepStatus` — estado actual leido del proyecto
+6. **Tab "Archivos" (files)**:
+   - File list con upload button
+   - Mismo contenido actual de la seccion Files
 
-**4. Frontend: `src/components/dataprep/DataPrepManager.tsx`**
+7. **Logica del banner**: El banner de Data Readiness permanece fuera de los tabs (entre header y tabs), siempre visible cuando `dataPrepStatus === 'pending'`. Se le agrega un boton CTA "Ir a preparacion" que cambia el tab activo a "data".
 
-Agregar en la parte inferior de la seccion:
-- Si no hay reglas: boton prominente "No requiere preparacion" + texto explicativo de por que es importante revisar
-- Si hay reglas activas: boton "Confirmar datos listos"
-- Si ya esta confirmado: badge verde "Datos confirmados" con opcion de reabrir
+8. **Estado del tab activo**: Usar `useState` para controlar el tab activo. El CTA del banner hara `setActiveTab('data')`.
 
-**5. Frontend: `src/pages/ProjectDetail.tsx`**
+9. **Indicador en tab**: El tab "Datos" mostrara un punto de color (amber si pending, green si confirmed) para indicar el estado sin entrar al tab.
 
-- Leer `project.data_prep_status` del objeto del proyecto
-- Si es `pending`: mostrar banner amarillo/informativo arriba de las Quick Actions: "Antes de analizar, revisa y confirma la preparacion de datos"
-- El boton/card de Chat: deshabilitado con tooltip "Confirma la preparacion de datos primero"
-- El boton/card de Cross Tables: tambien deshabilitado (misma razon)
-- Si es `confirmed` o `skipped`: todo funciona como ahora
+**Archivo: `src/i18n/translations.ts`**
 
-**6. Frontend: `src/pages/ProjectChat.tsx`**
+Agregar claves para los nombres de los tabs:
+- `projectDetail.tabOverview` / "Resumen" / "Overview"
+- `projectDetail.tabData` / "Datos" / "Data"
+- `projectDetail.tabContext` / "Contexto" / "Context"
+- `projectDetail.tabFiles` / "Archivos" / "Files"
+- `projectDetail.goToDataPrep` / "Ir a preparacion" / "Go to data prep"
 
-Agregar un guard al inicio: si `data_prep_status === 'pending'`, redirigir a ProjectDetail con un toast informativo. Esto previene acceso directo via URL.
-
-**7. Frontend: `src/i18n/translations.ts`**
-
-Nuevas claves en ambos idiomas:
-- `dataPrep.confirmReady` / "Confirmar datos listos"
-- `dataPrep.skipPrep` / "No requiere preparacion"  
-- `dataPrep.statusPending` / "Pendiente de revision"
-- `dataPrep.statusConfirmed` / "Datos confirmados"
-- `dataPrep.statusSkipped` / "Sin preparacion requerida"
-- `dataPrep.gateBanner` / "Revisa y confirma la preparacion de datos antes de iniciar el analisis"
-- `dataPrep.gateTooltip` / "Confirma la preparacion de datos primero"
-- `dataPrep.skipConfirmTitle` / "Confirmar sin preparacion?"
-- `dataPrep.skipConfirmDescription` / "Al continuar sin reglas de preparacion, el analisis usara los datos tal como fueron cargados..."
-- `dataPrep.reopenPrep` / "Reabrir preparacion"
-
-### Dependencia del backend
-
-Este feature requiere que el backend implemente el campo `data_prep_status` o el endpoint dedicado. Recomiendo coordinar con el ingeniero de backend para definir cual de las dos opciones prefieren antes de implementar el frontend.
-
-Si quieren avanzar solo en frontend mientras tanto, se puede usar localStorage como almacenamiento temporal del estado, y despues migrar al backend cuando este listo.
+No se crean archivos nuevos. Todo se reorganiza dentro del mismo `ProjectDetail.tsx` usando el componente `Tabs` ya disponible en el proyecto.
 
