@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,12 +29,16 @@ import {
   Network,
   ArrowLeftRight,
   Calculator,
+  Table2,
+  ListChecks,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDataPrep } from '@/hooks/useDataPrep';
 import { DataPrepRuleDialog } from './DataPrepRuleDialog';
+import type { RulePrefill } from './DataPrepRuleDialog';
 import { DataPrepPreview } from './DataPrepPreview';
 import { DataPrepAIInput } from './DataPrepAIInput';
+import { DataTableView } from './DataTableView';
 import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType, DataPrepPreviewResponse } from '@/types/dataPrep';
 import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import { toast } from 'sonner';
@@ -73,6 +78,8 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
   const [showDialog, setShowDialog] = useState(false);
   const [editingRule, setEditingRule] = useState<DataPrepRule | null>(null);
   const [deletingRule, setDeletingRule] = useState<DataPrepRule | null>(null);
+  const [rulePrefill, setRulePrefill] = useState<RulePrefill | null>(null);
+  const [activeTab, setActiveTab] = useState('rules');
 
   useEffect(() => {
     fetchRules();
@@ -128,11 +135,19 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
 
   const openCreate = () => {
     setEditingRule(null);
+    setRulePrefill(null);
+    setShowDialog(true);
+  };
+
+  const openCreateWithPrefill = (prefill: RulePrefill) => {
+    setEditingRule(null);
+    setRulePrefill(prefill);
     setShowDialog(true);
   };
 
   const openEdit = (rule: DataPrepRule) => {
     setEditingRule(rule);
+    setRulePrefill(null);
     setShowDialog(true);
   };
 
@@ -148,6 +163,8 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
   };
 
   const activeCount = rules.filter((r) => r.is_active).length;
+
+  const dt = (dp as Record<string, unknown>).dataTab as Record<string, string> | undefined;
 
   return (
     <div className="space-y-4">
@@ -165,7 +182,7 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
           )}
         </div>
         <div className="flex gap-2">
-          {rules.length > 0 && (
+          {activeTab === 'rules' && rules.length > 0 && (
             <Button
               variant="outline"
               size="sm"
@@ -187,130 +204,153 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
         </div>
       </div>
 
-      {/* AI Input */}
-      <DataPrepAIInput projectId={projectId} onRuleCreated={fetchRules} />
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="rules" className="gap-1.5">
+            <ListChecks className="h-4 w-4" />
+            {dt?.rulesTab || 'Rules'}
+          </TabsTrigger>
+          <TabsTrigger value="data" className="gap-1.5">
+            <Table2 className="h-4 w-4" />
+            {dt?.dataTabLabel || 'Data'}
+          </TabsTrigger>
+        </TabsList>
 
-      {error && (
-        <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
-          {error}
-        </div>
-      )}
+        <TabsContent value="rules" className="space-y-4 mt-3">
+          {/* AI Input */}
+          <DataPrepAIInput projectId={projectId} onRuleCreated={fetchRules} />
 
-      {/* Preview */}
-      {preview && (
-        <div className="relative">
-          <DataPrepPreview preview={preview} />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-2 right-2 h-6 text-xs"
-            onClick={clearPreview}
-          >
-            {t.common.close}
-          </Button>
-        </div>
-      )}
-
-      {/* Rules list */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : rules.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-12">
-            <SlidersHorizontal className="h-10 w-10 text-muted-foreground" />
-            <div className="text-center space-y-1">
-              <p className="font-medium text-muted-foreground">
-                {dp?.noRules || 'No hay reglas configuradas'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {dp?.noRulesHint || 'Agrega reglas para limpiar, ponderar o recodificar datos'}
-              </p>
+          {error && (
+            <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
+              {error}
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-2">
-          {rules.map((rule, index) => {
-            const Icon = RULE_TYPE_ICONS[rule.rule_type];
-            return (
-              <Card key={rule.id} className={!rule.is_active ? 'opacity-60' : ''}>
-                <CardContent className="py-3 px-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {/* Reorder buttons */}
-                      <div className="flex flex-col">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 w-5 p-0"
-                          onClick={() => handleMoveUp(index)}
-                          disabled={index === 0}
-                        >
-                          <ChevronUp className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 w-5 p-0"
-                          onClick={() => handleMoveDown(index)}
-                          disabled={index === rules.length - 1}
-                        >
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
+          )}
+
+          {/* Preview */}
+          {preview && (
+            <div className="relative">
+              <DataPrepPreview preview={preview} />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 h-6 text-xs"
+                onClick={clearPreview}
+              >
+                {t.common.close}
+              </Button>
+            </div>
+          )}
+
+          {/* Rules list */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : rules.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-3 py-12">
+                <SlidersHorizontal className="h-10 w-10 text-muted-foreground" />
+                <div className="text-center space-y-1">
+                  <p className="font-medium text-muted-foreground">
+                    {dp?.noRules || 'No hay reglas configuradas'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {dp?.noRulesHint || 'Agrega reglas para limpiar, ponderar o recodificar datos'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {rules.map((rule, index) => {
+                const Icon = RULE_TYPE_ICONS[rule.rule_type];
+                return (
+                  <Card key={rule.id} className={!rule.is_active ? 'opacity-60' : ''}>
+                    <CardContent className="py-3 px-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0"
+                              onClick={() => handleMoveUp(index)}
+                              disabled={index === 0}
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0"
+                              onClick={() => handleMoveDown(index)}
+                              disabled={index === rules.length - 1}
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-medium flex items-center gap-2">
+                              {rule.name}
+                              <Badge variant="outline" className="text-xs">
+                                {ruleTypeLabel(rule.rule_type)}
+                              </Badge>
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              #{rule.order_index}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={rule.is_active}
+                            onCheckedChange={() => handleToggleActive(rule)}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => openEdit(rule)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                            onClick={() => setDeletingRule(rule)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
 
-                      <Icon className="h-4 w-4 text-muted-foreground" />
-
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-medium flex items-center gap-2">
-                          {rule.name}
-                          <Badge variant="outline" className="text-xs">
-                            {ruleTypeLabel(rule.rule_type)}
-                          </Badge>
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          #{rule.order_index}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={rule.is_active}
-                        onCheckedChange={() => handleToggleActive(rule)}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={() => openEdit(rule)}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-destructive hover:text-destructive"
-                        onClick={() => setDeletingRule(rule)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+        <TabsContent value="data" className="mt-3">
+          <DataTableView
+            projectId={projectId}
+            onCreateRule={(prefill) => {
+              openCreateWithPrefill(prefill);
+              setActiveTab('rules');
+            }}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Create/Edit dialog */}
       <DataPrepRuleDialog
         open={showDialog}
         onOpenChange={setShowDialog}
         editingRule={editingRule}
+        prefill={rulePrefill}
         onSave={handleSave}
         onPreview={handlePreview}
         availableVariables={availableVariables}
