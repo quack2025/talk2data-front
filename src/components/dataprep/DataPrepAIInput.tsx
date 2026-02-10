@@ -9,11 +9,13 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import type { DataPrepPreviewResponse } from '@/types/dataPrep';
+import { extractQuickReplies, QuickReplyChips } from './QuickReplyChips';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   isClarification?: boolean;
+  quickReplies?: string[];
   ruleData?: {
     rule: Record<string, unknown>;
     preview?: DataPrepPreviewResponse;
@@ -98,9 +100,16 @@ export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables =
         setMessages((prev) => [...prev, assistantMsg]);
         setPendingRule(response.rule);
       } else if (response.status === 'clarification_needed') {
+        const clarText = response.clarification_message || '';
+        const detectedOptions = extractQuickReplies(clarText);
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: response.clarification_message || '', isClarification: true },
+          {
+            role: 'assistant',
+            content: clarText,
+            isClarification: true,
+            quickReplies: detectedOptions.length >= 2 ? detectedOptions : undefined,
+          },
         ]);
       } else {
         setMessages((prev) => [
@@ -203,6 +212,15 @@ export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables =
                         {msg.content}
                       </div>
                     </div>
+
+                    {/* Quick reply chips for clarification messages */}
+                    {msg.isClarification && msg.quickReplies && msg.quickReplies.length > 0 && !pendingRule && (
+                      <QuickReplyChips
+                        options={msg.quickReplies}
+                        onSelect={handleReply}
+                        disabled={isLoading}
+                      />
+                    )}
 
                     {/* Rule preview card */}
                     {msg.ruleData && (
