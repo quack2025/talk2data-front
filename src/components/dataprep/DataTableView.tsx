@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -13,7 +13,15 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Loader2, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDataTable } from '@/hooks/useDataTable';
 import { ColumnDistributionSheet } from './ColumnDistributionSheet';
@@ -49,6 +57,21 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
   const [offset, setOffset] = useState(0);
   const [prepared, setPrepared] = useState(false);
   const [distOpen, setDistOpen] = useState(false);
+  const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
+
+  const visibleColumns = tableData?.columns.filter(c => !hiddenCols.has(c.name)) ?? [];
+
+  const toggleColumn = (colName: string) => {
+    setHiddenCols(prev => {
+      const next = new Set(prev);
+      if (next.has(colName)) next.delete(colName);
+      else next.add(colName);
+      return next;
+    });
+  };
+
+  const showAllColumns = () => setHiddenCols(new Set());
+  const allColumns = tableData?.columns ?? [];
 
   useEffect(() => {
     fetchData(offset, LIMIT, prepared);
@@ -116,6 +139,48 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
               {totalRows.toLocaleString()} {dt?.rows || 'rows'} × {totalCols} {dt?.columns || 'columns'}
             </Badge>
           )}
+          {/* Column selector */}
+          {allColumns.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
+                  <Columns3 className="h-3.5 w-3.5" />
+                  {dt?.columns || 'Columns'}
+                  {hiddenCols.size > 0 && (
+                    <Badge variant="secondary" className="h-4 px-1 text-[10px]">
+                      {allColumns.length - hiddenCols.size}/{allColumns.length}
+                    </Badge>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="max-h-80 overflow-y-auto w-64">
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  <span>{dt?.selectColumns || 'Select columns'}</span>
+                  {hiddenCols.size > 0 && (
+                    <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5" onClick={showAllColumns}>
+                      {dt?.showAll || 'Show all'}
+                    </Button>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {allColumns.map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.name}
+                    checked={!hiddenCols.has(col.name)}
+                    onCheckedChange={() => toggleColumn(col.name)}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <span className="font-mono text-xs">{col.name}</span>
+                    {col.label && (
+                      <span className="ml-1.5 text-muted-foreground text-xs truncate max-w-[140px]">
+                        {col.label}
+                      </span>
+                    )}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* Pagination */}
@@ -152,12 +217,11 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : tableData && tableData.rows.length > 0 ? (
-        <ScrollArea className="border rounded-md" style={{ maxHeight: 'calc(100vh - 340px)' }}>
-          <div className="min-w-max">
-            <table className="w-full text-sm">
+        <div className="border rounded-md overflow-auto" style={{ maxHeight: 'calc(100vh - 340px)' }}>
+            <table className="w-full text-sm min-w-max">
               <thead className="sticky top-0 z-10 bg-background border-b">
                 <tr>
-                  {tableData.columns.map((col) => (
+                  {visibleColumns.map((col) => (
                     <ContextMenu key={col.name}>
                       <ContextMenuTrigger asChild>
                         <th className="px-3 py-2 text-left whitespace-nowrap cursor-context-menu hover:bg-muted/50 transition-colors">
@@ -227,7 +291,7 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
               <tbody>
                 {tableData.rows.map((row, rowIdx) => (
                   <tr key={rowIdx} className={rowIdx % 2 === 0 ? '' : 'bg-muted/30'}>
-                    {tableData.columns.map((col) => (
+                    {visibleColumns.map((col) => (
                       <ContextMenu key={col.name}>
                         <ContextMenuTrigger asChild>
                           <td
@@ -284,9 +348,7 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                 ))}
               </tbody>
             </table>
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        </div>
       ) : (
         <div className="text-center py-12 text-muted-foreground text-sm">
           {dt?.noData || 'No data available'}
