@@ -606,6 +606,14 @@ export const translations = {
       columnsAdded: 'Columnas agregadas',
       warnings: 'Advertencias',
       weightSummary: 'Resumen de ponderación',
+      ai: {
+        placeholder: "Describe una regla en lenguaje natural... ej: 'Crear un Top 2 Box para satisfacción'",
+        thinking: 'Pensando...',
+        ruleReady: 'Regla lista para crear:',
+        createRule: 'Crear Regla',
+        rowsAffected: 'Filas afectadas',
+        columnsAdded: 'Columnas añadidas',
+      },
     },
     // Landing page
     landing: {
@@ -1288,6 +1296,14 @@ export const translations = {
       columnsAdded: 'Columns added',
       warnings: 'Warnings',
       weightSummary: 'Weight summary',
+      ai: {
+        placeholder: "Describe a rule in natural language... e.g. 'Create a Top 2 Box for satisfaction'",
+        thinking: 'Thinking...',
+        ruleReady: 'Rule ready to create:',
+        createRule: 'Create Rule',
+        rowsAffected: 'Rows affected',
+        columnsAdded: 'Columns added',
+      },
     },
     // Landing page
     landing: {
