@@ -69,7 +69,7 @@ export default function ProjectDetail() {
   const dateLocale = language === 'es' ? es : enUS;
   const { setLastProjectId } = useLastProject();
   const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('files');
 
   // Use the API hooks
   const { data: project, isLoading: projectLoading } = useProject(projectId!);
@@ -268,9 +268,18 @@ export default function ProjectDetail() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full justify-start h-12 bg-transparent border-b rounded-none p-0 gap-0">
-            <TabsTrigger value="overview" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
-              <LayoutDashboard className="h-4 w-4" />
-              {t.projectDetail.tabOverview}
+            <TabsTrigger value="files" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
+              <FolderOpen className="h-4 w-4" />
+              {t.projectDetail.tabFiles}
+              {hasFiles && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {files.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="context" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
+              <BookOpen className="h-4 w-4" />
+              {t.projectDetail.tabContext}
             </TabsTrigger>
             <TabsTrigger value="data" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
               <SlidersHorizontal className="h-4 w-4" />
@@ -283,18 +292,9 @@ export default function ProjectDetail() {
               <Database className="h-4 w-4" />
               {t.projectDetail.tabExplorer}
             </TabsTrigger>
-            <TabsTrigger value="context" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
-              <BookOpen className="h-4 w-4" />
-              {t.projectDetail.tabContext}
-            </TabsTrigger>
-            <TabsTrigger value="files" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
-              <FolderOpen className="h-4 w-4" />
-              {t.projectDetail.tabFiles}
-              {hasFiles && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                  {files.length}
-                </Badge>
-              )}
+            <TabsTrigger value="overview" className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 text-base font-medium text-muted-foreground data-[state=active]:text-foreground">
+              <LayoutDashboard className="h-4 w-4" />
+              {t.projectDetail.tabOverview}
             </TabsTrigger>
           </TabsList>
 
