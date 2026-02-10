@@ -219,7 +219,7 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
 
         <TabsContent value="rules" className="space-y-4 mt-3">
           {/* AI Input */}
-          <DataPrepAIInput projectId={projectId} onRuleCreated={fetchRules} />
+          <DataPrepAIInput projectId={projectId} onRuleCreated={fetchRules} availableVariables={availableVariables} variableLabels={variableLabels} />
 
           {error && (
             <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
