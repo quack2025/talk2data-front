@@ -13,7 +13,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search, Download } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search, Download, Tags } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import {
@@ -62,6 +62,7 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
   const [colSearch, setColSearch] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [showLabels, setShowLabels] = useState(true);
 
   const allColumns = tableData?.columns ?? [];
   const visibleColumns = allColumns.filter(c => !hiddenCols.has(c.name));
@@ -122,23 +123,23 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
 
   const renderCellValue = (row: Record<string, unknown>, col: ColumnMeta) => {
     const raw = row[col.name];
-    // Try backend-provided label first, then resolve from column value_labels
-    let label = row[`${col.name}__label`] as string | undefined;
-    if (!label && col.value_labels && raw != null) {
-      label = col.value_labels[String(raw)];
-    }
-
     if (raw == null || raw === '' || (typeof raw === 'number' && isNaN(raw))) {
       return <span className="italic text-muted-foreground">—</span>;
     }
 
-    if (label) {
-      return (
-        <span>
-          {label}{' '}
-          <span className="text-muted-foreground">({String(raw)})</span>
-        </span>
-      );
+    if (showLabels) {
+      let label = row[`${col.name}__label`] as string | undefined;
+      if (!label && col.value_labels && raw != null) {
+        label = col.value_labels[String(raw)];
+      }
+      if (label) {
+        return (
+          <span>
+            {label}{' '}
+            <span className="text-muted-foreground">({String(raw)})</span>
+          </span>
+        );
+      }
     }
 
     return <span>{String(raw)}</span>;
@@ -168,6 +169,17 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
               checked={prepared}
               onCheckedChange={(v) => { setPrepared(v); setOffset(0); }}
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="labels-toggle"
+              checked={showLabels}
+              onCheckedChange={setShowLabels}
+            />
+            <Label htmlFor="labels-toggle" className="text-sm cursor-pointer flex items-center gap-1">
+              <Tags className="h-3.5 w-3.5" />
+              {dt?.valueLabels || 'Value Labels'}
+            </Label>
           </div>
           {totalRows > 0 && (
             <Badge variant="outline" className="text-xs">
