@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,6 +25,7 @@ interface AutoDetectPanelProps {
   onAutoDetect: () => Promise<AutoDetectResponse>;
   onSaveGroups: (groups: VariableGroupCreate[]) => Promise<void>;
   isSaving?: boolean;
+  variableLabels?: VariableLabelMap;
 }
 
 export function AutoDetectPanel({
@@ -32,6 +34,7 @@ export function AutoDetectPanel({
   onAutoDetect,
   onSaveGroups,
   isSaving = false,
+  variableLabels = {},
 }: AutoDetectPanelProps) {
   const { t, language } = useLanguage();
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
@@ -191,6 +194,7 @@ export function AutoDetectPanel({
                 onToggleExpand={() => toggleExpand(index)}
                 getConfidenceBadge={getConfidenceBadge}
                 getTypeLabel={getTypeLabel}
+                variableLabels={variableLabels}
                 groupingT={groupingT}
               />
             ))}
@@ -210,6 +214,7 @@ function SuggestionCard({
   onToggleExpand,
   getConfidenceBadge,
   getTypeLabel,
+  variableLabels,
   groupingT,
 }: {
   suggestion: VariableGroupSuggestion;
@@ -220,6 +225,7 @@ function SuggestionCard({
   onToggleExpand: () => void;
   getConfidenceBadge: (c: number) => 'default' | 'secondary' | 'outline';
   getTypeLabel: (type: string) => string;
+  variableLabels: VariableLabelMap;
   groupingT: any;
 }) {
   return (
@@ -272,7 +278,7 @@ function SuggestionCard({
               <div className="flex flex-wrap gap-1">
                 {suggestion.variables.map((v) => (
                   <Badge key={v} variant="secondary" className="text-xs font-mono">
-                    {v}
+                    {v}{variableLabels[v] && <span className="font-sans text-muted-foreground ml-1">({variableLabels[v]})</span>}
                   </Badge>
                 ))}
               </div>
@@ -285,7 +291,9 @@ function SuggestionCard({
                   {suggestion.sub_groups.map((sg, i) => (
                     <div key={i} className="text-xs pl-2 border-l-2 border-muted">
                       <span className="font-medium">{sg.name}</span>:{' '}
-                      {sg.variables.join(', ')}
+                      {sg.variables.map((v, vi) => (
+                        <span key={v}>{vi > 0 && ', '}{v}{variableLabels[v] ? ` (${variableLabels[v]})` : ''}</span>
+                      ))}
                     </div>
                   ))}
                 </div>
