@@ -80,13 +80,13 @@ export function ConfigureStep({
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="table-title">
-              Título (opcional)
+              {t.aggfile?.titleLabel || 'Título (opcional)'}
             </Label>
             <Input
               id="table-title"
               value={title}
               onChange={(e) => onSetTitle(e.target.value)}
-              placeholder="Ej: Tablas de satisfacción por segmento"
+              placeholder={t.aggfile?.titlePlaceholder || 'Ej: Tablas de satisfacción por segmento'}
               maxLength={255}
             />
           </div>
@@ -95,7 +95,7 @@ export function ConfigureStep({
 
           {/* Analysis types */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">Tipo de análisis</h4>
+            <h4 className="text-sm font-medium">{t.aggfile?.analysisTypeLabel || 'Tipo de análisis'}</h4>
             <div className="space-y-2">
               {AVAILABLE_ANALYSIS_TYPES.map((type) => (
                 <div key={type} className="flex items-center space-x-2">
@@ -172,7 +172,7 @@ export function ConfigureStep({
 
           {/* Options */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">Opciones</h4>
+            <h4 className="text-sm font-medium">{t.aggfile?.optionsLabel || 'Opciones'}</h4>
 
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -196,14 +196,14 @@ export function ConfigureStep({
                 }
               />
               <Label htmlFor="include-significance" className="cursor-pointer">
-                Incluir letras de significancia (A, B, C)
+                {t.aggfile?.includeSignificance || 'Incluir letras de significancia (A, B, C)'}
               </Label>
             </div>
 
             {/* Significance level */}
             {format.includeSignificance && (
               <div className="pl-6 space-y-2">
-                <Label>Nivel de confianza</Label>
+                <Label>{t.aggfile?.confidenceLevel || 'Nivel de confianza'}</Label>
                 <RadioGroup
                   value={String(format.significanceLevel)}
                   onValueChange={(v) =>
@@ -257,7 +257,7 @@ export function ConfigureStep({
           {t.common.back}
         </Button>
         <Button onClick={onNext} disabled={!canProceed} className="flex-1">
-          Vista previa
+          {t.aggfile?.preview || 'Vista previa'}
         </Button>
       </div>
     </div>
