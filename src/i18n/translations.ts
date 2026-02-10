@@ -615,6 +615,7 @@ export const translations = {
         columnsAdded: 'Columnas añadidas',
         replyPlaceholder: 'Escribe tu respuesta...',
         reply: 'Responder',
+        quickReply: 'Respuesta rápida',
       },
       form: {
         selectVariable: 'Seleccionar variable',
@@ -1358,6 +1359,7 @@ export const translations = {
         columnsAdded: 'Columns added',
         replyPlaceholder: 'Type your reply...',
         reply: 'Reply',
+        quickReply: 'Quick reply',
       },
       form: {
         selectVariable: 'Select variable',
