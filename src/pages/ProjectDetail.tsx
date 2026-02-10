@@ -337,9 +337,9 @@ export default function ProjectDetail() {
 
               <Card
                 className={`cursor-pointer transition-colors ${
-                  hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+                  canAccessAnalysis ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
                 }`}
-                onClick={() => hasReadyFiles && navigate('/exports')}
+                onClick={() => canAccessAnalysis && navigate('/exports')}
               >
                 <CardHeader className="pb-2">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -348,7 +348,13 @@ export default function ProjectDetail() {
                 </CardHeader>
                 <CardContent>
                   <CardTitle className="text-base">{t.projectDetail.exportCard}</CardTitle>
-                  <CardDescription>{t.projectDetail.exportCardDescription}</CardDescription>
+                  <CardDescription>
+                    {!hasReadyFiles 
+                      ? t.projectDetail.chatCardDisabled
+                      : !isDataReady
+                        ? (t.dataPrep?.gateTooltip || 'Confirma la preparación de datos primero')
+                        : t.projectDetail.exportCardDescription}
+                  </CardDescription>
                 </CardContent>
               </Card>
 
