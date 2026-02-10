@@ -174,11 +174,24 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="flex items-center justify-between py-1">
                   <span className="text-xs">{dt?.selectColumns || 'Select columns'}</span>
-                  {hiddenCols.size > 0 && (
-                    <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5" onClick={showAllColumns}>
-                      {dt?.showAll || 'Show all'}
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 text-xs px-1.5"
+                      onClick={() => {
+                        const inverted = new Set(allColumns.filter(c => !hiddenCols.has(c.name)).map(c => c.name));
+                        setHiddenCols(inverted);
+                      }}
+                    >
+                      {dt?.invertSelection || 'Invert'}
                     </Button>
-                  )}
+                    {hiddenCols.size > 0 && (
+                      <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5" onClick={showAllColumns}>
+                        {dt?.showAll || 'Show all'}
+                      </Button>
+                    )}
+                  </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <div className="max-h-60 overflow-y-auto">
