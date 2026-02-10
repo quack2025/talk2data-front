@@ -32,6 +32,7 @@ import {
   CheckCircle2,
   SkipForward,
   RotateCcw,
+  EyeOff,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDataPrep } from '@/hooks/useDataPrep';
@@ -56,6 +57,7 @@ const RULE_TYPE_ICONS: Record<DataPrepRuleType, React.ElementType> = {
   net: Network,
   recode: ArrowLeftRight,
   computed: Calculator,
+  exclude_columns: EyeOff,
 };
 
 export function DataPrepManager({ projectId, availableVariables = [], variableLabels = {}, onStatusChange }: DataPrepManagerProps) {
@@ -163,6 +165,7 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
       net: dp?.typeNet || 'Net',
       recode: dp?.typeRecode || 'Recode',
       computed: dp?.typeComputed || 'Computed',
+      exclude_columns: dp?.typeExcludeColumns || 'Exclude Columns',
     };
     return labels[type];
   };

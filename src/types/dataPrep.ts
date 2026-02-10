@@ -1,4 +1,4 @@
-export type DataPrepRuleType = 'cleaning' | 'weight' | 'net' | 'recode' | 'computed';
+export type DataPrepRuleType = 'cleaning' | 'weight' | 'net' | 'recode' | 'computed' | 'exclude_columns';
 
 export interface DataPrepRule {
   id: string;

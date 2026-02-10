@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, ArrowRight, Info, Loader2, Eye } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, Info, Loader2, Eye, Search } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType, DataPrepPreviewResponse } from '@/types/dataPrep';
 import type { VariableLabelMap } from '@/hooks/useProjectVariables';
@@ -42,7 +42,7 @@ interface DataPrepRuleDialogProps {
   variableLabels?: VariableLabelMap;
 }
 
-const RULE_TYPES: DataPrepRuleType[] = ['cleaning', 'weight', 'net', 'recode', 'computed'];
+const RULE_TYPES: DataPrepRuleType[] = ['cleaning', 'weight', 'net', 'recode', 'computed', 'exclude_columns'];
 
 const CLEANING_OPERATORS = [
   'equals', 'not_equals', 'less_than', 'greater_than',
@@ -128,6 +128,10 @@ export function DataPrepRuleDialog({
   const [weightMaxWeight, setWeightMaxWeight] = useState('10');
   const [weightMinWeight, setWeightMinWeight] = useState('0.1');
 
+  // Exclude columns
+  const [excludedColumns, setExcludedColumns] = useState<Set<string>>(new Set());
+  const [excludeSearch, setExcludeSearch] = useState('');
+
   const ruleTypeLabel = (type: DataPrepRuleType) => {
     const labels: Record<DataPrepRuleType, string> = {
       cleaning: dp?.typeCleaning || 'Cleaning',
@@ -135,6 +139,7 @@ export function DataPrepRuleDialog({
       net: dp?.typeNet || 'Net',
       recode: dp?.typeRecode || 'Recode',
       computed: dp?.typeComputed || 'Computed',
+      exclude_columns: dp?.typeExcludeColumns || 'Exclude Columns',
     };
     return labels[type];
   };
@@ -170,6 +175,7 @@ export function DataPrepRuleDialog({
     setComputedConditions([{ variable: '', operator: 'equals', value: '' }]);
     setWeightTargets([{ variable: '', values: '' }]);
     setWeightMaxIter('50'); setWeightMaxWeight('10'); setWeightMinWeight('0.1');
+    setExcludedColumns(new Set()); setExcludeSearch('');
   };
 
   const populateFromConfig = (type: DataPrepRuleType, config: Record<string, unknown>) => {
@@ -236,6 +242,11 @@ export function DataPrepRuleDialog({
         setWeightMaxIter(String(config.max_iterations ?? 50));
         setWeightMaxWeight(String(config.max_weight ?? 10));
         setWeightMinWeight(String(config.min_weight ?? 0.1));
+        break;
+      }
+      case 'exclude_columns': {
+        const cols = (config.columns as string[]) || [];
+        setExcludedColumns(new Set(cols));
         break;
       }
     }
@@ -309,6 +320,10 @@ export function DataPrepRuleDialog({
           min_weight: Number(weightMinWeight) || 0.1,
         };
       }
+      case 'exclude_columns':
+        return {
+          columns: Array.from(excludedColumns),
+        };
     }
   };
 
@@ -673,6 +688,72 @@ export function DataPrepRuleDialog({
     );
   };
 
+  const renderExcludeColumnsFields = () => {
+    const filteredVars = availableVariables.filter((v) => {
+      const q = excludeSearch.toLowerCase();
+      return v.toLowerCase().includes(q) || (variableLabels[v] && variableLabels[v].toLowerCase().includes(q));
+    });
+
+    const toggleColumn = (v: string) => {
+      setExcludedColumns((prev) => {
+        const next = new Set(prev);
+        if (next.has(v)) next.delete(v);
+        else next.add(v);
+        return next;
+      });
+    };
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-start gap-2 rounded-md bg-muted/50 p-3">
+          <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground">
+            {f?.excludeHint || 'Select the columns you want to exclude from the prepared dataset. These columns will not appear in the final output.'}
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-md border border-input bg-background px-2 h-8">
+          <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <input
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            placeholder={f?.searchVariables || 'Search variables...'}
+            value={excludeSearch}
+            onChange={(e) => setExcludeSearch(e.target.value)}
+          />
+        </div>
+        {excludedColumns.size > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {excludedColumns.size} {f?.columnsSelected || 'columns selected for exclusion'}
+          </p>
+        )}
+        <div className="max-h-60 overflow-y-auto border rounded-md divide-y">
+          {filteredVars.length === 0 ? (
+            <div className="px-3 py-4 text-xs text-muted-foreground text-center">
+              {f?.noVariablesFound || 'No variables found'}
+            </div>
+          ) : (
+            filteredVars.map((v) => (
+              <label
+                key={v}
+                className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted/50 cursor-pointer text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={excludedColumns.has(v)}
+                  onChange={() => toggleColumn(v)}
+                  className="rounded border-input"
+                />
+                <span className="font-mono text-xs">{v}</span>
+                {variableLabels[v] && (
+                  <span className="text-xs text-muted-foreground truncate">{variableLabels[v]}</span>
+                )}
+              </label>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderTypeFields = () => {
     switch (ruleType) {
       case 'cleaning': return renderCleaningFields();
@@ -680,6 +761,7 @@ export function DataPrepRuleDialog({
       case 'recode': return renderRecodeFields();
       case 'computed': return renderComputedFields();
       case 'weight': return renderWeightFields();
+      case 'exclude_columns': return renderExcludeColumnsFields();
     }
   };
 
