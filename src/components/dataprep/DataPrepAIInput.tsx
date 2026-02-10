@@ -31,9 +31,11 @@ interface AIInterpretResponse {
 interface DataPrepAIInputProps {
   projectId: string;
   onRuleCreated: () => void;
+  availableVariables?: string[];
+  variableLabels?: Record<string, string>;
 }
 
-export function DataPrepAIInput({ projectId, onRuleCreated }: DataPrepAIInputProps) {
+export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables = [], variableLabels = {} }: DataPrepAIInputProps) {
   const { t, language } = useLanguage();
   const dp = t.dataPrep;
   const ai = (dp as Record<string, unknown>).ai as Record<string, string> | undefined;
@@ -62,9 +64,21 @@ export function DataPrepAIInput({ projectId, onRuleCreated }: DataPrepAIInputPro
 
     try {
       const conversationHistory = newMessages.map(({ role, content }) => ({ role, content }));
+      // Build variable context for the AI: send names with labels
+      const variableContext = availableVariables.length > 0
+        ? availableVariables.map(v => {
+            const label = variableLabels[v];
+            return label ? `${v} (${label})` : v;
+          })
+        : undefined;
       const response = await api.post<AIInterpretResponse>(
         `/projects/${projectId}/data-prep/ai-interpret`,
-        { message: text, language, conversation_history: conversationHistory }
+        {
+          message: text,
+          language,
+          conversation_history: conversationHistory,
+          available_variables: variableContext,
+        }
       );
 
       if (response.status === 'rule_ready' && response.rule) {
