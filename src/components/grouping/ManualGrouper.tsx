@@ -178,7 +178,7 @@ export function ManualGrouper({
                   id="group-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ej: Conocimiento de Marcas"
+                  placeholder={language === 'en' ? 'E.g.: Brand Awareness' : 'Ej: Conocimiento de Marcas'}
                   maxLength={255}
                 />
               </div>
@@ -215,7 +215,7 @@ export function ManualGrouper({
                 id="group-desc"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Ej: Variables Q5_1 a Q5_15 de la sección de marcas"
+                placeholder={language === 'en' ? 'E.g.: Variables Q5_1 to Q5_15 from the brands section' : 'Ej: Variables Q5_1 a Q5_15 de la sección de marcas'}
               />
             </div>
 
