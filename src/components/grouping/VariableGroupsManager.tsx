@@ -183,6 +183,7 @@ export function VariableGroupsManager({
             onAutoDetect={autoDetect}
             onSaveGroups={handleSaveDetectedGroups}
             isSaving={isSaving}
+            variableLabels={variableLabels}
           />
           <Separator />
         </>
@@ -221,6 +222,7 @@ export function VariableGroupsManager({
                 onDelete={() => setDeletingGroup(group)}
                 groupingT={groupingT}
                 language={language}
+                variableLabels={variableLabels}
               />
             ))}
           </div>
@@ -276,6 +278,7 @@ function GroupCard({
   onDelete,
   groupingT,
   language,
+  variableLabels = {},
 }: {
   group: VariableGroup;
   isExpanded: boolean;
@@ -284,6 +287,7 @@ function GroupCard({
   onDelete: () => void;
   groupingT: any;
   language: 'es' | 'en';
+  variableLabels?: Record<string, string>;
 }) {
   return (
     <Card>
@@ -345,7 +349,7 @@ function GroupCard({
           <div className="flex flex-wrap gap-1">
             {group.variables.map((v) => (
               <Badge key={v} variant="secondary" className="text-xs font-mono">
-                {v}
+                {v}{variableLabels[v] && <span className="font-sans text-muted-foreground ml-1">({variableLabels[v]})</span>}
               </Badge>
             ))}
           </div>
@@ -358,7 +362,9 @@ function GroupCard({
               {group.sub_groups.map((sg, i) => (
                 <div key={i} className="text-xs pl-2 border-l-2 border-primary/30">
                   <span className="font-medium">{sg.name}</span>:{' '}
-                  {sg.variables.join(', ')}
+                  {sg.variables.map((v, vi) => (
+                    <span key={v}>{vi > 0 && ', '}{v}{variableLabels[v] ? ` (${variableLabels[v]})` : ''}</span>
+                  ))}
                 </div>
               ))}
             </div>
