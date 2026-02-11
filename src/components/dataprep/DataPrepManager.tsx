@@ -331,38 +331,44 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
       </div>
 
       {/* Data Readiness Gate Footer */}
-      <div className="border-t pt-4 mt-4">
+      <div className="mt-4">
         {dataPrepStatus === 'pending' ? (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">
-              {dp?.gateBanner || 'Revisa y confirma la preparación de datos antes de iniciar el análisis'}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSkipConfirm(true)}
-              >
-                <SkipForward className="mr-2 h-4 w-4" />
-                {dp?.skipPrep || 'No requiere preparación'}
-              </Button>
-              {rules.length > 0 && (
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    confirmDataReady();
-                    onStatusChange?.('confirmed');
-                    toast.success(dp?.statusConfirmed || 'Datos confirmados');
-                  }}
-                >
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                  {dp?.confirmReady || 'Confirmar datos listos'}
-                </Button>
-              )}
-            </div>
-          </div>
+          <Card className="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30">
+            <CardContent className="py-4 px-5">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                    {dp?.gateBanner || 'Revisa y confirma la preparación de datos antes de iniciar el análisis'}
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button
+                    variant="outline"
+                    className="border-amber-400 bg-white hover:bg-amber-100 text-amber-800 dark:border-amber-600 dark:bg-amber-900/50 dark:text-amber-200 dark:hover:bg-amber-900"
+                    onClick={() => setShowSkipConfirm(true)}
+                  >
+                    <SkipForward className="mr-2 h-4 w-4" />
+                    {dp?.skipPrep || 'No requiere preparación — continuar'}
+                  </Button>
+                  {rules.length > 0 && (
+                    <Button
+                      onClick={() => {
+                        confirmDataReady();
+                        onStatusChange?.('confirmed');
+                        toast.success(dp?.statusConfirmed || 'Datos confirmados');
+                      }}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {dp?.confirmReady || 'Confirmar datos listos'}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between border-t pt-4">
             <div className="flex items-center gap-2">
               <Badge variant={dataPrepStatus === 'confirmed' ? 'default' : 'secondary'} className="gap-1">
                 <CheckCircle2 className="h-3 w-3" />
