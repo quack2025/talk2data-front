@@ -13,7 +13,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search, Download, Tags, EyeOff } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search, Download, Tags, EyeOff, FileSpreadsheet } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import {
@@ -60,9 +60,11 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
   const [prepared, setPrepared] = useState(false);
   const [distOpen, setDistOpen] = useState(false);
   const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
+  const [pendingHiddenCols, setPendingHiddenCols] = useState<Set<string> | null>(null);
   const [colSearch, setColSearch] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [showLabels, setShowLabels] = useState(true);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
   const allColumns = tableData?.columns ?? [];
   const visibleColumns = allColumns.filter(c => !hiddenCols.has(c.name));
@@ -71,16 +73,28 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
     return col.name.toLowerCase().includes(q) || (col.label && col.label.toLowerCase().includes(q));
   });
 
+  const editingHiddenCols = pendingHiddenCols ?? hiddenCols;
+
   const toggleColumn = (colName: string) => {
-    setHiddenCols(prev => {
-      const next = new Set(prev);
-      if (next.has(colName)) next.delete(colName);
-      else next.add(colName);
-      return next;
-    });
+    const base = pendingHiddenCols ?? new Set(hiddenCols);
+    const next = new Set(base);
+    if (next.has(colName)) next.delete(colName);
+    else next.add(colName);
+    setPendingHiddenCols(next);
   };
 
-  const showAllColumns = () => setHiddenCols(new Set());
+  const applyColumnSelection = () => {
+    if (pendingHiddenCols) {
+      setHiddenCols(pendingHiddenCols);
+      setPendingHiddenCols(null);
+    }
+  };
+
+  const cancelColumnSelection = () => {
+    setPendingHiddenCols(null);
+  };
+
+  const showAllColumns = () => setPendingHiddenCols(new Set());
 
   useEffect(() => {
     fetchData(offset, LIMIT, prepared);
@@ -94,11 +108,11 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
     [fetchDistribution]
   );
 
-  const handleExportExcel = useCallback(async () => {
+  const handleExportExcel = useCallback(async (labelFormat: 'value' | 'label' | 'both') => {
     setIsExporting(true);
     try {
       const blob = await api.downloadBlob(
-        `/projects/${projectId}/data-prep/export-excel?prepared=${prepared}`,
+        `/projects/${projectId}/data-prep/export-excel?prepared=${prepared}&label_format=${labelFormat}`,
         'GET'
       );
       const url = window.URL.createObjectURL(blob);
@@ -200,7 +214,7 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={() => setColSearch('')}>
+              <DropdownMenuContent align="start" className="w-64" onCloseAutoFocus={() => { setColSearch(''); cancelColumnSelection(); }}>
                 <div className="px-2 py-1.5">
                   <div className="flex items-center gap-1.5 rounded-md border border-input bg-background px-2 h-7">
                     <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -222,13 +236,14 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                       size="sm"
                       className="h-5 text-xs px-1.5"
                       onClick={() => {
-                        const inverted = new Set(allColumns.filter(c => !hiddenCols.has(c.name)).map(c => c.name));
-                        setHiddenCols(inverted);
+                        const base = pendingHiddenCols ?? new Set(hiddenCols);
+                        const inverted = new Set(allColumns.filter(c => !base.has(c.name)).map(c => c.name));
+                        setPendingHiddenCols(inverted);
                       }}
                     >
                       {dt?.invertSelection || 'Invert'}
                     </Button>
-                    {hiddenCols.size > 0 && (
+                    {editingHiddenCols.size > 0 && (
                       <Button variant="ghost" size="sm" className="h-5 text-xs px-1.5" onClick={showAllColumns}>
                         {dt?.showAll || 'Show all'}
                       </Button>
@@ -245,7 +260,7 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                     filteredColumns.map((col) => (
                       <DropdownMenuCheckboxItem
                         key={col.name}
-                        checked={!hiddenCols.has(col.name)}
+                        checked={!editingHiddenCols.has(col.name)}
                         onCheckedChange={() => toggleColumn(col.name)}
                         onSelect={(e) => e.preventDefault()}
                       >
@@ -259,25 +274,67 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
                     ))
                   )}
                 </div>
+                {pendingHiddenCols && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <div className="flex items-center justify-end gap-1.5 px-2 py-1.5">
+                      <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={cancelColumnSelection}>
+                        {dt?.cancel || 'Cancel'}
+                      </Button>
+                      <Button size="sm" className="h-6 text-xs px-2" onClick={applyColumnSelection}>
+                        <Check className="h-3 w-3 mr-1" />
+                        {dt?.apply || 'Apply'}
+                      </Button>
+                    </div>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
           {/* Export to Excel */}
           {totalRows > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1.5 text-xs"
-              disabled={isExporting}
-              onClick={handleExportExcel}
-            >
-              {isExporting ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Download className="h-3.5 w-3.5" />
-              )}
-              {dt?.exportExcel || 'Export to Excel'}
-            </Button>
+            <DropdownMenu open={exportMenuOpen} onOpenChange={setExportMenuOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs"
+                  disabled={isExporting}
+                >
+                  {isExporting ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  {dt?.exportExcel || 'Export to Excel'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuLabel className="text-xs">{dt?.exportFormat || 'Export format'}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={false}
+                  onSelect={() => { setExportMenuOpen(false); handleExportExcel('value'); }}
+                >
+                  <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
+                  {dt?.exportValues || 'Values only'} <span className="ml-1 text-muted-foreground text-xs">(1, 2, 3)</span>
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={false}
+                  onSelect={() => { setExportMenuOpen(false); handleExportExcel('label'); }}
+                >
+                  <Tags className="mr-2 h-3.5 w-3.5" />
+                  {dt?.exportLabels || 'Labels only'} <span className="ml-1 text-muted-foreground text-xs">(Masculino)</span>
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={false}
+                  onSelect={() => { setExportMenuOpen(false); handleExportExcel('both'); }}
+                >
+                  <Tags className="mr-2 h-3.5 w-3.5" />
+                  {dt?.exportBoth || 'Labels + Values'} <span className="ml-1 text-muted-foreground text-xs">(Masculino (2))</span>
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
 
