@@ -3,8 +3,16 @@ import { api } from '@/lib/api';
 import type {
   DataPrepRule,
   DataPrepRuleCreate,
+  DataPrepRuleUpdate,
   DataPrepPreviewResponse,
   DataPrepSummary,
+  DataPrepSummaryResponse,
+  VariableProfilesResponse,
+  PrepSuggestionsResponse,
+  ApplySuggestionsResponse,
+  QCReportResponse,
+  TemplatesListResponse,
+  ApplyTemplateResponse,
 } from '@/types/dataPrep';
 
 export type DataPrepStatus = 'pending' | 'confirmed' | 'skipped';
@@ -61,7 +69,7 @@ export function useDataPrep(projectId: string) {
   );
 
   const updateRule = useCallback(
-    async (ruleId: string, data: Partial<DataPrepRuleCreate> & { is_active?: boolean }) => {
+    async (ruleId: string, data: DataPrepRuleUpdate) => {
       try {
         const response = await api.put<DataPrepRule>(
           `/projects/${projectId}/data-prep/${ruleId}`,
@@ -102,6 +110,7 @@ export function useDataPrep(projectId: string) {
           { rule_ids: ruleIds }
         );
         setRules(response);
+        return response;
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Error reordering rules');
         throw e;
@@ -110,6 +119,7 @@ export function useDataPrep(projectId: string) {
     [projectId]
   );
 
+  // Lovable's preview (no body — previews all active rules)
   const previewRules = useCallback(async () => {
     setIsPreviewLoading(true);
     setError(null);
@@ -127,6 +137,22 @@ export function useDataPrep(projectId: string) {
     }
   }, [projectId]);
 
+  // Sprint 9 preview (single rule with body)
+  const previewRule = useCallback(
+    async (data: DataPrepRuleCreate): Promise<DataPrepPreviewResponse> => {
+      try {
+        return await api.post<DataPrepPreviewResponse>(
+          `/projects/${projectId}/data-prep/preview`,
+          data
+        );
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Error previewing rule');
+        throw e;
+      }
+    },
+    [projectId]
+  );
+
   const fetchSummary = useCallback(async () => {
     try {
       const response = await api.get<DataPrepSummary>(
@@ -139,28 +165,94 @@ export function useDataPrep(projectId: string) {
     }
   }, [projectId]);
 
+  const getSummary = useCallback(async (): Promise<DataPrepSummaryResponse> => {
+    try {
+      return await api.get<DataPrepSummaryResponse>(
+        `/projects/${projectId}/data-prep/summary`
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error loading summary');
+      throw e;
+    }
+  }, [projectId]);
+
+  const toggleRule = useCallback(
+    async (ruleId: string, isActive: boolean) => {
+      return updateRule(ruleId, { is_active: isActive });
+    },
+    [updateRule]
+  );
+
   const clearPreview = useCallback(() => {
     setPreview(null);
   }, []);
 
+  // Data readiness gate (Lovable)
   const confirmDataReady = useCallback(() => {
     setStoredStatus(projectId, 'confirmed');
     setDataPrepStatus('confirmed');
-    // TODO: Replace with API call when backend is ready
-    // api.patch(`/projects/${projectId}`, { data_prep_status: 'confirmed' });
   }, [projectId]);
 
   const skipDataPrep = useCallback(() => {
     setStoredStatus(projectId, 'skipped');
     setDataPrepStatus('skipped');
-    // TODO: Replace with API call when backend is ready
-    // api.patch(`/projects/${projectId}`, { data_prep_status: 'skipped' });
   }, [projectId]);
 
   const reopenDataPrep = useCallback(() => {
     setStoredStatus(projectId, 'pending');
     setDataPrepStatus('pending');
   }, [projectId]);
+
+  // Sprint 11: Variable Profiles
+  const getVariableProfiles = useCallback(async (): Promise<VariableProfilesResponse> => {
+    return api.get<VariableProfilesResponse>(
+      `/projects/${projectId}/data-prep/variable-profiles`
+    );
+  }, [projectId]);
+
+  // Sprint 11: Suggestions
+  const getSuggestions = useCallback(async (studyType?: string): Promise<PrepSuggestionsResponse> => {
+    const qs = studyType ? `?study_type=${studyType}` : '';
+    return api.get<PrepSuggestionsResponse>(
+      `/projects/${projectId}/data-prep/suggestions${qs}`
+    );
+  }, [projectId]);
+
+  const applySuggestions = useCallback(async (
+    suggestionIds: string[],
+    modifications?: Record<string, Record<string, any>>,
+  ): Promise<ApplySuggestionsResponse> => {
+    const res = await api.post<ApplySuggestionsResponse>(
+      `/projects/${projectId}/data-prep/apply-suggestions`,
+      { suggestion_ids: suggestionIds, modifications }
+    );
+    await fetchRules();
+    return res;
+  }, [projectId, fetchRules]);
+
+  // Sprint 11: QC Report
+  const getQCReport = useCallback(async (): Promise<QCReportResponse> => {
+    return api.get<QCReportResponse>(
+      `/projects/${projectId}/data-prep/qc-report`
+    );
+  }, [projectId]);
+
+  // Sprint 11: Templates
+  const getTemplates = useCallback(async (): Promise<TemplatesListResponse> => {
+    return api.get<TemplatesListResponse>(`/data-prep/templates`);
+  }, []);
+
+  const applyTemplate = useCallback(async (
+    templateId: string,
+    variableMapping?: Record<string, string>,
+  ): Promise<ApplyTemplateResponse> => {
+    const res = await api.post<ApplyTemplateResponse>(
+      `/projects/${projectId}/data-prep/apply-template`,
+      { template_id: templateId, variable_mapping: variableMapping || {} }
+    );
+    await fetchRules();
+    return res;
+  }, [projectId, fetchRules]);
 
   return {
     rules,
@@ -176,10 +268,19 @@ export function useDataPrep(projectId: string) {
     deleteRule,
     reorderRules,
     previewRules,
+    previewRule,
     fetchSummary,
+    getSummary,
+    toggleRule,
     clearPreview,
     confirmDataReady,
     skipDataPrep,
     reopenDataPrep,
+    getVariableProfiles,
+    getSuggestions,
+    applySuggestions,
+    getQCReport,
+    getTemplates,
+    applyTemplate,
   };
 }
