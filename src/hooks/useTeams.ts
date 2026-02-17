@@ -48,7 +48,7 @@ export function useCreateTeam() {
 
   return useMutation({
     mutationFn: async (data: CreateTeamData): Promise<Team> => {
-      return api.post<Team>('/teams', { name: data.name });
+      return api.post<Team>('/teams', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TEAMS_KEY });
