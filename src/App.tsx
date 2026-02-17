@@ -17,6 +17,7 @@ import ProjectUpload from "./pages/ProjectUpload";
 import ProjectChat from "./pages/ProjectChat";
 import ProjectSettings from "./pages/ProjectSettings";
 import ProjectSummary from "./pages/ProjectSummary";
+import ProjectExplore from "./pages/ProjectExplore";
 import Exports from "./pages/Exports";
 import Upload from "./pages/Upload";
 import Chat from "./pages/Chat";
@@ -179,6 +180,15 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ProjectSummary />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/projects/:projectId/explore"
+              element={
+                <ProtectedRoute>
+                  <ProjectExplore />
                 </ProtectedRoute>
               }
             />

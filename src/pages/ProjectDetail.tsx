@@ -33,6 +33,7 @@ import {
   Sparkles,
   ArrowRight,
   Table2,
+  Compass,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -179,6 +180,15 @@ export default function ProjectDetail() {
               {t.aggfile?.generateTables || 'Generar Tablas'}
             </Button>
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/projects/${projectId}/explore`)}
+              disabled={!hasReadyFiles}
+            >
+              <Compass className="h-4 w-4 mr-2" />
+              {t.explore?.title || 'Explorar Datos'}
+            </Button>
+            <Button
               size="sm"
               onClick={() => navigate(`/projects/${projectId}/chat`)}
               disabled={!hasReadyFiles}
@@ -190,7 +200,7 @@ export default function ProjectDetail() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           <Card
             className="cursor-pointer hover:border-primary/50 transition-colors"
             onClick={() => navigate(`/projects/${projectId}/upload`)}
@@ -258,6 +268,27 @@ export default function ProjectDetail() {
               <CardDescription>
                 {hasReadyFiles 
                   ? (t.aggfile?.generateTablesCardDescription || 'Excel con tablas cruzadas')
+                  : t.projectDetail.chatCardDisabled}
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card
+            className={`cursor-pointer transition-colors ${
+              hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+            }`}
+            onClick={() => hasReadyFiles && navigate(`/projects/${projectId}/explore`)}
+          >
+            <CardHeader className="pb-2">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Compass className="h-5 w-5 text-primary" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CardTitle className="text-base">{t.explore?.title || 'Explorar Datos'}</CardTitle>
+              <CardDescription>
+                {hasReadyFiles
+                  ? (t.explore?.cardDescription || 'Análisis interactivo punto a punto')
                   : t.projectDetail.chatCardDisabled}
               </CardDescription>
             </CardContent>
