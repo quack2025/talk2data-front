@@ -75,17 +75,15 @@ export function InviteMemberDialog({ open, onOpenChange, teamId, teamName }: Inv
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="userId">{t.teams?.userId || 'ID del usuario'}</Label>
+              <Label htmlFor="userId">{t.teams?.emailAddress || 'Correo electrónico'}</Label>
               <Input
                 id="userId"
+                type="email"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
-                placeholder={t.teams?.userIdPlaceholder || 'UUID del usuario a agregar'}
+                placeholder="user@example.com"
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                {t.teams?.userIdHint || 'Ingresa el ID del usuario registrado en la plataforma.'}
-              </p>
             </div>
 
             <div className="space-y-2">
