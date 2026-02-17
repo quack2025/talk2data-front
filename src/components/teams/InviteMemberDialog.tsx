@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useInviteMember } from '@/hooks/useTeams';
+import { useAddMember } from '@/hooks/useTeams';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Loader2 } from 'lucide-react';
 import type { TeamRole } from '@/types/teams';
@@ -31,21 +31,21 @@ interface InviteMemberDialogProps {
 
 export function InviteMemberDialog({ open, onOpenChange, teamId, teamName }: InviteMemberDialogProps) {
   const { t } = useLanguage();
-  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
   const [role, setRole] = useState<TeamRole>('viewer');
-  const inviteMember = useInviteMember();
+  const addMember = useAddMember();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (!userId.trim()) return;
 
-    await inviteMember.mutateAsync({
+    await addMember.mutateAsync({
       teamId,
-      email: email.trim().toLowerCase(),
+      userId: userId.trim(),
       role,
     });
 
-    setEmail('');
+    setUserId('');
     setRole('viewer');
     onOpenChange(false);
   };
@@ -67,23 +67,25 @@ export function InviteMemberDialog({ open, onOpenChange, teamId, teamName }: Inv
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{t.teams?.inviteMember || 'Invitar miembro'}</DialogTitle>
+            <DialogTitle>{t.teams?.inviteMember || 'Agregar miembro'}</DialogTitle>
             <DialogDescription>
-              {t.teams?.inviteToTeam || 'Invitar usuario a'} <strong>{teamName}</strong>
+              {t.teams?.inviteToTeam || 'Agregar usuario a'} <strong>{teamName}</strong>
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="email">{t.teams?.emailAddress || 'Correo electrónico'}</Label>
+              <Label htmlFor="userId">{t.teams?.userId || 'ID del usuario'}</Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="usuario@ejemplo.com"
+                id="userId"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                placeholder={t.teams?.userIdPlaceholder || 'UUID del usuario a agregar'}
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                {t.teams?.userIdHint || 'Ingresa el ID del usuario registrado en la plataforma.'}
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -110,9 +112,9 @@ export function InviteMemberDialog({ open, onOpenChange, teamId, teamName }: Inv
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t.common?.cancel || 'Cancelar'}
             </Button>
-            <Button type="submit" disabled={inviteMember.isPending || !email.trim()}>
-              {inviteMember.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t.teams?.invite || 'Invitar'}
+            <Button type="submit" disabled={addMember.isPending || !userId.trim()}>
+              {addMember.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t.teams?.addMember || 'Agregar'}
             </Button>
           </DialogFooter>
         </form>

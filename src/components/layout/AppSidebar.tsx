@@ -12,6 +12,7 @@ import {
   Loader2,
   ExternalLink,
   Users,
+  Key,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -49,6 +50,11 @@ export function AppSidebar() {
       title: t.sidebar.teams || 'Equipos',
       href: "/teams",
       icon: Users,
+    },
+    {
+      title: t.sidebar.apiKeys || 'API Keys',
+      href: "/api-keys",
+      icon: Key,
     },
   ];
 

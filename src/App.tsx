@@ -24,6 +24,8 @@ import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
 import Teams from "./pages/Teams";
 import Landing from "./pages/Landing";
+import ApiKeys from "./pages/ApiKeys";
+import SharedView from "./pages/SharedView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -237,6 +239,18 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/api-keys"
+              element={
+                <ProtectedRoute>
+                  <ApiKeys />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Public shared resource viewer (no auth required) */}
+            <Route path="/shared/:token" element={<SharedView />} />
 
             {/* Catch all */}
             <Route path="*" element={<NotFound />} />

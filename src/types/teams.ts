@@ -1,35 +1,35 @@
-// Team types for multi-user workspaces
+// Team types matching FastAPI backend schemas
 
 export type TeamRole = 'admin' | 'editor' | 'viewer';
+export type TeamPlan = 'team' | 'enterprise';
 
-export interface Team {
+export interface TeamMemberUser {
   id: string;
+  email: string;
   name: string;
-  description?: string;
-  owner_id: string;
-  created_at: string;
-  updated_at: string;
+  is_active: boolean;
 }
 
 export interface TeamMember {
   id: string;
-  team_id: string;
-  user_id?: string | null;
-  invited_email?: string | null;
+  user_id: string;
   role: TeamRole;
-  invited_by?: string;
-  invited_at: string;
-  accepted_at?: string;
-  // Joined from profiles (when user exists)
-  user_email?: string;
-  user_name?: string;
-  user_avatar?: string;
-  // Computed
-  is_pending?: boolean;
+  joined_at: string;
+  user: TeamMemberUser | null;
 }
 
-export interface TeamWithMembers extends Team {
+export interface Team {
+  id: string;
+  name: string;
+  plan: TeamPlan;
+  owner_id: string;
   members: TeamMember[];
+  created_at: string;
+  updated_at?: string;
+}
+
+// Enriched type used by UI components
+export interface TeamWithMembers extends Team {
   member_count: number;
   is_owner: boolean;
   my_role?: TeamRole;
@@ -37,15 +37,9 @@ export interface TeamWithMembers extends Team {
 
 export interface CreateTeamData {
   name: string;
-  description?: string;
 }
 
-export interface InviteMemberData {
-  email: string;
-  role: TeamRole;
-}
-
-export interface UpdateMemberRoleData {
-  member_id: string;
+export interface AddMemberData {
+  user_id: string;
   role: TeamRole;
 }

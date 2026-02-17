@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -30,7 +30,7 @@ import {
 import { useDeleteTeam, useRemoveMember, useUpdateMemberRole } from '@/hooks/useTeams';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { InviteMemberDialog } from './InviteMemberDialog';
-import { Users, MoreVertical, UserPlus, Trash2, Crown, Edit, Eye, Clock } from 'lucide-react';
+import { Users, MoreVertical, UserPlus, Trash2, Crown, Edit, Eye } from 'lucide-react';
 import type { TeamWithMembers, TeamRole } from '@/types/teams';
 
 interface TeamCardProps {
@@ -69,12 +69,12 @@ export function TeamCard({ team }: TeamCardProps) {
     }
   };
 
-  const handleRemoveMember = (memberId: string) => {
-    removeMember.mutate(memberId);
+  const handleRemoveMember = (userId: string) => {
+    removeMember.mutate({ teamId: team.id, userId });
   };
 
-  const handleRoleChange = (memberId: string, newRole: TeamRole) => {
-    updateRole.mutate({ memberId, role: newRole });
+  const handleRoleChange = (userId: string, newRole: TeamRole) => {
+    updateRole.mutate({ teamId: team.id, userId, role: newRole });
   };
 
   return (
@@ -116,7 +116,7 @@ export function TeamCard({ team }: TeamCardProps) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setShowInvite(true)}>
                     <UserPlus className="mr-2 h-4 w-4" />
-                    {t.teams?.inviteMember || 'Invitar miembro'}
+                    {t.teams?.inviteMember || 'Agregar miembro'}
                   </DropdownMenuItem>
                   {team.is_owner && (
                     <>
@@ -134,35 +134,29 @@ export function TeamCard({ team }: TeamCardProps) {
               </DropdownMenu>
             )}
           </div>
-
-          {team.description && (
-            <p className="text-sm text-muted-foreground mt-2">{team.description}</p>
-          )}
         </CardHeader>
 
         <CardContent>
           <div className="space-y-3">
             <h4 className="text-sm font-medium">{t.teams?.teamMembers || 'Miembros del equipo'}</h4>
             <div className="space-y-2">
-              {/* Active members */}
-              {team.members.filter(m => m.accepted_at && !m.is_pending).map((member) => (
+              {team.members.map((member) => (
                 <div
                   key={member.id}
                   className="flex items-center justify-between rounded-lg border p-2"
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={member.user_avatar || undefined} />
                       <AvatarFallback className="text-xs">
-                        {(member.user_name || member.user_email || '?').slice(0, 2).toUpperCase()}
+                        {(member.user?.name || member.user?.email || '?').slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="text-sm font-medium">
-                        {member.user_name || member.user_email || 'Usuario'}
+                        {member.user?.name || member.user?.email || 'Usuario'}
                       </p>
-                      {member.user_name && member.user_email && (
-                        <p className="text-xs text-muted-foreground">{member.user_email}</p>
+                      {member.user?.name && member.user?.email && (
+                        <p className="text-xs text-muted-foreground">{member.user.email}</p>
                       )}
                     </div>
                   </div>
@@ -171,7 +165,7 @@ export function TeamCard({ team }: TeamCardProps) {
                     {canManage && member.user_id !== team.owner_id ? (
                       <Select
                         value={member.role}
-                        onValueChange={(v) => handleRoleChange(member.id, v as TeamRole)}
+                        onValueChange={(v) => handleRoleChange(member.user_id, v as TeamRole)}
                       >
                         <SelectTrigger className="h-8 w-28">
                           <SelectValue />
@@ -202,49 +196,7 @@ export function TeamCard({ team }: TeamCardProps) {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => handleRemoveMember(member.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {/* Pending invitations */}
-              {team.members.filter(m => m.is_pending).map((member) => (
-                <div
-                  key={member.id}
-                  className="flex items-center justify-between rounded-lg border border-dashed border-muted-foreground/30 p-2 bg-muted/30"
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8 opacity-60">
-                      <AvatarFallback className="text-xs bg-muted">
-                        {(member.invited_email || '?').slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        {member.invited_email}
-                      </p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        <span>{t.teams?.pendingInvitation || 'Invitación pendiente'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-muted-foreground">
-                      {roleLabels[member.role]}
-                    </Badge>
-
-                    {canManage && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => handleRemoveMember(member.id)}
+                        onClick={() => handleRemoveMember(member.user_id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -261,7 +213,7 @@ export function TeamCard({ team }: TeamCardProps) {
                 onClick={() => setShowInvite(true)}
               >
                 <UserPlus className="mr-2 h-4 w-4" />
-                {t.teams?.addMember || 'Añadir miembro'}
+                {t.teams?.addMember || 'Agregar miembro'}
               </Button>
             )}
           </div>
