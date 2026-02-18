@@ -99,6 +99,8 @@ import {
   ResultDisplay,
   BookmarkManager,
 } from '@/components/explore';
+import { DataTableView } from '@/components/dataprep';
+import type { RulePrefill } from '@/components/dataprep';
 import type { ExploreVariable, ExploreRunRequest, ExploreBookmark } from '@/types/explore';
 import type { ProjectUpdateData } from '@/types/database';
 
@@ -122,6 +124,7 @@ export default function ProjectDetail() {
   const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [showBookmarks, setShowBookmarks] = useState(true);
+  const [pendingRulePrefill, setPendingRulePrefill] = useState<RulePrefill | null>(null);
 
   // Explore state
   const [selectedVariable, setSelectedVariable] = useState<ExploreVariable | null>(null);
@@ -231,6 +234,12 @@ export default function ProjectDetail() {
       navigate('/projects');
     } catch { /* handled in hook */ }
   };
+
+  // Cross-tab: rule creation from Explorer → DataPrep
+  const handleCreateRuleFromExplorer = useCallback((prefill: RulePrefill) => {
+    setPendingRulePrefill(prefill);
+    setActiveTab('dataprep');
+  }, []);
 
   // Explore handlers
   const handleSelectVariable = useCallback((variable: ExploreVariable) => {
@@ -634,7 +643,12 @@ export default function ProjectDetail() {
           <TabsContent value="dataprep" className="space-y-6 mt-0">
             {hasReadyFiles && variableNames.length > 0 ? (
               <>
-                <DataPrepManager projectId={projectId!} availableVariables={variableNames} />
+                <DataPrepManager
+                  projectId={projectId!}
+                  availableVariables={variableNames}
+                  externalPrefill={pendingRulePrefill}
+                  onExternalPrefillConsumed={() => setPendingRulePrefill(null)}
+                />
                 {project.is_tracking && (
                   <Card>
                     <CardHeader>
@@ -693,69 +707,95 @@ export default function ProjectDetail() {
           {/* === TAB: DATA EXPLORER === */}
           <TabsContent value="explore" className="mt-0 -mx-6 -mb-6 lg:-mx-8 lg:-mb-8">
             {hasReadyFiles ? (
-              <div className="flex h-[calc(100vh-280px)] border-t">
-                {/* Left: Variable Browser */}
-                <div className="w-64 border-r flex-shrink-0 overflow-hidden">
-                  {explore.variables && (
-                    <VariableBrowser
-                      variables={explore.variables.variables}
-                      groups={explore.variables.groups}
-                      banners={explore.variables.banners}
-                      selectedVariable={selectedVariable?.name || null}
-                      onSelectVariable={handleSelectVariable}
+              <div className="flex flex-col h-[calc(100vh-240px)]">
+
+                {/* Top section: Full-width Data Table */}
+                <div className="border-b flex-shrink-0 overflow-hidden" style={{ maxHeight: '55%' }}>
+                  <div className="px-4 py-2 border-b bg-muted/30 flex items-center gap-2">
+                    <Table2 className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-muted-foreground">
+                      {t.dataPrep?.dataTab?.dataTabLabel || 'Data Table'}
+                    </span>
+                  </div>
+                  <div className="overflow-auto" style={{ maxHeight: 'calc(55vh - 40px)' }}>
+                    <DataTableView
+                      projectId={projectId!}
+                      onCreateRule={handleCreateRuleFromExplorer}
                     />
-                  )}
-                  {explore.isLoading && (
-                    <div className="flex items-center justify-center h-full">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                </div>
+
+                {/* Bottom section: 3-column analysis panel */}
+                <div className="flex flex-1 overflow-hidden border-t">
+                  {/* Left: Variable Browser */}
+                  <div className="w-64 border-r flex-shrink-0 overflow-hidden">
+                    {explore.variables && (
+                      <VariableBrowser
+                        variables={explore.variables.variables}
+                        groups={explore.variables.groups}
+                        banners={explore.variables.banners}
+                        selectedVariable={selectedVariable?.name || null}
+                        onSelectVariable={handleSelectVariable}
+                      />
+                    )}
+                    {explore.isLoading && (
+                      <div className="flex items-center justify-center h-full">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Center: Analysis + Results */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {t.explore?.title || 'Frequency Analysis'}
+                      </span>
+                    </div>
+                    <AnalysisPanel
+                      selectedVariable={selectedVariable}
+                      allVariables={explore.variables?.variables || []}
+                      banners={explore.variables?.banners || []}
+                      isRunning={explore.isRunning}
+                      onRun={handleRun}
+                    />
+                    {explore.result && (
+                      <ResultDisplay
+                        result={explore.result}
+                        currentRequest={currentRequest}
+                        onExport={handleExportExplore}
+                        onBookmark={handleBookmark}
+                      />
+                    )}
+                  </div>
+
+                  {/* Right: Bookmarks (toggleable) */}
+                  {showBookmarks && (
+                    <div className="w-64 border-l flex-shrink-0 overflow-hidden">
+                      <div className="p-3 border-b flex items-center justify-between">
+                        <h3 className="font-medium text-sm">
+                          {t.explore?.bookmarks || 'Bookmarks'} ({explore.bookmarks.length})
+                        </h3>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowBookmarks(false)}>
+                          <PanelRightClose className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <BookmarkManager
+                        bookmarks={explore.bookmarks}
+                        onSelect={handleSelectBookmark}
+                        onDelete={handleDeleteBookmark}
+                      />
                     </div>
                   )}
-                </div>
-
-                {/* Center: Analysis + Results */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  <AnalysisPanel
-                    selectedVariable={selectedVariable}
-                    allVariables={explore.variables?.variables || []}
-                    banners={explore.variables?.banners || []}
-                    isRunning={explore.isRunning}
-                    onRun={handleRun}
-                  />
-                  {explore.result && (
-                    <ResultDisplay
-                      result={explore.result}
-                      currentRequest={currentRequest}
-                      onExport={handleExportExplore}
-                      onBookmark={handleBookmark}
-                    />
-                  )}
-                </div>
-
-                {/* Right: Bookmarks (toggleable) */}
-                {showBookmarks && (
-                  <div className="w-64 border-l flex-shrink-0 overflow-hidden">
-                    <div className="p-3 border-b flex items-center justify-between">
-                      <h3 className="font-medium text-sm">
-                        {t.explore?.bookmarks || 'Bookmarks'} ({explore.bookmarks.length})
-                      </h3>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowBookmarks(false)}>
-                        <PanelRightClose className="h-4 w-4" />
+                  {!showBookmarks && (
+                    <div className="border-l p-2">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowBookmarks(true)}>
+                        <PanelRightOpen className="h-4 w-4" />
                       </Button>
                     </div>
-                    <BookmarkManager
-                      bookmarks={explore.bookmarks}
-                      onSelect={handleSelectBookmark}
-                      onDelete={handleDeleteBookmark}
-                    />
-                  </div>
-                )}
-                {!showBookmarks && (
-                  <div className="border-l p-2">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowBookmarks(true)}>
-                      <PanelRightOpen className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ) : (
               <Card className="border-dashed m-0">
