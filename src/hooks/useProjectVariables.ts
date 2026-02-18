@@ -13,7 +13,7 @@ interface AnalysisVariablesResponse {
 
 export type VariableLabelMap = Record<string, string>;
 
-export function useProjectVariables(projectId: string | undefined) {
+export function useProjectVariables(projectId: string | undefined, projectStatus?: string) {
   const query = useQuery({
     queryKey: ['project-variables', projectId],
     queryFn: async () => {
@@ -22,8 +22,9 @@ export function useProjectVariables(projectId: string | undefined) {
       );
       return response.variables;
     },
-    enabled: !!projectId,
+    enabled: !!projectId && (!projectStatus || projectStatus === 'ready'),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false,
   });
 
   const variableNames = query.data?.map(v => v.name) ?? [];

@@ -60,7 +60,7 @@ export default function ProjectDetail() {
   const { data: project, isLoading: projectLoading } = useProject(projectId!);
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
   const { data: summary, isLoading: summaryLoading } = useExecutiveSummary(projectId!);
-  const { data: variableNames = [] } = useProjectVariables(projectId);
+  const { data: variableNames = [] } = useProjectVariables(projectId, project?.status);
 
   // Track last used project
   useEffect(() => {
