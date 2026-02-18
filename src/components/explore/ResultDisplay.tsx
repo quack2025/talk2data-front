@@ -154,7 +154,7 @@ function ResultTable({
               <td className="py-1.5 px-3">{row.label ?? row.value ?? row.category}</td>
               <td className="text-right py-1.5 px-3 tabular-nums">{row.count ?? row.n}</td>
               <td className="text-right py-1.5 px-3 tabular-nums">
-                {((row.percent ?? row.pct ?? 0) as number).toFixed(1)}%
+                {((row.percent ?? row.pct ?? row.percentage ?? 0) as number).toFixed(1)}%
               </td>
             </tr>
           ))}
