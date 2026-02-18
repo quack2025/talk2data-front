@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -34,6 +35,8 @@ import {
   ArrowRight,
   Table2,
   Compass,
+  AlertTriangle,
+  FolderOpen,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -55,14 +58,13 @@ export default function ProjectDetail() {
   const dateLocale = language === 'es' ? es : enUS;
   const { setLastProjectId } = useLastProject();
   const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
-  // Use the API hooks
   const { data: project, isLoading: projectLoading } = useProject(projectId!);
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
   const { data: summary, isLoading: summaryLoading } = useExecutiveSummary(projectId!);
   const { data: variableNames = [] } = useProjectVariables(projectId, project?.status);
 
-  // Track last used project
   useEffect(() => {
     if (projectId) {
       setLastProjectId(projectId);
@@ -90,11 +92,7 @@ export default function ProjectDetail() {
       <AppLayout>
         <div className="p-6 lg:p-8 text-center">
           <h1 className="text-2xl font-bold">{t.projectDetail.notFound}</h1>
-          <Button
-            variant="link"
-            onClick={() => navigate('/projects')}
-            className="mt-4"
-          >
+          <Button variant="link" onClick={() => navigate('/projects')} className="mt-4">
             {t.projectDetail.backToProjects}
           </Button>
         </div>
@@ -105,16 +103,22 @@ export default function ProjectDetail() {
   const hasFiles = files && files.length > 0;
   const hasReadyFiles = project.status === 'ready';
   const hasSummary = !!summary;
+  const dataPrepReady = hasReadyFiles; // could be more granular later
+  const showDataReadinessBanner = hasFiles && !hasReadyFiles;
 
-  // Check if project has study context configured
-  const hasStudyContext = project.study_objective || project.country || 
-    project.industry || project.target_audience || 
-    (project.brands && project.brands.length > 0) || 
-    project.methodology || project.study_date || project.is_tracking;
+  const hasStudyContext =
+    project.study_objective ||
+    project.country ||
+    project.industry ||
+    project.target_audience ||
+    (project.brands && project.brands.length > 0) ||
+    project.methodology ||
+    project.study_date ||
+    project.is_tracking;
 
   return (
     <AppLayout>
-      <div className="p-6 lg:p-8 space-y-6">
+      <div className="p-6 lg:p-8 space-y-4">
         {/* Breadcrumb */}
         <Breadcrumb>
           <BreadcrumbList>
@@ -131,21 +135,20 @@ export default function ProjectDetail() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
               <Badge variant={statusConfig[project.status]?.variant ?? 'secondary'}>
                 {statusConfig[project.status]?.label ?? project.status}
               </Badge>
             </div>
-            {project.description && (
-              <p className="text-muted-foreground mt-1">{project.description}</p>
-            )}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1 flex-wrap">
               <span>
                 {t.projectDetail.createdOn}{' '}
-                {format(new Date(project.created_at), language === 'es' ? "d 'de' MMMM, yyyy" : "MMMM d, yyyy", {
-                  locale: dateLocale,
-                })}
+                {format(
+                  new Date(project.created_at),
+                  language === 'es' ? "d 'de' MMMM, yyyy" : 'MMMM d, yyyy',
+                  { locale: dateLocale }
+                )}
               </span>
               {project.n_variables !== undefined && (
                 <span className="flex items-center gap-1">
@@ -161,7 +164,9 @@ export default function ProjectDetail() {
               )}
             </div>
           </div>
-          <div className="flex gap-2">
+
+          {/* Header action buttons */}
+          <div className="flex gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -180,15 +185,6 @@ export default function ProjectDetail() {
               {t.aggfile?.generateTables || 'Generar Tablas'}
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/projects/${projectId}/explore`)}
-              disabled={!hasReadyFiles}
-            >
-              <Compass className="h-4 w-4 mr-2" />
-              {t.explore?.title || 'Explorar Datos'}
-            </Button>
-            <Button
               size="sm"
               onClick={() => navigate(`/projects/${projectId}/chat`)}
               disabled={!hasReadyFiles}
@@ -199,381 +195,514 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          <Card
-            className="cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => navigate(`/projects/${projectId}/upload`)}
-          >
-            <CardHeader className="pb-2">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Upload className="h-5 w-5 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardTitle className="text-base">{t.projectDetail.uploadCard}</CardTitle>
-              <CardDescription>{t.projectDetail.uploadCardDescription}</CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`cursor-pointer transition-colors ${
-              hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
-            }`}
-            onClick={() => hasReadyFiles && navigate(`/projects/${projectId}/chat`)}
-          >
-            <CardHeader className="pb-2">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MessageSquare className="h-5 w-5 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardTitle className="text-base">{t.projectDetail.chatCard}</CardTitle>
-              <CardDescription>
-                {hasReadyFiles ? t.projectDetail.chatCardDescription : t.projectDetail.chatCardDisabled}
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`cursor-pointer transition-colors ${
-              hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
-            }`}
-            onClick={() => hasReadyFiles && navigate('/exports')}
-          >
-            <CardHeader className="pb-2">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardTitle className="text-base">{t.projectDetail.exportCard}</CardTitle>
-              <CardDescription>{t.projectDetail.exportCardDescription}</CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`cursor-pointer transition-colors ${
-              hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
-            }`}
-            onClick={() => hasReadyFiles && setAggfileModalOpen(true)}
-          >
-            <CardHeader className="pb-2">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Table2 className="h-5 w-5 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardTitle className="text-base">{t.aggfile?.generateTablesCard || 'Generar Tablas'}</CardTitle>
-              <CardDescription>
-                {hasReadyFiles 
-                  ? (t.aggfile?.generateTablesCardDescription || 'Excel con tablas cruzadas')
-                  : t.projectDetail.chatCardDisabled}
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`cursor-pointer transition-colors ${
-              hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
-            }`}
-            onClick={() => hasReadyFiles && navigate(`/projects/${projectId}/explore`)}
-          >
-            <CardHeader className="pb-2">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Compass className="h-5 w-5 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardTitle className="text-base">{t.explore?.title || 'Explorar Datos'}</CardTitle>
-              <CardDescription>
-                {hasReadyFiles
-                  ? (t.explore?.cardDescription || 'Análisis interactivo punto a punto')
-                  : t.projectDetail.chatCardDisabled}
-              </CardDescription>
-            </CardContent>
-          </Card>
-
-          <Card
-            className="cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => navigate(`/projects/${projectId}/settings`)}
-          >
-            <CardHeader className="pb-2">
-              <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                <Settings className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardTitle className="text-base">{t.projectDetail.settingsCard}</CardTitle>
-              <CardDescription>{t.projectDetail.settingsCardDescription}</CardDescription>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Executive Summary Preview */}
-        {hasSummary && (
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardHeader className="flex flex-row items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle>{t.summary?.title || 'Resumen Ejecutivo'}</CardTitle>
-                  <CardDescription>{t.summary?.generatedByAI || 'Generado automáticamente con IA'}</CardDescription>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(`/projects/${projectId}/summary`)}
-                className="gap-2"
-              >
-                {t.summary?.viewFullSummary || 'Ver resumen completo'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {summary.content}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Study Context Summary */}
-        {hasStudyContext && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>{t.settings.studyContext}</CardTitle>
-                <CardDescription>{t.projectDetail.studyContextDescription}</CardDescription>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(`/projects/${projectId}/settings`)}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                {t.common.edit}
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {project.study_objective && (
-                  <div className="col-span-full space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Target className="h-4 w-4" />
-                      {t.settings.studyObjective}
-                    </div>
-                    <p className="text-sm">{project.study_objective}</p>
-                  </div>
-                )}
-
-                {project.country && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Globe className="h-4 w-4" />
-                      {t.settings.country}
-                    </div>
-                    <p className="text-sm font-medium">{project.country}</p>
-                  </div>
-                )}
-
-                {project.industry && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Building2 className="h-4 w-4" />
-                      {t.settings.industry}
-                    </div>
-                    <p className="text-sm font-medium">{project.industry}</p>
-                  </div>
-                )}
-
-                {project.methodology && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <FlaskConical className="h-4 w-4" />
-                      {t.settings.methodology}
-                    </div>
-                    <p className="text-sm font-medium">{project.methodology}</p>
-                  </div>
-                )}
-
-                {project.target_audience && (
-                  <div className="col-span-full space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      {t.settings.targetAudience}
-                    </div>
-                    <p className="text-sm">{project.target_audience}</p>
-                  </div>
-                )}
-
-                {project.brands && project.brands.length > 0 && (
-                  <div className="col-span-full space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Tag className="h-4 w-4" />
-                      {t.settings.brands}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {project.brands.map((brand) => (
-                        <Badge key={brand} variant="secondary">{brand}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {project.study_date && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      {t.settings.studyDate}
-                    </div>
-                    <p className="text-sm font-medium">
-                      {format(new Date(project.study_date), 'PPP', { locale: dateLocale })}
-                    </p>
-                  </div>
-                )}
-
-                {project.is_tracking && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <RefreshCw className="h-4 w-4" />
-                      {t.settings.isTracking}
-                    </div>
-                    <p className="text-sm font-medium">
-                      {project.wave_number ? `Wave ${project.wave_number}` : t.common.yes}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Files section */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>{t.projectDetail.filesSection}</CardTitle>
-              <CardDescription>{t.projectDetail.filesSectionDescription}</CardDescription>
+        {/* Data Readiness Banner */}
+        {!dataPrepReady && hasFiles && (
+          <div className="flex items-center justify-between rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+            <div className="flex items-center gap-2 text-warning-foreground text-sm" style={{ color: 'hsl(var(--warning))' }}>
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>{t.projectDetail.dataPrepBanner}</span>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate(`/projects/${projectId}/upload`)}
+              className="shrink-0"
+              style={{ borderColor: 'hsl(var(--warning) / 0.5)', color: 'hsl(var(--warning))' }}
+              onClick={() => setActiveTab('dataprep')}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              {t.common.add}
+              <ArrowRight className="h-4 w-4 mr-1" />
+              {t.projectDetail.goToDataPrep}
             </Button>
-          </CardHeader>
-          <CardContent>
-            {filesLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : !hasFiles ? (
-              <div className="text-center py-8">
-                <FileSpreadsheet className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-                <p className="text-muted-foreground">{t.projectDetail.noFilesYet}</p>
-                <Button
-                  variant="link"
-                  onClick={() => navigate(`/projects/${projectId}/upload`)}
-                  className="mt-2"
-                >
-                  {t.projectDetail.uploadFirstFile}
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {files.map((file) => (
-                  <div
-                    key={file.id}
-                    className="flex items-center gap-4 p-3 rounded-lg border bg-muted/30"
-                  >
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <FileSpreadsheet className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{file.original_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {(file.size_bytes / 1024 / 1024).toFixed(2)} MB •{' '}
-                        {format(new Date(file.uploaded_at), "d MMM yyyy", { locale: dateLocale })}
-                      </p>
-                    </div>
-                    <Badge variant="outline">
-                      {file.file_type === 'spss_data' ? 'SPSS' : 'Cuestionario'}
-                    </Badge>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="border-b rounded-none bg-transparent p-0 h-auto gap-0 w-full justify-start overflow-x-auto">
+            <TabsTrigger
+              value="overview"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-1 text-base font-medium text-muted-foreground data-[state=active]:text-foreground"
+            >
+              {t.projectDetail.tabOverview || 'Project Overview'}
+            </TabsTrigger>
+            <TabsTrigger
+              value="dataprep"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-1 text-base font-medium text-muted-foreground data-[state=active]:text-foreground"
+            >
+              <span className="flex items-center gap-2">
+                {t.projectDetail.tabData}
+                <span className={`h-2 w-2 rounded-full ${dataPrepReady ? 'bg-green-500' : 'bg-amber-500'}`} />
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="explore"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-1 text-base font-medium text-muted-foreground data-[state=active]:text-foreground"
+            >
+              {t.explore?.title || 'Data Explorer'}
+            </TabsTrigger>
+            <TabsTrigger
+              value="context"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-1 text-base font-medium text-muted-foreground data-[state=active]:text-foreground"
+            >
+              {t.settings?.studyContext || 'Study Context'}
+            </TabsTrigger>
+            <TabsTrigger
+              value="files"
+              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-1 text-base font-medium text-muted-foreground data-[state=active]:text-foreground"
+            >
+              <span className="flex items-center gap-2">
+                {t.projectDetail.tabFiles || 'Files'}
+                {files && files.length > 0 && (
+                  <span className="text-xs bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 leading-none">
+                    {files.length}
+                  </span>
+                )}
+              </span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* === TAB: PROJECT OVERVIEW === */}
+          <TabsContent value="overview" className="space-y-6 mt-0">
+            {/* Quick action cards */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <Card
+                className="cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => navigate(`/projects/${projectId}/upload`)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Upload className="h-5 w-5 text-primary" />
                   </div>
-                ))}
-              </div>
+                </CardHeader>
+                <CardContent>
+                  <CardTitle className="text-base">{t.projectDetail.uploadCard}</CardTitle>
+                  <CardDescription>{t.projectDetail.uploadCardDescription}</CardDescription>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`cursor-pointer transition-colors ${
+                  hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+                }`}
+                onClick={() => hasReadyFiles && navigate(`/projects/${projectId}/chat`)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardTitle className="text-base">{t.projectDetail.chatCard}</CardTitle>
+                  <CardDescription>
+                    {hasReadyFiles
+                      ? t.projectDetail.chatCardDescription
+                      : t.projectDetail.chatCardDisabled}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`cursor-pointer transition-colors ${
+                  hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+                }`}
+                onClick={() => hasReadyFiles && navigate('/exports')}
+              >
+                <CardHeader className="pb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardTitle className="text-base">{t.projectDetail.exportCard}</CardTitle>
+                  <CardDescription>{t.projectDetail.exportCardDescription}</CardDescription>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`cursor-pointer transition-colors ${
+                  hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+                }`}
+                onClick={() => hasReadyFiles && setAggfileModalOpen(true)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Table2 className="h-5 w-5 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardTitle className="text-base">
+                    {t.aggfile?.generateTablesCard || 'Generar Tablas'}
+                  </CardTitle>
+                  <CardDescription>
+                    {hasReadyFiles
+                      ? t.aggfile?.generateTablesCardDescription || 'Excel con tablas cruzadas'
+                      : t.projectDetail.chatCardDisabled}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+
+              <Card
+                className="cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => navigate(`/projects/${projectId}/settings`)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                    <Settings className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardTitle className="text-base">{t.projectDetail.settingsCard}</CardTitle>
+                  <CardDescription>{t.projectDetail.settingsCardDescription}</CardDescription>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Data readiness inline banner */}
+            {!dataPrepReady && hasFiles && (
+              <button
+                onClick={() => setActiveTab('dataprep')}
+                className="w-auto flex items-center gap-2 text-sm rounded-lg px-4 py-2.5 border transition-colors"
+                style={{ color: 'hsl(var(--warning))', borderColor: 'hsl(var(--warning) / 0.4)', backgroundColor: 'hsl(var(--warning) / 0.08)' }}
+              >
+                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: 'hsl(var(--warning))' }} />
+                {t.projectDetail.dataPrepBanner}
+                <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </button>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Variable Groups Section */}
-        {hasReadyFiles && variableNames.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.grouping?.title || 'Grupos de Variables'}</CardTitle>
-              <CardDescription>
-                {t.grouping?.autoDetectDescription || 'Organiza las variables en grupos para análisis más estructurados'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <VariableGroupsManager
-                projectId={projectId!}
-                availableVariables={variableNames}
-              />
-            </CardContent>
-          </Card>
-        )}
+            {/* Executive Summary */}
+            {hasSummary && (
+              <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardHeader className="flex flex-row items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle>{t.summary?.title || 'Resumen Ejecutivo'}</CardTitle>
+                      <CardDescription>
+                        {t.summary?.generatedByAI || 'Generado automáticamente con IA'}
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/projects/${projectId}/summary`)}
+                    className="gap-2"
+                  >
+                    {t.summary?.viewFullSummary || 'Ver resumen completo'}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground line-clamp-3">{summary.content}</p>
+                </CardContent>
+              </Card>
+            )}
 
-        {/* Data Preparation Section */}
-        {hasReadyFiles && variableNames.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.dataPrep?.title || 'Preparación de Datos'}</CardTitle>
-              <CardDescription>
-                {t.dataPrep?.noRulesHint || 'Crea reglas de limpieza, ponderación, nets o recodificación para preparar tus datos.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DataPrepManager
-                projectId={projectId!}
-                availableVariables={variableNames}
-              />
-            </CardContent>
-          </Card>
-        )}
+            {/* Empty state */}
+            {!hasFiles && (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <FolderOpen className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <h3 className="font-semibold mb-1">{t.projectDetail.noFilesYet}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t.projectDetail.uploadCardDescription}
+                  </p>
+                  <Button onClick={() => navigate(`/projects/${projectId}/upload`)}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    {t.projectDetail.uploadFiles}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-        {/* Wave Manager Section (only for tracking studies) */}
-        {hasReadyFiles && project.is_tracking && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.waves?.title || 'Waves / Tracking'}</CardTitle>
-              <CardDescription>
-                {t.waves?.description || 'Gestiona las olas del estudio y compara resultados entre periodos'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <WaveManager
-                projectId={projectId!}
-                availableFiles={files?.map(f => ({ id: f.id, name: f.original_name })) || []}
-                availableVariables={variableNames}
-              />
-            </CardContent>
-          </Card>
-        )}
+          {/* === TAB: DATA PREPARATION === */}
+          <TabsContent value="dataprep" className="space-y-6 mt-0">
+            {hasReadyFiles && variableNames.length > 0 ? (
+              <>
+                <DataPrepManager projectId={projectId!} availableVariables={variableNames} />
+                {project.is_tracking && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{t.waves?.title || 'Waves / Tracking'}</CardTitle>
+                      <CardDescription>
+                        {t.waves?.description ||
+                          'Gestiona las olas del estudio y compara resultados entre periodos'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <WaveManager
+                        projectId={projectId!}
+                        availableFiles={
+                          files?.map((f) => ({ id: f.id, name: f.original_name })) || []
+                        }
+                        availableVariables={variableNames}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t.grouping?.title || 'Grupos de Variables'}</CardTitle>
+                    <CardDescription>
+                      {t.grouping?.autoDetectDescription ||
+                        'Organiza las variables en grupos para análisis más estructurados'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <VariableGroupsManager
+                      projectId={projectId!}
+                      availableVariables={variableNames}
+                    />
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <AlertTriangle className="h-12 w-12 mb-4" style={{ color: 'hsl(var(--warning) / 0.6)' }} />
+                  <h3 className="font-semibold mb-1">
+                    {t.projectDetail.chatCardDisabled || 'Confirm data preparation first'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t.projectDetail.uploadCardDescription}
+                  </p>
+                  <Button variant="outline" onClick={() => navigate(`/projects/${projectId}/upload`)}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    {t.projectDetail.uploadFiles}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-        {/* Aggfile Generator Modal */}
-        <AggfileGeneratorModal
-          open={aggfileModalOpen}
-          onOpenChange={setAggfileModalOpen}
-          projectId={projectId!}
-        />
+          {/* === TAB: DATA EXPLORER === */}
+          <TabsContent value="explore" className="mt-0">
+            {hasReadyFiles ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <Compass className="h-12 w-12 text-primary/60 mb-4" />
+                  <h3 className="font-semibold mb-1">
+                    {t.explore?.title || 'Explorar Datos'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t.explore?.cardDescription || 'Análisis interactivo punto a punto'}
+                  </p>
+                  <Button onClick={() => navigate(`/projects/${projectId}/explore`)}>
+                    <Compass className="h-4 w-4 mr-2" />
+                    {t.explore?.title || 'Abrir Explorador'}
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <Compass className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <h3 className="font-semibold mb-1">
+                    {t.projectDetail.chatCardDisabled || 'Confirm data preparation first'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t.projectDetail.uploadCardDescription}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* === TAB: STUDY CONTEXT === */}
+          <TabsContent value="context" className="mt-0">
+            {hasStudyContext ? (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>{t.settings.studyContext}</CardTitle>
+                    <CardDescription>{t.projectDetail.studyContextDescription}</CardDescription>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(`/projects/${projectId}/settings`)}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    {t.common.edit}
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {project.study_objective && (
+                      <div className="col-span-full space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Target className="h-4 w-4" />
+                          {t.settings.studyObjective}
+                        </div>
+                        <p className="text-sm">{project.study_objective}</p>
+                      </div>
+                    )}
+                    {project.country && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Globe className="h-4 w-4" />
+                          {t.settings.country}
+                        </div>
+                        <p className="text-sm font-medium">{project.country}</p>
+                      </div>
+                    )}
+                    {project.industry && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Building2 className="h-4 w-4" />
+                          {t.settings.industry}
+                        </div>
+                        <p className="text-sm font-medium">{project.industry}</p>
+                      </div>
+                    )}
+                    {project.methodology && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <FlaskConical className="h-4 w-4" />
+                          {t.settings.methodology}
+                        </div>
+                        <p className="text-sm font-medium">{project.methodology}</p>
+                      </div>
+                    )}
+                    {project.target_audience && (
+                      <div className="col-span-full space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Users className="h-4 w-4" />
+                          {t.settings.targetAudience}
+                        </div>
+                        <p className="text-sm">{project.target_audience}</p>
+                      </div>
+                    )}
+                    {project.brands && project.brands.length > 0 && (
+                      <div className="col-span-full space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Tag className="h-4 w-4" />
+                          {t.settings.brands}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {project.brands.map((brand) => (
+                            <Badge key={brand} variant="secondary">{brand}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {project.study_date && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          {t.settings.studyDate}
+                        </div>
+                        <p className="text-sm font-medium">
+                          {format(new Date(project.study_date), 'PPP', { locale: dateLocale })}
+                        </p>
+                      </div>
+                    )}
+                    {project.is_tracking && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <RefreshCw className="h-4 w-4" />
+                          {t.settings.isTracking}
+                        </div>
+                        <p className="text-sm font-medium">
+                          {project.wave_number ? `Wave ${project.wave_number}` : t.common.yes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <Target className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                  <h3 className="font-semibold mb-1">
+                    {t.settings.studyContext}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {t.projectDetail.studyContextDescription}
+                  </p>
+                  <Button variant="outline" onClick={() => navigate(`/projects/${projectId}/settings`)}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    {t.common.edit}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* === TAB: FILES === */}
+          <TabsContent value="files" className="mt-0">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>{t.projectDetail.filesSection}</CardTitle>
+                  <CardDescription>{t.projectDetail.filesSectionDescription}</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/projects/${projectId}/upload`)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {t.common.add}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {filesLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : !hasFiles ? (
+                  <div className="text-center py-8">
+                    <FileSpreadsheet className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground">{t.projectDetail.noFilesYet}</p>
+                    <Button
+                      variant="link"
+                      onClick={() => navigate(`/projects/${projectId}/upload`)}
+                      className="mt-2"
+                    >
+                      {t.projectDetail.uploadFirstFile}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {files.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center gap-4 p-3 rounded-lg border bg-muted/30"
+                      >
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <FileSpreadsheet className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{file.original_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {(file.size_bytes / 1024 / 1024).toFixed(2)} MB •{' '}
+                            {format(new Date(file.uploaded_at), 'd MMM yyyy', { locale: dateLocale })}
+                          </p>
+                        </div>
+                        <Badge variant="outline">
+                          {file.file_type === 'spss_data' ? 'SPSS' : 'Cuestionario'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* Aggfile Generator Modal */}
+      <AggfileGeneratorModal
+        open={aggfileModalOpen}
+        onOpenChange={setAggfileModalOpen}
+        projectId={projectId!}
+      />
     </AppLayout>
   );
 }
