@@ -172,42 +172,49 @@ function ResultTable({
     );
   }
 
-  // Crosstab / crosstab_with_significance
+  // Crosstab / crosstab_with_significance — backend returns array of rows
   if (
     (analysisType === 'crosstab' || analysisType === 'crosstab_with_significance') &&
     data.table
   ) {
-    const table = data.table as Record<string, Record<string, any>>;
-    const rowKeys = Object.keys(table);
-    const colKeys = rowKeys.length > 0 ? Object.keys(table[rowKeys[0]]) : [];
+    const rows = data.table as Record<string, any>[];
+    if (!rows.length) return <p className="text-sm text-muted-foreground">No data</p>;
+
+    // Separate Total row from data rows
+    const dataRows = rows.filter(r => r.row_value !== 'Total');
+    const totalRow = rows.find(r => r.row_value === 'Total');
+
+    // Column keys: everything except row_value and row_label
+    const colKeys = Object.keys(rows[0]).filter(k => k !== 'row_value' && k !== 'row_label');
+
+    // Map numeric codes to human-readable labels
+    const colLabels: Record<string, string> = data.col_value_labels ?? {};
 
     return (
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b">
-            <th className="text-left py-2 px-3 font-medium"></th>
-            {colKeys.map((col) => (
-              <th key={col} className="text-right py-2 px-3 font-medium">
-                {col}
+            <th className="text-left py-2 px-3 font-medium w-[40%]"></th>
+            {colKeys.map(col => (
+              <th key={col} className="text-right py-2 px-3 font-medium text-xs">
+                {colLabels[col] ?? col}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rowKeys.map((row) => (
-            <tr key={row} className="border-b last:border-0 hover:bg-muted/50">
-              <td className="py-1.5 px-3 font-medium">{row}</td>
-              {colKeys.map((col) => {
-                const cell = table[row][col];
-                const value = typeof cell === 'object' ? cell?.pct ?? cell?.value : cell;
-                const sig = typeof cell === 'object' ? cell?.sig : null;
+          {dataRows.map((row, i) => (
+            <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
+              <td className="py-1.5 px-3 text-xs">{row.row_label}</td>
+              {colKeys.map(col => {
+                const cell = row[col];
+                const pct = cell?.percentage ?? cell?.pct ?? (typeof cell === 'number' ? cell : null);
+                const sig = cell?.sig ?? null;
                 return (
-                  <td key={col} className="text-right py-1.5 px-3 tabular-nums">
-                    {typeof value === 'number' ? value.toFixed(1) : value}
+                  <td key={col} className="text-right py-1.5 px-3 tabular-nums text-xs">
+                    {typeof pct === 'number' ? pct.toFixed(1) + '%' : '-'}
                     {sig && (
-                      <span className="text-[10px] text-primary ml-0.5 font-bold">
-                        {sig}
-                      </span>
+                      <span className="text-[10px] text-primary ml-0.5 font-bold">{sig}</span>
                     )}
                   </td>
                 );
@@ -215,6 +222,21 @@ function ResultTable({
             </tr>
           ))}
         </tbody>
+        {totalRow && (
+          <tfoot>
+            <tr className="border-t font-medium bg-muted/30">
+              <td className="py-1.5 px-3 text-xs">Total (n)</td>
+              {colKeys.map(col => {
+                const cell = totalRow[col];
+                return (
+                  <td key={col} className="text-right py-1.5 px-3 tabular-nums text-xs">
+                    {cell?.count ?? '-'}
+                  </td>
+                );
+              })}
+            </tr>
+          </tfoot>
+        )}
       </table>
     );
   }
