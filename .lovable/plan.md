@@ -1,101 +1,88 @@
 
+## Add Full Data Table View to the Data Explorer Tab
 
-## Plan: Reorganizar ProjectDetail con navegacion por tabs
+### What's Missing
 
-### Diagnostico actual
+The current "Data Explorer" tab only shows the **frequency/analysis panel** (Variable Browser → AnalysisPanel → ResultDisplay → Bookmarks). The previous "Habilita gate UX más visible" version also had a **full raw data table** at the top of that tab, with:
 
-La pagina actual tiene ~600 lineas y muestra 8+ secciones en scroll vertical continuo. El usuario debe hacer scroll extenso para llegar a Data Preparation (que es obligatorio) y luego volver arriba para las Quick Actions. Esto rompe el flujo logico.
+- **Original Data / Prepared Data** toggle
+- **Value Labels** toggle (show label + code vs raw code)
+- **Rows × Columns** badge (e.g. "292 rows × 129 columns")
+- **Column Selector** dropdown with search, invert, show-all, and apply
+- **Export to Excel** dropdown (Values only / Labels only / Labels + Values)
+- **Paginated data grid** with horizontal scroll, sticky headers, and right-click context menus per column/cell (View Distribution, Create Net, Create Recode, Exclude Column, Keep only value, Exclude value)
+- **Column Distribution Sheet** (slide-in panel with bar chart per variable)
 
-### Propuesta: Header fijo + Tabs internos
+All of this logic already exists as a fully working component: `DataTableView` in `src/components/dataprep/DataTableView.tsx`. It is currently only used inside the "Data Preparation" tab via `DataPrepManager`. The goal is to **add** it to the Data Explorer tab as a top section, without replacing the existing analysis panel below.
 
-En lugar de crear rutas separadas (que fragmentarian demasiado la experiencia y perderian contexto), la mejor opcion es un **header fijo con tabs** que organicen el contenido en paneles. Esto da visibilidad sin scroll excesivo y mantiene la navegacion dentro del proyecto coherente.
+### What `DataTableView` needs
 
-```text
-+------------------------------------------+
-| Breadcrumb                               |
-| Header (nombre, status, botones)         |
-| Banner Data Readiness (si pending)       |
-+------------------------------------------+
-| [Resumen] [Datos] [Contexto] [Archivos]  |  <-- Tabs
-+------------------------------------------+
-|                                          |
-|  Contenido del tab activo                |
-|                                          |
-+------------------------------------------+
-```
+`DataTableView` accepts two props:
+- `projectId: string` — already available
+- `onCreateRule: (prefill: RulePrefill) => void` — currently wired to open the rule dialog in DataPrepManager
 
-### Distribucion de tabs
+For the Explorer tab, the `onCreateRule` callback needs to **switch to the Data Preparation tab** and pre-fill the rule dialog there. This can be done by lifting a `pendingRulePrefill` state up to `ProjectDetail` and applying it when the dataprep tab activates.
 
-**Tab 1 - Resumen (default)**
-- Quick Actions (Chat, Tables, Export, Settings) - como cards compactos en una fila
-- Executive Summary preview
-- Badge de estado de Data Prep (link al tab Datos)
+### Implementation Plan
 
-**Tab 2 - Datos**
-- Data Preparation (con gate de confirmacion)
-- Variable Groups
-- Waves (si aplica)
+**File: `src/pages/ProjectDetail.tsx`**
 
-**Tab 3 - Contexto**
-- Study Context (objetivo, pais, industria, metodologia, etc.)
-- Link a Settings para editar
+1. **Import `DataTableView`** from `@/components/dataprep`.
 
-**Tab 4 - Archivos**
-- Lista de archivos del proyecto
-- Boton de upload
+2. **Import `RulePrefill`** type from `@/components/dataprep`.
 
-### Beneficios vs pantallas separadas
+3. **Add state** for pending cross-tab rule creation:
+   ```ts
+   const [pendingRulePrefill, setPendingRulePrefill] = useState<RulePrefill | null>(null);
+   ```
 
-| Criterio | Tabs (propuesto) | Rutas separadas |
-|----------|-----------------|-----------------|
-| Contexto del proyecto | Siempre visible en header | Se pierde al navegar |
-| Velocidad de navegacion | Instantanea (sin carga) | Requiere fetch por ruta |
-| Complejidad de codigo | Moderada (1 archivo) | Alta (4+ archivos nuevos) |
-| Visibilidad de Data Prep | 1 clic (tab "Datos") | 1 clic (ruta dedicada) |
-| Mobile | Tabs scrolleables | Mejor en teoria |
+4. **Add handler** `handleCreateRuleFromExplorer` that:
+   - Saves the prefill to `pendingRulePrefill`
+   - Switches `activeTab` to `'dataprep'`
+   (The DataPrepManager will pick up the prefill on the next render)
 
-### Seccion tecnica
+5. **Add state & handler in DataPrepManager** — DataPrepManager already has internal `rulePrefill` state. The cleanest approach is to pass an optional `externalPrefill` prop to `DataPrepManager` and apply it via a `useEffect` when it changes.
 
-**Archivo: `src/pages/ProjectDetail.tsx`**
+   Actually, a simpler approach: pass a `prefillRef` callback directly. Looking at the code, `DataPrepManager` already tracks `rulePrefill` and `showDialog` internally. The cleanest solution without refactoring the child is to pass `initialPrefill?: RulePrefill` prop to `DataPrepManager` and use a `useEffect` to open the dialog when it's provided.
 
-Cambios principales:
+6. **In the Data Explorer tab (`value="explore"`)**: Add `DataTableView` at the top of the center area (above the AnalysisPanel), inside a visually separated section. Structure:
 
-1. **Estructura general**: El header (breadcrumb, nombre, status, botones, banner) permanece fuera de los tabs, siempre visible. El contenido debajo se organiza con el componente `Tabs` de shadcn/ui.
+   ```
+   [Data Explorer Tab]
+   ┌──────────────────────────────────────────────────────┐
+   │  📊 Data Table (DataTableView with all features)     │
+   │  Original ◉ | Value Labels ◉ | 292×129 | Col Sel | Export │
+   │  ┌───┬────────┬──────────────────────────────────┐  │
+   │  │ 9 │ 1398.. │ Complete │ ...                   │  │
+   │  └───┴────────┴──────────────────────────────────┘  │
+   │  Pagination: Showing 1-50 of 292   < >              │
+   ├──────────────────────────────────────────────────────┤
+   │  🔍 Frequency Analysis (AnalysisPanel + Results)    │
+   └──────────────────────────────────────────────────────┘
+   ```
 
-2. **Tabs component**: Usar `Tabs` con `TabsList` y `TabsTrigger` para las 4 pestanas. El tab activo por defecto sera "overview" (Resumen).
+   The two sections are separated by a divider with a label. The table uses the full width area (no side panels constrain it). The Variable Browser and Bookmarks panels remain visible alongside the analysis section below.
 
-3. **Tab "Resumen" (overview)**:
-   - Quick Actions grid (las 5 cards actuales)
-   - Executive Summary preview card
-   - Un mini-badge o link que indica el estado de Data Prep con enlace al tab "data"
+7. **Layout adjustment**: The Data Explorer tab currently uses a 3-column flex layout (`Variable Browser | Center | Bookmarks`). The `DataTableView` needs full horizontal width (it scrolls horizontally). The best approach is to **restructure the layout** into two vertical sections:
+   - **Top section (full width)**: `DataTableView` with its own horizontal scroll
+   - **Bottom section (3-column flex)**: Variable Browser | Analysis Panel + Results | Bookmarks
+   
+   This keeps all existing functionality intact while adding the table on top.
 
-4. **Tab "Datos" (data)**:
-   - DataPrepManager (con su gate de confirmacion incluido)
-   - VariableGroupsManager
-   - WaveManager (condicional si `project.is_tracking`)
+**File: `src/components/dataprep/DataPrepManager.tsx`**
 
-5. **Tab "Contexto" (context)**:
-   - Study Context card (objetivo, pais, industria, etc.)
-   - Boton para ir a Settings a editar
+8. **Add optional `externalPrefill` prop**: When provided and changes (non-null), automatically open the rule dialog with that prefill. Reset to null after consuming.
 
-6. **Tab "Archivos" (files)**:
-   - File list con upload button
-   - Mismo contenido actual de la seccion Files
+### Technical Details
 
-7. **Logica del banner**: El banner de Data Readiness permanece fuera de los tabs (entre header y tabs), siempre visible cuando `dataPrepStatus === 'pending'`. Se le agrega un boton CTA "Ir a preparacion" que cambia el tab activo a "data".
+- `DataTableView` already handles its own data fetching via `useDataTable(projectId)` — no new API calls needed
+- The `onCreateRule` callback from the explorer table will call `handleCreateRuleFromExplorer`, which switches tabs and passes the prefill through
+- The `ColumnDistributionSheet` is rendered inside `DataTableView` itself — no additional wiring
+- No new dependencies required — all components and hooks already exist
 
-8. **Estado del tab activo**: Usar `useState` para controlar el tab activo. El CTA del banner hara `setActiveTab('data')`.
+### Summary of Changes
 
-9. **Indicador en tab**: El tab "Datos" mostrara un punto de color (amber si pending, green si confirmed) para indicar el estado sin entrar al tab.
-
-**Archivo: `src/i18n/translations.ts`**
-
-Agregar claves para los nombres de los tabs:
-- `projectDetail.tabOverview` / "Resumen" / "Overview"
-- `projectDetail.tabData` / "Datos" / "Data"
-- `projectDetail.tabContext` / "Contexto" / "Context"
-- `projectDetail.tabFiles` / "Archivos" / "Files"
-- `projectDetail.goToDataPrep` / "Ir a preparacion" / "Go to data prep"
-
-No se crean archivos nuevos. Todo se reorganiza dentro del mismo `ProjectDetail.tsx` usando el componente `Tabs` ya disponible en el proyecto.
-
+| File | Change |
+|---|---|
+| `src/pages/ProjectDetail.tsx` | Import `DataTableView` + `RulePrefill`; add `pendingRulePrefill` state; add `handleCreateRuleFromExplorer`; add `DataTableView` to the explorer tab; pass `externalPrefill` to `DataPrepManager` |
+| `src/components/dataprep/DataPrepManager.tsx` | Add optional `externalPrefill?: RulePrefill` prop; add `useEffect` to consume it and open the dialog |
