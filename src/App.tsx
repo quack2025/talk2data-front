@@ -27,6 +27,8 @@ import Landing from "./pages/Landing";
 import ApiKeys from "./pages/ApiKeys";
 import SharedView from "./pages/SharedView";
 import NotFound from "./pages/NotFound";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -248,6 +250,10 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+
+            {/* Password recovery routes (public) */}
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Public shared resource viewer (no auth required) */}
             <Route path="/shared/:token" element={<SharedView />} />
