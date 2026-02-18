@@ -49,6 +49,8 @@ interface DataPrepManagerProps {
   availableVariables?: string[];
   variableLabels?: VariableLabelMap;
   onStatusChange?: (status: 'pending' | 'confirmed' | 'skipped') => void;
+  externalPrefill?: RulePrefill | null;
+  onExternalPrefillConsumed?: () => void;
 }
 
 const RULE_TYPE_ICONS: Record<DataPrepRuleType, React.ElementType> = {
@@ -60,7 +62,7 @@ const RULE_TYPE_ICONS: Record<DataPrepRuleType, React.ElementType> = {
   exclude_columns: EyeOff,
 };
 
-export function DataPrepManager({ projectId, availableVariables = [], variableLabels = {}, onStatusChange }: DataPrepManagerProps) {
+export function DataPrepManager({ projectId, availableVariables = [], variableLabels = {}, onStatusChange, externalPrefill, onExternalPrefillConsumed }: DataPrepManagerProps) {
   const { t } = useLanguage();
   const dp = t.dataPrep;
   const {
@@ -87,6 +89,16 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
   const [deletingRule, setDeletingRule] = useState<DataPrepRule | null>(null);
   const [rulePrefill, setRulePrefill] = useState<RulePrefill | null>(null);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+
+  // Consume external prefill (e.g., from Data Explorer tab context menu)
+  useEffect(() => {
+    if (externalPrefill) {
+      setEditingRule(null);
+      setRulePrefill(externalPrefill);
+      setShowDialog(true);
+      onExternalPrefillConsumed?.();
+    }
+  }, [externalPrefill]);
 
   useEffect(() => {
     fetchRules();
