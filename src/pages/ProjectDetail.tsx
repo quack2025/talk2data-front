@@ -67,6 +67,7 @@ import {
   Sparkles,
   ArrowRight,
   Table2,
+  Eye,
   Compass,
   AlertTriangle,
   FolderOpen,
@@ -717,15 +718,15 @@ export default function ProjectDetail() {
                       value="table"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-2 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground flex items-center gap-2"
                     >
-                      <Table2 className="h-4 w-4" />
-                      {t.dataPrep?.dataTab?.dataTabLabel || 'Data Table'}
+                      <Eye className="h-4 w-4" />
+                      Browse
                     </TabsTrigger>
                     <TabsTrigger
                       value="analysis"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-2 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground flex items-center gap-2"
                     >
                       <BarChart3 className="h-4 w-4" />
-                      {t.explore?.title || 'Frequency Analysis'}
+                      Analyze
                     </TabsTrigger>
                   </TabsList>
                 </div>
