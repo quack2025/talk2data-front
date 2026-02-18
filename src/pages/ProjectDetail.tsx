@@ -123,6 +123,7 @@ export default function ProjectDetail() {
   const { toast } = useToast();
   const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [exploreSubTab, setExploreSubTab] = useState<'table' | 'analysis'>('table');
   const [showBookmarks, setShowBookmarks] = useState(true);
   const [pendingRulePrefill, setPendingRulePrefill] = useState<RulePrefill | null>(null);
 
@@ -278,6 +279,7 @@ export default function ProjectDetail() {
   const handleSelectBookmark = useCallback((bookmark: ExploreBookmark) => {
     const config = bookmark.analysis_config as ExploreRunRequest;
     setCurrentRequest(config);
+    setExploreSubTab('analysis');
     if (explore.variables) {
       const v = explore.variables.variables.find((v) => v.name === config.variable);
       if (v) setSelectedVariable(v);
@@ -707,26 +709,37 @@ export default function ProjectDetail() {
           {/* === TAB: DATA EXPLORER === */}
           <TabsContent value="explore" className="mt-0 -mx-6 -mb-6 lg:-mx-8 lg:-mb-8">
             {hasReadyFiles ? (
-              <div className="flex flex-col h-[calc(100vh-240px)]">
-
-                {/* Top section: Full-width Data Table */}
-                <div className="border-b flex-shrink-0 overflow-hidden" style={{ maxHeight: '55%' }}>
-                  <div className="px-4 py-2 border-b bg-muted/30 flex items-center gap-2">
-                    <Table2 className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-muted-foreground">
+              <Tabs value={exploreSubTab} onValueChange={(v) => setExploreSubTab(v as 'table' | 'analysis')}>
+                {/* Sub-tab header */}
+                <div className="px-6 lg:px-8 border-b bg-muted/20">
+                  <TabsList className="bg-transparent p-0 h-auto gap-0 rounded-none">
+                    <TabsTrigger
+                      value="table"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-2 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground flex items-center gap-2"
+                    >
+                      <Table2 className="h-4 w-4" />
                       {t.dataPrep?.dataTab?.dataTabLabel || 'Data Table'}
-                    </span>
-                  </div>
-                  <div className="overflow-auto" style={{ maxHeight: 'calc(55vh - 40px)' }}>
-                    <DataTableView
-                      projectId={projectId!}
-                      onCreateRule={handleCreateRuleFromExplorer}
-                    />
-                  </div>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="analysis"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-2 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground flex items-center gap-2"
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      {t.explore?.title || 'Frequency Analysis'}
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
 
-                {/* Bottom section: 3-column analysis panel */}
-                <div className="flex flex-1 overflow-hidden border-t">
+                {/* Sub-tab: Data Table */}
+                <TabsContent value="table" className="mt-0 h-[calc(100vh-290px)] overflow-hidden">
+                  <DataTableView
+                    projectId={projectId!}
+                    onCreateRule={handleCreateRuleFromExplorer}
+                  />
+                </TabsContent>
+
+                {/* Sub-tab: Frequency Analysis */}
+                <TabsContent value="analysis" className="mt-0 h-[calc(100vh-290px)] flex overflow-hidden">
                   {/* Left: Variable Browser */}
                   <div className="w-64 border-r flex-shrink-0 overflow-hidden">
                     {explore.variables && (
@@ -747,12 +760,6 @@ export default function ProjectDetail() {
 
                   {/* Center: Analysis + Results */}
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-muted-foreground">
-                        {t.explore?.title || 'Frequency Analysis'}
-                      </span>
-                    </div>
                     <AnalysisPanel
                       selectedVariable={selectedVariable}
                       allVariables={explore.variables?.variables || []}
@@ -795,8 +802,8 @@ export default function ProjectDetail() {
                       </Button>
                     </div>
                   )}
-                </div>
-              </div>
+                </TabsContent>
+              </Tabs>
             ) : (
               <Card className="border-dashed m-0">
                 <CardContent className="flex flex-col items-center justify-center py-12 text-center">
