@@ -1,88 +1,115 @@
 
-## Add Full Data Table View to the Data Explorer Tab
+## Dividir "Data Explorer" en dos sub-tabs: "Data Table" y "Frequency Analysis"
 
-### What's Missing
+### El problema
 
-The current "Data Explorer" tab only shows the **frequency/analysis panel** (Variable Browser → AnalysisPanel → ResultDisplay → Bookmarks). The previous "Habilita gate UX más visible" version also had a **full raw data table** at the top of that tab, with:
+El tab "Data Explorer" actual tiene dos secciones apiladas verticalmente:
+1. **Top (55% de altura)**: Tabla completa de datos (`DataTableView`)
+2. **Bottom (45% restante)**: Variable Browser + AnalysisPanel + Bookmarks
 
-- **Original Data / Prepared Data** toggle
-- **Value Labels** toggle (show label + code vs raw code)
-- **Rows × Columns** badge (e.g. "292 rows × 129 columns")
-- **Column Selector** dropdown with search, invert, show-all, and apply
-- **Export to Excel** dropdown (Values only / Labels only / Labels + Values)
-- **Paginated data grid** with horizontal scroll, sticky headers, and right-click context menus per column/cell (View Distribution, Create Net, Create Recode, Exclude Column, Keep only value, Exclude value)
-- **Column Distribution Sheet** (slide-in panel with bar chart per variable)
+Esto genera una vista muy comprimida donde ninguna sección tiene suficiente espacio para respirar, y el usuario tiene que scrollear dentro de ambas secciones simultáneamente. Es visualmente pesado y confuso.
 
-All of this logic already exists as a fully working component: `DataTableView` in `src/components/dataprep/DataTableView.tsx`. It is currently only used inside the "Data Preparation" tab via `DataPrepManager`. The goal is to **add** it to the Data Explorer tab as a top section, without replacing the existing analysis panel below.
+### La solución
 
-### What `DataTableView` needs
+Reemplazar el layout de dos secciones apiladas por **dos sub-tabs dentro del tab "Data Explorer"**:
 
-`DataTableView` accepts two props:
-- `projectId: string` — already available
-- `onCreateRule: (prefill: RulePrefill) => void` — currently wired to open the rule dialog in DataPrepManager
+```text
+[Project Detail Tabs]
+ Overview | Data Prep ● | Data Explorer | Study Context | Files
 
-For the Explorer tab, the `onCreateRule` callback needs to **switch to the Data Preparation tab** and pre-fill the rule dialog there. This can be done by lifting a `pendingRulePrefill` state up to `ProjectDetail` and applying it when the dataprep tab activates.
+  [Data Explorer sub-tabs]
+  ┌─────────────┬──────────────────────┐
+  │  Data Table │  Frequency Analysis  │   ← sub-tabs (pill style o underline sutil)
+  └─────────────┴──────────────────────┘
 
-### Implementation Plan
+  [Data Table activo]
+  ┌──────────────────────────────────────────────────────────────┐
+  │  Original ◉ | Value Labels ◉ | 292×129 | Col Sel | Export   │
+  │  ┌────┬────────────┬──────────────────────────────────────┐  │
+  │  │ 1  │ 1398..     │ Complete │ ...                       │  │
+  │  │ 2  │ 2201..     │ ...      │                           │  │
+  │  └────┴────────────┴──────────────────────────────────────┘  │
+  │  Mostrando 1-50 de 292   < >                                  │
+  └──────────────────────────────────────────────────────────────┘
 
-**File: `src/pages/ProjectDetail.tsx`**
+  [Frequency Analysis activo]
+  ┌─────────────────┬──────────────────────────────┬────────────┐
+  │ Variable Browser│ AnalysisPanel + ResultDisplay │ Bookmarks  │
+  │ (Variable list) │ (Freq / CrossTab / Means...)  │ (saved)    │
+  └─────────────────┴──────────────────────────────┴────────────┘
+```
 
-1. **Import `DataTableView`** from `@/components/dataprep`.
+Cada sub-tab tiene la **altura completa disponible** y puede usar el espacio sin restricciones.
 
-2. **Import `RulePrefill`** type from `@/components/dataprep`.
+### Cambios técnicos (solo `src/pages/ProjectDetail.tsx`)
 
-3. **Add state** for pending cross-tab rule creation:
-   ```ts
-   const [pendingRulePrefill, setPendingRulePrefill] = useState<RulePrefill | null>(null);
-   ```
+Este es un cambio de layout puro. No se toca ninguna lógica, hooks, ni componentes hijos.
 
-4. **Add handler** `handleCreateRuleFromExplorer` that:
-   - Saves the prefill to `pendingRulePrefill`
-   - Switches `activeTab` to `'dataprep'`
-   (The DataPrepManager will pick up the prefill on the next render)
+**1. Agregar estado para el sub-tab activo**
+```ts
+const [exploreSubTab, setExploreSubTab] = useState<'table' | 'analysis'>('table');
+```
 
-5. **Add state & handler in DataPrepManager** — DataPrepManager already has internal `rulePrefill` state. The cleanest approach is to pass an optional `externalPrefill` prop to `DataPrepManager` and apply it via a `useEffect` when it changes.
+**2. Reestructurar el `TabsContent value="explore"`**
 
-   Actually, a simpler approach: pass a `prefillRef` callback directly. Looking at the code, `DataPrepManager` already tracks `rulePrefill` and `showDialog` internally. The cleanest solution without refactoring the child is to pass `initialPrefill?: RulePrefill` prop to `DataPrepManager` and use a `useEffect` to open the dialog when it's provided.
+Reemplazar el `div` con dos secciones apiladas (`flex-col`) por un segundo nivel de `Tabs` (sub-tabs):
 
-6. **In the Data Explorer tab (`value="explore"`)**: Add `DataTableView` at the top of the center area (above the AnalysisPanel), inside a visually separated section. Structure:
+```tsx
+<TabsContent value="explore" className="mt-0 -mx-6 -mb-6 lg:-mx-8 lg:-mb-8">
+  {hasReadyFiles ? (
+    <Tabs value={exploreSubTab} onValueChange={(v) => setExploreSubTab(v as 'table' | 'analysis')}>
+      {/* Sub-tab header */}
+      <div className="px-6 lg:px-8 border-b bg-muted/20">
+        <TabsList className="bg-transparent p-0 h-auto gap-0 rounded-none">
+          <TabsTrigger value="table" className="... underline style sutil ...">
+            <Table2 className="h-4 w-4 mr-2" /> Data Table
+          </TabsTrigger>
+          <TabsTrigger value="analysis" className="... underline style sutil ...">
+            <BarChart3 className="h-4 w-4 mr-2" /> Frequency Analysis
+          </TabsTrigger>
+        </TabsList>
+      </div>
 
-   ```
-   [Data Explorer Tab]
-   ┌──────────────────────────────────────────────────────┐
-   │  📊 Data Table (DataTableView with all features)     │
-   │  Original ◉ | Value Labels ◉ | 292×129 | Col Sel | Export │
-   │  ┌───┬────────┬──────────────────────────────────┐  │
-   │  │ 9 │ 1398.. │ Complete │ ...                   │  │
-   │  └───┴────────┴──────────────────────────────────┘  │
-   │  Pagination: Showing 1-50 of 292   < >              │
-   ├──────────────────────────────────────────────────────┤
-   │  🔍 Frequency Analysis (AnalysisPanel + Results)    │
-   └──────────────────────────────────────────────────────┘
-   ```
+      {/* Sub-tab: Data Table — ocupa altura completa */}
+      <TabsContent value="table" className="mt-0 h-[calc(100vh-290px)] overflow-hidden">
+        <DataTableView projectId={projectId!} onCreateRule={handleCreateRuleFromExplorer} />
+      </TabsContent>
 
-   The two sections are separated by a divider with a label. The table uses the full width area (no side panels constrain it). The Variable Browser and Bookmarks panels remain visible alongside the analysis section below.
+      {/* Sub-tab: Frequency Analysis — ocupa altura completa en 3 columnas */}
+      <TabsContent value="analysis" className="mt-0 h-[calc(100vh-290px)] flex overflow-hidden">
+        {/* Variable Browser | Analysis+Results | Bookmarks */}
+        ...
+      </TabsContent>
+    </Tabs>
+  ) : (
+    <EmptyState />
+  )}
+</TabsContent>
+```
 
-7. **Layout adjustment**: The Data Explorer tab currently uses a 3-column flex layout (`Variable Browser | Center | Bookmarks`). The `DataTableView` needs full horizontal width (it scrolls horizontally). The best approach is to **restructure the layout** into two vertical sections:
-   - **Top section (full width)**: `DataTableView` with its own horizontal scroll
-   - **Bottom section (3-column flex)**: Variable Browser | Analysis Panel + Results | Bookmarks
-   
-   This keeps all existing functionality intact while adding the table on top.
+**3. Bonus UX: cuando el usuario hace "Exclude Column" desde el Data Table**
+El handler `handleCreateRuleFromExplorer` ya cambia a `activeTab = 'dataprep'`. Esto sigue funcionando sin cambios.
 
-**File: `src/components/dataprep/DataPrepManager.tsx`**
+**4. Bonus UX: cuando el usuario viene del bookmark**
+La función `handleSelectBookmark` ejecuta un análisis. Podemos hacer que también cambie el sub-tab a `'analysis'` automáticamente para que el resultado sea visible:
+```ts
+const handleSelectBookmark = useCallback((bookmark) => {
+  ...
+  setExploreSubTab('analysis'); // ← agregar esta línea
+  explore.runAnalysis(config);
+}, [...]);
+```
 
-8. **Add optional `externalPrefill` prop**: When provided and changes (non-null), automatically open the rule dialog with that prefill. Reset to null after consuming.
+### Resumen de cambios
 
-### Technical Details
-
-- `DataTableView` already handles its own data fetching via `useDataTable(projectId)` — no new API calls needed
-- The `onCreateRule` callback from the explorer table will call `handleCreateRuleFromExplorer`, which switches tabs and passes the prefill through
-- The `ColumnDistributionSheet` is rendered inside `DataTableView` itself — no additional wiring
-- No new dependencies required — all components and hooks already exist
-
-### Summary of Changes
-
-| File | Change |
+| Archivo | Qué cambia |
 |---|---|
-| `src/pages/ProjectDetail.tsx` | Import `DataTableView` + `RulePrefill`; add `pendingRulePrefill` state; add `handleCreateRuleFromExplorer`; add `DataTableView` to the explorer tab; pass `externalPrefill` to `DataPrepManager` |
-| `src/components/dataprep/DataPrepManager.tsx` | Add optional `externalPrefill?: RulePrefill` prop; add `useEffect` to consume it and open the dialog |
+| `src/pages/ProjectDetail.tsx` | Añadir estado `exploreSubTab`; reemplazar layout apilado por dos `TabsContent` hijos; ajustar `handleSelectBookmark` para auto-seleccionar sub-tab de análisis |
+
+Solo se modifica un archivo. No hay cambios en componentes hijos, hooks, ni tipos.
+
+### Resultado visual esperado
+
+- **Data Table sub-tab**: La tabla ocupa el 100% del espacio disponible sin ningún panel debajo compitiendo. El scroll horizontal funciona con amplitud. Todos los controles (Value Labels, Column Selector, Export, paginación) tienen espacio cómodo.
+- **Frequency Analysis sub-tab**: El panel de 3 columnas (Variable Browser + Análisis + Bookmarks) ocupa toda la altura sin ninguna tabla encima ocupando espacio. El usuario puede enfocarse completamente en explorar frecuencias y cruces.
+- La transición entre sub-tabs es instantánea (sin re-fetch de datos porque ambos mantienen estado en memoria mientras el tab padre "explore" está montado).
