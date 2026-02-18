@@ -10,29 +10,83 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Play, Loader2, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  Play,
+  Loader2,
+  X,
+  BarChart2,
+  Table2,
+  GitCompare,
+  TrendingUp,
+  Star,
+  MinusCircle,
+} from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { ExploreVariable, ExploreRunRequest, FilterCondition } from '@/types/explore';
+import { cn } from '@/lib/utils';
 
-const ALL_ANALYSIS_TYPES = [
-  'frequency',
-  'crosstab',
-  'crosstab_with_significance',
-  'mean',
-  'compare_means',
-  'nps',
-  'net_score',
+// ─── Analysis type definitions ─────────────────────────────────────────────
+
+interface AnalysisTypeDef {
+  id: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: { es: string; en: string };
+  description: { es: string; en: string };
+  needsCross?: boolean;
+  needsSignificance?: boolean;
+}
+
+const ANALYSIS_TYPES: AnalysisTypeDef[] = [
+  {
+    id: 'frequency',
+    icon: BarChart2,
+    label: { es: 'Frecuencia', en: 'Frequency' },
+    description: { es: 'Distribución de respuestas', en: 'Response distribution' },
+  },
+  {
+    id: 'crosstab',
+    icon: Table2,
+    label: { es: 'Tabla cruzada', en: 'Crosstab' },
+    description: { es: 'Cruce entre dos variables', en: 'Cross two variables' },
+    needsCross: true,
+  },
+  {
+    id: 'crosstab_with_significance',
+    icon: GitCompare,
+    label: { es: 'Cruce + significancia', en: 'Crosstab + sig.' },
+    description: { es: 'Cruce con prueba estadística', en: 'Cross with significance test' },
+    needsCross: true,
+    needsSignificance: true,
+  },
+  {
+    id: 'mean',
+    icon: TrendingUp,
+    label: { es: 'Media', en: 'Mean' },
+    description: { es: 'Valor promedio', en: 'Average value' },
+  },
+  {
+    id: 'compare_means',
+    icon: GitCompare,
+    label: { es: 'Comparar medias', en: 'Compare means' },
+    description: { es: 'Media por grupos', en: 'Mean by groups' },
+    needsCross: true,
+  },
+  {
+    id: 'nps',
+    icon: Star,
+    label: { es: 'NPS', en: 'NPS' },
+    description: { es: 'Net Promoter Score', en: 'Net Promoter Score' },
+  },
+  {
+    id: 'net_score',
+    icon: MinusCircle,
+    label: { es: 'Net Score', en: 'Net Score' },
+    description: { es: 'Top-2 menos Bottom-2', en: 'Top-2 minus Bottom-2' },
+  },
 ];
 
-const ANALYSIS_LABELS: Record<string, { es: string; en: string }> = {
-  frequency: { es: 'Frecuencia', en: 'Frequency' },
-  crosstab: { es: 'Tabla cruzada', en: 'Crosstab' },
-  crosstab_with_significance: { es: 'Cruce con significancia', en: 'Crosstab (significance)' },
-  mean: { es: 'Media', en: 'Mean' },
-  compare_means: { es: 'Comparar medias', en: 'Compare means' },
-  nps: { es: 'NPS', en: 'NPS' },
-  net_score: { es: 'Net Score', en: 'Net Score' },
-};
+// ─── Props ──────────────────────────────────────────────────────────────────
 
 interface AnalysisPanelProps {
   selectedVariable: ExploreVariable | null;
@@ -41,6 +95,8 @@ interface AnalysisPanelProps {
   isRunning: boolean;
   onRun: (request: ExploreRunRequest) => void;
 }
+
+// ─── Component ──────────────────────────────────────────────────────────────
 
 export function AnalysisPanel({
   selectedVariable,
@@ -55,7 +111,7 @@ export function AnalysisPanel({
   const [confidenceLevel, setConfidenceLevel] = useState(0.95);
   const [filters, setFilters] = useState<FilterCondition[]>([]);
 
-  // Reset analysis type when variable changes
+  // When variable changes, reset to first suggested type
   useEffect(() => {
     if (selectedVariable) {
       const suggested = selectedVariable.suggested_analyses;
@@ -65,77 +121,47 @@ export function AnalysisPanel({
     }
   }, [selectedVariable]);
 
-  const needsCrossVariable = [
-    'crosstab',
-    'crosstab_with_significance',
-    'compare_means',
-  ].includes(analysisType);
+  const currentTypeDef = ANALYSIS_TYPES.find((a) => a.id === analysisType);
+  const needsCross = currentTypeDef?.needsCross ?? false;
+  const needsSignificance = currentTypeDef?.needsSignificance ?? false;
 
   const handleRun = () => {
     if (!selectedVariable) return;
-
     const request: ExploreRunRequest = {
       analysis_type: analysisType,
       variable: selectedVariable.name,
     };
-
-    if (needsCrossVariable && crossVariable) {
+    if (needsCross && crossVariable) {
       request.cross_variable = crossVariable;
     }
-
-    if (analysisType === 'crosstab_with_significance') {
+    if (needsSignificance) {
       request.confidence_level = confidenceLevel;
     }
-
     if (filters.length > 0) {
       request.filters = filters;
     }
-
     onRun(request);
   };
 
-  const addFilter = () => {
+  const addFilter = () =>
     setFilters((prev) => [...prev, { variable: '', operator: 'eq', value: '' }]);
-  };
+  const removeFilter = (i: number) =>
+    setFilters((prev) => prev.filter((_, idx) => idx !== i));
+  const updateFilter = (i: number, field: keyof FilterCondition, value: any) =>
+    setFilters((prev) => prev.map((f, idx) => (idx === i ? { ...f, [field]: value } : f)));
 
-  const removeFilter = (index: number) => {
-    setFilters((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateFilter = (index: number, field: keyof FilterCondition, value: any) => {
-    setFilters((prev) =>
-      prev.map((f, i) => (i === index ? { ...f, [field]: value } : f))
-    );
-  };
-
-  const availableTypes = selectedVariable
-    ? ALL_ANALYSIS_TYPES.filter(
-        (t) =>
-          selectedVariable.suggested_analyses.includes(t) ||
-          ALL_ANALYSIS_TYPES.includes(t)
-      )
-    : ALL_ANALYSIS_TYPES;
-
-  // Sort: suggested first, then rest
-  const sortedTypes = selectedVariable
-    ? [
-        ...availableTypes.filter((t) =>
-          selectedVariable.suggested_analyses.includes(t)
-        ),
-        ...availableTypes.filter(
-          (t) => !selectedVariable.suggested_analyses.includes(t)
-        ),
-      ]
-    : availableTypes;
-
-  // Remove duplicates
-  const uniqueTypes = [...new Set(sortedTypes)];
+  // Sort suggested types first
+  const suggested = selectedVariable?.suggested_analyses ?? [];
+  const sortedTypes = [
+    ...ANALYSIS_TYPES.filter((a) => suggested.includes(a.id)),
+    ...ANALYSIS_TYPES.filter((a) => !suggested.includes(a.id)),
+  ];
 
   if (!selectedVariable) {
     return (
-      <Card className="h-full flex items-center justify-center">
-        <CardContent className="text-center text-muted-foreground">
-          <p>{t.explore?.selectVariableHint || 'Selecciona una variable para comenzar'}</p>
+      <Card className="flex items-center justify-center min-h-[120px]">
+        <CardContent className="text-center text-muted-foreground pt-6">
+          <p className="text-sm">{t.explore?.selectVariableHint || 'Selecciona una variable para comenzar'}</p>
         </CardContent>
       </Card>
     );
@@ -144,61 +170,96 @@ export function AnalysisPanel({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <span className="font-mono text-sm">{selectedVariable.name}</span>
+        <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+          <span className="font-mono text-sm bg-muted px-1.5 py-0.5 rounded">
+            {selectedVariable.name}
+          </span>
           {selectedVariable.label && (
-            <span className="font-normal text-muted-foreground text-sm truncate">
+            <span className="font-normal text-muted-foreground text-sm truncate max-w-xs">
               {selectedVariable.label}
             </span>
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Analysis Type */}
-        <div className="space-y-1.5">
-          <Label className="text-xs">{t.explore?.analysisType || 'Tipo de análisis'}</Label>
-          <Select value={analysisType} onValueChange={setAnalysisType}>
-            <SelectTrigger className="h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {uniqueTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {ANALYSIS_LABELS[type]?.[language] || type}
-                  {selectedVariable.suggested_analyses.includes(type) && ' *'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+
+      <CardContent className="space-y-5">
+        {/* ── Analysis type selector (visual buttons) ── */}
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+            {t.explore?.analysisType || 'Tipo de análisis'}
+          </Label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {sortedTypes.map((typeDef) => {
+              const Icon = typeDef.icon;
+              const isSuggested = suggested.includes(typeDef.id);
+              const isSelected = analysisType === typeDef.id;
+              return (
+                <button
+                  key={typeDef.id}
+                  onClick={() => {
+                    setAnalysisType(typeDef.id);
+                    if (!typeDef.needsCross) setCrossVariable('');
+                  }}
+                  className={cn(
+                    'flex items-start gap-2 rounded-md border px-3 py-2 text-left transition-all text-sm',
+                    isSelected
+                      ? 'border-primary bg-primary/5 text-foreground'
+                      : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/50'
+                  )}
+                >
+                  <Icon className={cn('h-4 w-4 mt-0.5 flex-shrink-0', isSelected ? 'text-primary' : '')} />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 leading-none">
+                      <span className="font-medium truncate">
+                        {typeDef.label[language as 'es' | 'en'] || typeDef.label.en}
+                      </span>
+                      {isSuggested && (
+                        <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 leading-none">
+                          ✓
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
+                      {typeDef.description[language as 'es' | 'en'] || typeDef.description.en}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Cross Variable */}
-        {needsCrossVariable && (
-          <div className="space-y-1.5">
-            <Label className="text-xs">{t.explore?.crossVariable || 'Variable de cruce (banner)'}</Label>
+        {/* ── Cross variable selector ── */}
+        {needsCross && (
+          <div className="space-y-1.5 rounded-md border border-primary/20 bg-primary/5 p-3">
+            <Label className="text-xs font-medium">
+              {t.explore?.crossVariable || 'Variable de cruce (banner)'}
+            </Label>
             <Select value={crossVariable} onValueChange={setCrossVariable}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder={t.explore?.selectBanner || 'Seleccionar banner...'} />
+              <SelectTrigger className="h-9 bg-background">
+                <SelectValue placeholder={t.explore?.selectBanner || 'Seleccionar variable de cruce...'} />
               </SelectTrigger>
               <SelectContent>
-                {/* Banners first */}
                 {banners.length > 0 && (
                   <>
+                    <div className="px-2 py-1 text-[11px] text-muted-foreground font-medium uppercase tracking-wide">
+                      Banners sugeridos
+                    </div>
                     {banners
                       .filter((b) => b !== selectedVariable.name)
                       .map((b) => (
                         <SelectItem key={b} value={b}>
-                          {b} *
+                          ★ {b}
                         </SelectItem>
                       ))}
+                    <div className="my-1 border-t" />
+                    <div className="px-2 py-1 text-[11px] text-muted-foreground font-medium uppercase tracking-wide">
+                      Todas las variables
+                    </div>
                   </>
                 )}
-                {/* Then all other variables */}
                 {allVariables
-                  .filter(
-                    (v) =>
-                      v.name !== selectedVariable.name && !banners.includes(v.name)
-                  )
+                  .filter((v) => v.name !== selectedVariable.name && !banners.includes(v.name))
                   .map((v) => (
                     <SelectItem key={v.name} value={v.name}>
                       {v.name}
@@ -210,8 +271,8 @@ export function AnalysisPanel({
           </div>
         )}
 
-        {/* Confidence Level */}
-        {analysisType === 'crosstab_with_significance' && (
+        {/* ── Confidence level ── */}
+        {needsSignificance && (
           <div className="space-y-1.5">
             <Label className="text-xs">
               {t.explore?.confidenceLevel || 'Nivel de confianza'}: {(confidenceLevel * 100).toFixed(0)}%
@@ -226,20 +287,19 @@ export function AnalysisPanel({
           </div>
         )}
 
-        {/* Filters */}
+        {/* ── Filters ── */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-xs">{t.explore?.filters || 'Filtros'}</Label>
+            <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+              {t.explore?.filters || 'Filtros'}
+            </Label>
             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={addFilter}>
               + {t.explore?.addFilter || 'Agregar filtro'}
             </Button>
           </div>
           {filters.map((filter, index) => (
             <div key={index} className="flex gap-1.5 items-center">
-              <Select
-                value={filter.variable}
-                onValueChange={(v) => updateFilter(index, 'variable', v)}
-              >
+              <Select value={filter.variable} onValueChange={(v) => updateFilter(index, 'variable', v)}>
                 <SelectTrigger className="h-8 text-xs flex-1">
                   <SelectValue placeholder="Variable" />
                 </SelectTrigger>
@@ -251,10 +311,7 @@ export function AnalysisPanel({
                   ))}
                 </SelectContent>
               </Select>
-              <Select
-                value={filter.operator}
-                onValueChange={(v) => updateFilter(index, 'operator', v)}
-              >
+              <Select value={filter.operator} onValueChange={(v) => updateFilter(index, 'operator', v)}>
                 <SelectTrigger className="h-8 text-xs w-20">
                   <SelectValue />
                 </SelectTrigger>
@@ -270,25 +327,20 @@ export function AnalysisPanel({
                 type="text"
                 value={String(filter.value)}
                 onChange={(e) => updateFilter(index, 'value', e.target.value)}
-                className="h-8 w-24 rounded-md border px-2 text-xs"
+                className="h-8 w-24 rounded-md border px-2 text-xs bg-background"
                 placeholder="Valor"
               />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => removeFilter(index)}
-              >
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => removeFilter(index)}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
           ))}
         </div>
 
-        {/* Run Button */}
+        {/* ── Run button ── */}
         <Button
           onClick={handleRun}
-          disabled={isRunning || !selectedVariable}
+          disabled={isRunning || !selectedVariable || (needsCross && !crossVariable)}
           className="w-full"
         >
           {isRunning ? (
