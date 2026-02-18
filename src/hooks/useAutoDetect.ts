@@ -7,7 +7,7 @@ export function useAutoDetect(projectId: string | undefined) {
     queryKey: ["auto-detect", projectId],
     queryFn: () =>
       api.post<ProcessingSpec>(
-        `/api/v1/analysis/projects/${projectId}/auto-detect`
+        `/analysis/projects/${projectId}/auto-detect`
       ),
     enabled: !!projectId,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes

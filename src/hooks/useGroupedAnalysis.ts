@@ -10,7 +10,7 @@ export function useGroupedAnalysis(
     queryKey: ["grouped-analysis", projectId],
     queryFn: () =>
       api.post<GroupedAnalysisResult>(
-        `/api/v1/analysis/projects/${projectId}/grouped-analysis`
+        `/analysis/projects/${projectId}/grouped-analysis`
       ),
     enabled: !!projectId && enabled,
     staleTime: 5 * 60 * 1000,

@@ -95,6 +95,11 @@ class ApiClient {
           throw new ApiError(extractErrorMessage(errorBody, response.status), response.status);
         }
 
+        // 204 No Content — nothing to parse
+        if (response.status === 204) {
+          return undefined as T;
+        }
+
         return await response.json();
       } catch (err) {
         lastError = err instanceof ApiError

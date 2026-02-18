@@ -51,15 +51,7 @@ export function useApiKeys() {
   const deleteKey = useCallback(async (keyId: string) => {
     setError(null);
     try {
-      // DELETE /api-keys/{keyId} returns 204 (no content).
-      // api.request always calls response.json(), which throws on empty body.
-      // We catch the JSON parse error and treat it as success.
-      await api.delete(`/api-keys/${keyId}`).catch((err) => {
-        // If the request itself failed (4xx/5xx), ApiError is thrown before json parse.
-        // A SyntaxError from json() on 204 means the delete succeeded.
-        if (err?.name === 'SyntaxError' || err?.message?.includes('JSON')) return;
-        throw err;
-      });
+      await api.delete(`/api-keys/${keyId}`);
       setKeys(prev => prev.filter(k => k.id !== keyId));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete API key';
