@@ -1,10 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar as CalendarPicker } from '@/components/ui/calendar';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -37,19 +70,47 @@ import {
   Compass,
   AlertTriangle,
   FolderOpen,
+  Save,
+  Trash2,
+  ChevronDown,
+  X,
+  CalendarIcon,
+  PanelRightOpen,
+  PanelRightClose,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
-import { useProject } from '@/hooks/useProjects';
+import { cn } from '@/lib/utils';
+import { useProject, useUpdateProject, useDeleteProject } from '@/hooks/useProjects';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useLastProject } from '@/hooks/useLastProject';
 import { useExecutiveSummary } from '@/hooks/useExecutiveSummary';
+import { useExplore } from '@/hooks/useExplore';
+import { useToast } from '@/hooks/use-toast';
 import { AggfileGeneratorModal } from '@/components/aggfile';
 import { VariableGroupsManager } from '@/components/grouping';
 import { DataPrepManager } from '@/components/data-prep';
 import { WaveManager } from '@/components/waves';
 import { useProjectVariables } from '@/hooks/useProjectVariables';
+import {
+  VariableBrowser,
+  AnalysisPanel,
+  ResultDisplay,
+  BookmarkManager,
+} from '@/components/explore';
+import type { ExploreVariable, ExploreRunRequest, ExploreBookmark } from '@/types/explore';
+import type { ProjectUpdateData } from '@/types/database';
+
+const INDUSTRIES = [
+  'FMCG', 'Automotive', 'Banking', 'Telecom', 'Pharma',
+  'Retail', 'Technology', 'Media', 'Healthcare', 'Other',
+];
+
+const METHODOLOGIES = [
+  'Online panel', 'CATI', 'Face-to-face', 'Focus groups',
+  'In-depth interviews', 'Mixed methods', 'Other',
+];
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -57,19 +118,170 @@ export default function ProjectDetail() {
   const { t, language } = useLanguage();
   const dateLocale = language === 'es' ? es : enUS;
   const { setLastProjectId } = useLastProject();
+  const { toast } = useToast();
   const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showBookmarks, setShowBookmarks] = useState(true);
+
+  // Explore state
+  const [selectedVariable, setSelectedVariable] = useState<ExploreVariable | null>(null);
+  const [currentRequest, setCurrentRequest] = useState<ExploreRunRequest | null>(null);
+
+  // Study context form state
+  const [hasChanges, setHasChanges] = useState(false);
+  const [ctxName, setCtxName] = useState('');
+  const [ctxDescription, setCtxDescription] = useState('');
+  const [studyObjective, setStudyObjective] = useState('');
+  const [country, setCountry] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [targetAudience, setTargetAudience] = useState('');
+  const [brands, setBrands] = useState<string[]>([]);
+  const [brandInput, setBrandInput] = useState('');
+  const [methodology, setMethodology] = useState('');
+  const [studyDate, setStudyDate] = useState<Date | undefined>();
+  const [isTracking, setIsTracking] = useState(false);
+  const [waveNumber, setWaveNumber] = useState<number | undefined>();
+  const [additionalContext, setAdditionalContext] = useState('');
+  const [reportLanguage, setReportLanguage] = useState('en');
+  const [isContextOpen, setIsContextOpen] = useState(false);
 
   const { data: project, isLoading: projectLoading } = useProject(projectId!);
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
-  const { data: summary, isLoading: summaryLoading } = useExecutiveSummary(projectId!);
+  const { data: summary } = useExecutiveSummary(projectId!);
   const { data: variableNames = [] } = useProjectVariables(projectId, project?.status);
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
+  const explore = useExplore(projectId!);
+
 
   useEffect(() => {
     if (projectId) {
       setLastProjectId(projectId);
+      explore.fetchVariables();
+      explore.fetchBookmarks();
     }
   }, [projectId, setLastProjectId]);
+
+  // Initialize study context form when project loads
+  useEffect(() => {
+    if (project) {
+      setCtxName(project.name);
+      setCtxDescription(project.description || '');
+      setStudyObjective(project.study_objective || '');
+      setCountry(project.country || '');
+      setIndustry(project.industry || '');
+      setTargetAudience(project.target_audience || '');
+      setBrands(project.brands || []);
+      setMethodology(project.methodology || '');
+      setStudyDate(project.study_date ? new Date(project.study_date) : undefined);
+      setIsTracking(project.is_tracking || false);
+      setWaveNumber(project.wave_number);
+      setAdditionalContext(project.additional_context || '');
+      setReportLanguage(project.report_language || 'en');
+      const hasCtx = project.study_objective || project.country || project.industry ||
+        project.target_audience || (project.brands && project.brands.length > 0) ||
+        project.methodology || project.study_date || project.is_tracking;
+      setIsContextOpen(!!hasCtx);
+    }
+  }, [project]);
+
+  const markChanged = () => setHasChanges(true);
+
+  const handleAddBrand = () => {
+    const trimmed = brandInput.trim();
+    if (trimmed && !brands.includes(trimmed)) {
+      setBrands([...brands, trimmed]);
+      setBrandInput('');
+      markChanged();
+    }
+  };
+
+  const handleRemoveBrand = (brand: string) => {
+    setBrands(brands.filter(b => b !== brand));
+    markChanged();
+  };
+
+  const handleSaveContext = async () => {
+    if (!projectId) return;
+    const data: ProjectUpdateData = {
+      name: ctxName,
+      description: ctxDescription || undefined,
+      study_objective: studyObjective || undefined,
+      country: country || undefined,
+      industry: industry || undefined,
+      target_audience: targetAudience || undefined,
+      brands: brands.length > 0 ? brands : undefined,
+      methodology: methodology || undefined,
+      study_date: studyDate ? format(studyDate, 'yyyy-MM-dd') : undefined,
+      is_tracking: isTracking,
+      wave_number: isTracking && waveNumber ? waveNumber : undefined,
+      additional_context: additionalContext || undefined,
+      report_language: reportLanguage,
+    };
+    try {
+      await updateProject.mutateAsync({ projectId, data, toastMessages: { success: t.toasts.projectUpdated, error: t.toasts.error } });
+      setHasChanges(false);
+    } catch { /* handled in hook */ }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!projectId) return;
+    try {
+      await deleteProject.mutateAsync({ projectId, toastMessages: { success: t.toasts.projectDeleted, error: t.toasts.error } });
+      navigate('/projects');
+    } catch { /* handled in hook */ }
+  };
+
+  // Explore handlers
+  const handleSelectVariable = useCallback((variable: ExploreVariable) => {
+    setSelectedVariable(variable);
+    explore.clearResult();
+  }, [explore.clearResult]);
+
+  const handleRun = useCallback(async (request: ExploreRunRequest) => {
+    setCurrentRequest(request);
+    try {
+      await explore.runAnalysis(request);
+    } catch {
+      toast({ title: t.explore?.error || 'Error', description: explore.error || '', variant: 'destructive' });
+    }
+  }, [explore.runAnalysis, toast, t]);
+
+  const handleExportExplore = useCallback(async () => {
+    if (!currentRequest) return;
+    try {
+      await explore.exportToExcel(currentRequest);
+      toast({ title: t.explore?.exportStarted || 'Descarga iniciada' });
+    } catch {
+      toast({ title: t.explore?.error || 'Error', variant: 'destructive' });
+    }
+  }, [currentRequest, explore.exportToExcel, toast, t]);
+
+  const handleBookmark = useCallback(async () => {
+    if (!currentRequest || !explore.result) return;
+    const title = `${explore.result.analysis_type}: ${explore.result.variable}${explore.result.cross_variable ? ` x ${explore.result.cross_variable}` : ''}`;
+    try {
+      await explore.createBookmark({ title, analysis_config: currentRequest, result_snapshot: explore.result.result || {} });
+      toast({ title: t.explore?.bookmarkSaved || 'Análisis guardado' });
+    } catch { toast({ title: t.explore?.error || 'Error', variant: 'destructive' }); }
+  }, [currentRequest, explore.result, explore.createBookmark, toast, t]);
+
+  const handleSelectBookmark = useCallback((bookmark: ExploreBookmark) => {
+    const config = bookmark.analysis_config as ExploreRunRequest;
+    setCurrentRequest(config);
+    if (explore.variables) {
+      const v = explore.variables.variables.find((v) => v.name === config.variable);
+      if (v) setSelectedVariable(v);
+    }
+    explore.runAnalysis(config);
+  }, [explore.variables, explore.runAnalysis]);
+
+  const handleDeleteBookmark = useCallback(async (bookmarkId: string) => {
+    try {
+      await explore.deleteBookmark(bookmarkId);
+      toast({ title: t.explore?.bookmarkDeleted || 'Bookmark eliminado' });
+    } catch { /* handled */ }
+  }, [explore.deleteBookmark, toast, t]);
 
   const statusConfig = {
     processing: { label: t.projects.processing, variant: 'secondary' as const },
@@ -479,29 +691,78 @@ export default function ProjectDetail() {
           </TabsContent>
 
           {/* === TAB: DATA EXPLORER === */}
-          <TabsContent value="explore" className="mt-0">
+          <TabsContent value="explore" className="mt-0 -mx-6 -mb-6 lg:-mx-8 lg:-mb-8">
             {hasReadyFiles ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Compass className="h-12 w-12 text-primary/60 mb-4" />
-                  <h3 className="font-semibold mb-1">
-                    {t.explore?.title || 'Explorar Datos'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {t.explore?.cardDescription || 'Análisis interactivo punto a punto'}
-                  </p>
-                  <Button onClick={() => navigate(`/projects/${projectId}/explore`)}>
-                    <Compass className="h-4 w-4 mr-2" />
-                    {t.explore?.title || 'Abrir Explorador'}
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="flex h-[calc(100vh-280px)] border-t">
+                {/* Left: Variable Browser */}
+                <div className="w-64 border-r flex-shrink-0 overflow-hidden">
+                  {explore.variables && (
+                    <VariableBrowser
+                      variables={explore.variables.variables}
+                      groups={explore.variables.groups}
+                      banners={explore.variables.banners}
+                      selectedVariable={selectedVariable?.name || null}
+                      onSelectVariable={handleSelectVariable}
+                    />
+                  )}
+                  {explore.isLoading && (
+                    <div className="flex items-center justify-center h-full">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Center: Analysis + Results */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  <AnalysisPanel
+                    selectedVariable={selectedVariable}
+                    allVariables={explore.variables?.variables || []}
+                    banners={explore.variables?.banners || []}
+                    isRunning={explore.isRunning}
+                    onRun={handleRun}
+                  />
+                  {explore.result && (
+                    <ResultDisplay
+                      result={explore.result}
+                      currentRequest={currentRequest}
+                      onExport={handleExportExplore}
+                      onBookmark={handleBookmark}
+                    />
+                  )}
+                </div>
+
+                {/* Right: Bookmarks (toggleable) */}
+                {showBookmarks && (
+                  <div className="w-64 border-l flex-shrink-0 overflow-hidden">
+                    <div className="p-3 border-b flex items-center justify-between">
+                      <h3 className="font-medium text-sm">
+                        {t.explore?.bookmarks || 'Bookmarks'} ({explore.bookmarks.length})
+                      </h3>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowBookmarks(false)}>
+                        <PanelRightClose className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <BookmarkManager
+                      bookmarks={explore.bookmarks}
+                      onSelect={handleSelectBookmark}
+                      onDelete={handleDeleteBookmark}
+                    />
+                  </div>
+                )}
+                {!showBookmarks && (
+                  <div className="border-l p-2">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowBookmarks(true)}>
+                      <PanelRightOpen className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             ) : (
-              <Card className="border-dashed">
+              <Card className="border-dashed m-0">
                 <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                   <Compass className="h-12 w-12 text-muted-foreground/40 mb-4" />
                   <h3 className="font-semibold mb-1">
-                    {t.projectDetail.chatCardDisabled || 'Confirm data preparation first'}
+                    {t.projectDetail.chatCardDisabled || 'Primero sube y procesa tus datos'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     {t.projectDetail.uploadCardDescription}
@@ -511,127 +772,166 @@ export default function ProjectDetail() {
             )}
           </TabsContent>
 
-          {/* === TAB: STUDY CONTEXT === */}
+          {/* === TAB: STUDY CONTEXT (inline editor) === */}
           <TabsContent value="context" className="mt-0">
-            {hasStudyContext ? (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>{t.settings.studyContext}</CardTitle>
-                    <CardDescription>{t.projectDetail.studyContextDescription}</CardDescription>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                  <CardTitle>{t.settings.studyContext}</CardTitle>
+                  <CardDescription>{t.projectDetail.studyContextDescription}</CardDescription>
+                </div>
+                <Button
+                  onClick={handleSaveContext}
+                  disabled={!hasChanges || updateProject.isPending || !ctxName.trim()}
+                  size="sm"
+                >
+                  {updateProject.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  {t.common.save}
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Basic */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="ctx-name">{t.projects.name} *</Label>
+                    <Input id="ctx-name" value={ctxName} onChange={(e) => { setCtxName(e.target.value); markChanged(); }} />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/projects/${projectId}/settings`)}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    {t.common.edit}
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {project.study_objective && (
-                      <div className="col-span-full space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Target className="h-4 w-4" />
-                          {t.settings.studyObjective}
-                        </div>
-                        <p className="text-sm">{project.study_objective}</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="ctx-desc">{t.projects.description}</Label>
+                    <Input id="ctx-desc" value={ctxDescription} onChange={(e) => { setCtxDescription(e.target.value); markChanged(); }} />
+                  </div>
+                </div>
+
+                {/* Study Context collapsible */}
+                <Collapsible open={isContextOpen} onOpenChange={setIsContextOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+                      <span className="text-sm font-medium">{t.settings.studyContext}</span>
+                      <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isContextOpen && 'rotate-180')} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label>{t.settings.studyObjective}</Label>
+                      <Textarea value={studyObjective} onChange={(e) => { setStudyObjective(e.target.value); markChanged(); }} placeholder={t.settings.studyObjectivePlaceholder} rows={3} />
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>{t.settings.country}</Label>
+                        <Input value={country} onChange={(e) => { setCountry(e.target.value); markChanged(); }} placeholder={t.settings.countryPlaceholder} />
                       </div>
-                    )}
-                    {project.country && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Globe className="h-4 w-4" />
-                          {t.settings.country}
-                        </div>
-                        <p className="text-sm font-medium">{project.country}</p>
+                      <div className="space-y-2">
+                        <Label>{t.settings.industry}</Label>
+                        <Select value={industry} onValueChange={(v) => { setIndustry(v); markChanged(); }}>
+                          <SelectTrigger><SelectValue placeholder={t.settings.industryPlaceholder} /></SelectTrigger>
+                          <SelectContent>{INDUSTRIES.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+                        </Select>
                       </div>
-                    )}
-                    {project.industry && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Building2 className="h-4 w-4" />
-                          {t.settings.industry}
-                        </div>
-                        <p className="text-sm font-medium">{project.industry}</p>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>{t.settings.methodology}</Label>
+                        <Select value={methodology} onValueChange={(v) => { setMethodology(v); markChanged(); }}>
+                          <SelectTrigger><SelectValue placeholder={t.settings.methodologyPlaceholder} /></SelectTrigger>
+                          <SelectContent>{METHODOLOGIES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                        </Select>
                       </div>
-                    )}
-                    {project.methodology && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <FlaskConical className="h-4 w-4" />
-                          {t.settings.methodology}
-                        </div>
-                        <p className="text-sm font-medium">{project.methodology}</p>
+                      <div className="space-y-2">
+                        <Label>{t.settings.studyDate}</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !studyDate && 'text-muted-foreground')}>
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {studyDate ? format(studyDate, 'PPP', { locale: dateLocale }) : t.settings.studyDatePlaceholder}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarPicker mode="single" selected={studyDate} onSelect={(d) => { setStudyDate(d); markChanged(); }} initialFocus className="pointer-events-auto" />
+                          </PopoverContent>
+                        </Popover>
                       </div>
-                    )}
-                    {project.target_audience && (
-                      <div className="col-span-full space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          {t.settings.targetAudience}
-                        </div>
-                        <p className="text-sm">{project.target_audience}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t.settings.targetAudience}</Label>
+                      <Textarea value={targetAudience} onChange={(e) => { setTargetAudience(e.target.value); markChanged(); }} placeholder={t.settings.targetAudiencePlaceholder} rows={2} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{t.settings.brands}</Label>
+                      <div className="flex gap-2">
+                        <Input value={brandInput} onChange={(e) => setBrandInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddBrand())} placeholder={t.settings.brandsPlaceholder} />
+                        <Button type="button" variant="secondary" onClick={handleAddBrand}>{t.common.add}</Button>
                       </div>
-                    )}
-                    {project.brands && project.brands.length > 0 && (
-                      <div className="col-span-full space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Tag className="h-4 w-4" />
-                          {t.settings.brands}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {project.brands.map((brand) => (
-                            <Badge key={brand} variant="secondary">{brand}</Badge>
+                      {brands.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {brands.map(b => (
+                            <Badge key={b} variant="secondary" className="gap-1">{b}
+                              <button type="button" onClick={() => handleRemoveBrand(b)} className="ml-1 hover:text-destructive"><X className="h-3 w-3" /></button>
+                            </Badge>
                           ))}
                         </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>{t.settings.isTracking}</Label>
+                      <Switch checked={isTracking} onCheckedChange={(v) => { setIsTracking(v); markChanged(); }} />
+                    </div>
+                    {isTracking && (
+                      <div className="space-y-2">
+                        <Label>{t.settings.waveNumber}</Label>
+                        <Input type="number" min={1} value={waveNumber || ''} onChange={(e) => { setWaveNumber(e.target.value ? parseInt(e.target.value) : undefined); markChanged(); }} placeholder={t.settings.waveNumberPlaceholder} />
                       </div>
                     )}
-                    {project.study_date && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          {t.settings.studyDate}
-                        </div>
-                        <p className="text-sm font-medium">
-                          {format(new Date(project.study_date), 'PPP', { locale: dateLocale })}
-                        </p>
-                      </div>
-                    )}
-                    {project.is_tracking && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <RefreshCw className="h-4 w-4" />
-                          {t.settings.isTracking}
-                        </div>
-                        <p className="text-sm font-medium">
-                          {project.wave_number ? `Wave ${project.wave_number}` : t.common.yes}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Target className="h-12 w-12 text-muted-foreground/40 mb-4" />
-                  <h3 className="font-semibold mb-1">
-                    {t.settings.studyContext}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {t.projectDetail.studyContextDescription}
-                  </p>
-                  <Button variant="outline" onClick={() => navigate(`/projects/${projectId}/settings`)}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    {t.common.edit}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+                    <div className="space-y-2">
+                      <Label>{t.settings.additionalContext}</Label>
+                      <Textarea value={additionalContext} onChange={(e) => { setAdditionalContext(e.target.value); markChanged(); }} placeholder={t.settings.additionalContextPlaceholder} rows={3} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{language === 'es' ? 'Idioma del Reporte' : 'Report Language'}</Label>
+                      <Select value={reportLanguage} onValueChange={(v) => { setReportLanguage(v); markChanged(); }}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="es">🇪🇸 Español</SelectItem>
+                          <SelectItem value="en">🇺🇸 English</SelectItem>
+                          <SelectItem value="pt">🇧🇷 Português</SelectItem>
+                          <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+
+                {/* Danger zone */}
+                <div className="border-t pt-4">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        {t.settings.deleteProject}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t.settings.deleteProjectConfirm}</AlertDialogTitle>
+                        <AlertDialogDescription>{t.settings.deleteProjectWarning}</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteProject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          {deleteProject.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                          {t.common.delete}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
+
 
           {/* === TAB: FILES === */}
           <TabsContent value="files" className="mt-0">
