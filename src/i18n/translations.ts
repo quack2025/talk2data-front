@@ -170,6 +170,7 @@ export const translations = {
       tabContext: 'Contexto del Estudio',
       tabFiles: 'Archivos',
       goToDataPrep: 'Ir a preparación',
+      dataPrepBanner: 'Revisa y confirma la preparación de datos antes de iniciar el análisis',
     },
     // Project Upload
     projectUpload: {
@@ -1058,6 +1059,7 @@ export const translations = {
       tabContext: 'Study Context',
       tabFiles: 'Files',
       goToDataPrep: 'Go to data prep',
+      dataPrepBanner: 'Review and confirm data preparation before starting analysis',
     },
     // Project Upload
     projectUpload: {
