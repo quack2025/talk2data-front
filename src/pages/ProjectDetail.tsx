@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
@@ -619,7 +620,9 @@ export default function ProjectDetail() {
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-3">{summary.content}</p>
+                  <div className="prose prose-sm dark:prose-invert max-w-none line-clamp-3">
+                    <ReactMarkdown>{summary.content}</ReactMarkdown>
+                  </div>
                 </CardContent>
               </Card>
             )}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -75,6 +75,15 @@ export function ManualGrouper({
     editingGroup?.sub_groups || []
   );
   const [filterText, setFilterText] = useState('');
+
+  // Sync form state when editingGroup changes (useState ignores initial value on re-render)
+  useEffect(() => {
+    setName(editingGroup?.name || '');
+    setDescription(editingGroup?.description || '');
+    setGroupType(editingGroup?.group_type || 'custom');
+    setSelectedVars(editingGroup?.variables || []);
+    setSubGroups(editingGroup?.sub_groups || []);
+  }, [editingGroup]);
   const [newSubGroupName, setNewSubGroupName] = useState('');
 
   const unselectedVars = availableVariables.filter(

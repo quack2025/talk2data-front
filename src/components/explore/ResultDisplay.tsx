@@ -9,8 +9,14 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Download, Bookmark, Code, AlertTriangle, Clock, Users, ChevronDown } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { ExploreRunResponse, ExploreRunRequest } from '@/types/explore';
+
+const CHART_COLORS = [
+  '#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#818cf8',
+  '#7c3aed', '#6d28d9', '#5b21b6', '#4c1d95', '#a855f7',
+];
 
 interface ResultDisplayProps {
   result: ExploreRunResponse;
@@ -134,10 +140,29 @@ function ResultTable({
   data: Record<string, any>;
   language: string;
 }) {
-  // Frequency table
+  // Frequency table + bar chart
   if (analysisType === 'frequency' && data.frequencies) {
     const freqs = data.frequencies as Record<string, any>[];
+    const chartData = freqs.slice(0, 15).map((row) => ({
+      name: String(row.label ?? row.value ?? row.category ?? '').slice(0, 25),
+      value: (row.percent ?? row.pct ?? row.percentage ?? 0) as number,
+    }));
     return (
+      <div className="space-y-4">
+        {chartData.length > 1 && (
+          <ResponsiveContainer width="100%" height={Math.max(chartData.length * 32, 120)}>
+            <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 30 }}>
+              <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} fontSize={11} />
+              <YAxis type="category" dataKey="name" width={140} fontSize={11} tick={{ fill: 'currentColor' }} />
+              <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
+              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                {chartData.map((_, i) => (
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b">
@@ -169,6 +194,7 @@ function ResultTable({
           </tfoot>
         )}
       </table>
+      </div>
     );
   }
 
@@ -294,6 +320,24 @@ function ResultTable({
           <div className="p-4 bg-muted/50 rounded-lg">
             <p className="text-2xl font-bold tabular-nums">{data.n}</p>
             <p className="text-xs text-muted-foreground">n</p>
+          </div>
+        )}
+        {data.median != null && (
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <p className="text-2xl font-bold tabular-nums">{(data.median as number).toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">{language === 'es' ? 'Mediana' : 'Median'}</p>
+          </div>
+        )}
+        {data.min != null && (
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <p className="text-2xl font-bold tabular-nums">{(data.min as number).toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">Min</p>
+          </div>
+        )}
+        {data.max != null && (
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <p className="text-2xl font-bold tabular-nums">{(data.max as number).toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">Max</p>
           </div>
         )}
       </div>
