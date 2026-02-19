@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
+import { HelpChatWidget } from "@/components/help-chat";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -18,6 +19,7 @@ export function AppLayout({ children, title, showHeader = true }: AppLayoutProps
           {children}
         </main>
       </div>
+      <HelpChatWidget />
     </div>
   );
 }
