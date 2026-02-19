@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, FileSpreadsheet, FileText, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileSpreadsheet, FileText, AlertCircle, Table } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLayout } from '@/components/layout';
 import { FileDropZone } from '@/components/upload/FileDropZone';
@@ -27,7 +27,7 @@ type UploadStep = 'idle' | 'uploading-spss' | 'uploading-questionnaire' | 'proce
 export default function ProjectUpload() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const [spssFile, setSpssFile] = useState<File | null>(null);
+  const [dataFile, setDataFile] = useState<File | null>(null);
   const [questionnaireFile, setQuestionnaireFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function ProjectUpload() {
   const [pollAttempts, setPollAttempts] = useState(0);
   const maxPollAttempts = 30; // 60 seconds max (2s intervals)
   
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { uploadFile } = useProjectFiles(projectId || '', {
     fileUploaded: t.toasts.fileUploaded,
     fileUploadedDesc: t.toasts.fileUploadedDesc,
@@ -49,6 +49,15 @@ export default function ProjectUpload() {
   
   // Get current project name
   const currentProject = projects?.find(p => p.id === projectId);
+
+  // Detect file type from extension
+  const dataFileType = useMemo(() => {
+    if (!dataFile) return 'spss';
+    const ext = dataFile.name.split('.').pop()?.toLowerCase();
+    if (ext === 'csv') return 'csv';
+    if (ext === 'xlsx' || ext === 'xls') return 'excel';
+    return 'spss';
+  }, [dataFile]) as 'spss' | 'csv' | 'excel';
 
   // Poll for summary
   const { data: summary } = usePollSummary(projectId || '', shouldPollSummary);
@@ -90,18 +99,18 @@ export default function ProjectUpload() {
   }, [pollAttempts, shouldPollSummary, navigate, projectId, toast, t, addPendingSummary, currentProject]);
 
   const handleUpload = async () => {
-    if (!spssFile || !projectId) return;
-    
+    if (!dataFile || !projectId) return;
+
     setIsProcessing(true);
     setUploadError(null);
     setUploadStep('uploading-spss');
     setPollAttempts(0);
 
     try {
-      // Upload SPSS file (required)
+      // Upload data file (SPSS, CSV, or Excel)
       await uploadFile.mutateAsync({
-        file: spssFile,
-        fileType: 'spss',
+        file: dataFile,
+        fileType: dataFileType,
       });
 
       // Upload questionnaire if provided (optional)
@@ -206,28 +215,43 @@ export default function ProjectUpload() {
 
         {/* Upload sections */}
         <div className="grid gap-6">
-          {/* SPSS File (Required) */}
+          {/* Data File (Required) — SPSS, CSV or Excel */}
           <Card>
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <FileSpreadsheet className="h-5 w-5 text-primary" />
+                  {dataFileType === 'csv' || dataFileType === 'excel'
+                    ? <Table className="h-5 w-5 text-primary" />
+                    : <FileSpreadsheet className="h-5 w-5 text-primary" />}
                 </div>
                 <div>
-                  <CardTitle className="text-lg">{t.projectUpload.spssFile}</CardTitle>
-                  <CardDescription>{t.projectUpload.spssRequired}</CardDescription>
+                  <CardTitle className="text-lg">
+                    {language === 'es' ? 'Archivo de datos' : 'Data File'}
+                  </CardTitle>
+                  <CardDescription>
+                    {language === 'es'
+                      ? 'Requerido - Archivo .sav, .csv o .xlsx con los datos'
+                      : 'Required - .sav, .csv, or .xlsx file with survey data'}
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <FileDropZone
-                accept={{ 'application/x-spss-sav': ['.sav'] }}
-                title={t.projectUpload.dropSpss}
-                description={t.projectUpload.spssFormats}
+                accept={{
+                  'application/x-spss-sav': ['.sav'],
+                  'text/csv': ['.csv'],
+                  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+                  'application/vnd.ms-excel': ['.xls'],
+                }}
+                title={language === 'es' ? 'Arrastra tu archivo de datos aqui' : 'Drag your data file here'}
+                description={language === 'es'
+                  ? 'Formatos soportados: .sav, .csv, .xlsx, .xls (max. 100MB)'
+                  : 'Supported formats: .sav, .csv, .xlsx, .xls (max. 100MB)'}
                 icon="spss"
-                onFileSelect={setSpssFile}
-                selectedFile={spssFile}
-                onRemove={() => setSpssFile(null)}
+                onFileSelect={setDataFile}
+                selectedFile={dataFile}
+                onRemove={() => setDataFile(null)}
                 isUploading={isProcessing && uploadStep === 'uploading-spss'}
               />
             </CardContent>
@@ -278,7 +302,7 @@ export default function ProjectUpload() {
           </Button>
           <Button
             onClick={handleUpload}
-            disabled={!spssFile || isProcessing}
+            disabled={!dataFile || isProcessing}
             className="gap-2"
           >
             {isProcessing ? (

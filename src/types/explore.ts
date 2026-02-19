@@ -40,6 +40,15 @@ export interface ExploreRunRequest {
   filters?: FilterCondition[];
   confidence_level?: number;
   nets?: Record<string, (string | number)[]>;
+  // Multiple Response Sets
+  mrs_variables?: string[];
+  group_key?: string;
+  // Regression + Factor Analysis (multi-variable)
+  variables?: string[];
+  // Factor Analysis specific
+  n_factors?: number;
+  method?: string; // "pca" or "efa"
+  rotation?: string | null; // "varimax", "promax", or null
 }
 
 export interface ExploreRunResponse {

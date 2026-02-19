@@ -548,6 +548,9 @@ export const translations = {
       fileLinked: 'Archivo vinculado',
       category: 'Categoría',
       delta: 'Δ',
+      significantChange: 'Cambio significativo',
+      notSignificant: 'No significativo',
+      confidenceLevel: 'Nivel de confianza',
     },
     // Teams
     teams: {
@@ -1439,6 +1442,9 @@ export const translations = {
       fileLinked: 'File linked',
       category: 'Category',
       delta: 'Δ',
+      significantChange: 'Significant change',
+      notSignificant: 'Not significant',
+      confidenceLevel: 'Confidence level',
     },
     // Teams
     teams: {

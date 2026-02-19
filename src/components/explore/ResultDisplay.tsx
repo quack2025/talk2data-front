@@ -326,6 +326,216 @@ function ResultTable({
     );
   }
 
+  // Multiple Response Sets
+  if (analysisType === 'multiple_response' && data.items) {
+    const items = data.items as Record<string, any>[];
+    return (
+      <div className="space-y-2">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3 font-medium">
+                {language === 'es' ? 'Item' : 'Item'}
+              </th>
+              <th className="text-right py-2 px-3 font-medium">n</th>
+              <th className="text-right py-2 px-3 font-medium">% Resp.</th>
+              <th className="text-right py-2 px-3 font-medium">% Ment.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, i) => (
+              <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
+                <td className="py-1.5 px-3 text-xs">{item.label}</td>
+                <td className="text-right py-1.5 px-3 tabular-nums">{item.count}</td>
+                <td className="text-right py-1.5 px-3 tabular-nums">{item.pct_respondents?.toFixed(1)}%</td>
+                <td className="text-right py-1.5 px-3 tabular-nums">{item.pct_mentions?.toFixed(1)}%</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="border-t font-medium">
+              <td className="py-1.5 px-3">{language === 'es' ? 'Total respondentes' : 'Total respondents'}</td>
+              <td className="text-right py-1.5 px-3 tabular-nums">{data.total_respondents}</td>
+              <td></td>
+              <td></td>
+            </tr>
+            <tr className="font-medium text-muted-foreground">
+              <td className="py-1.5 px-3">{language === 'es' ? 'Total menciones' : 'Total mentions'}</td>
+              <td className="text-right py-1.5 px-3 tabular-nums">{data.total_mentions}</td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    );
+  }
+
+  // Regression
+  if (analysisType === 'regression' && data.coefficients) {
+    const coefficients = data.coefficients as Record<string, any>[];
+    return (
+      <div className="space-y-4">
+        {/* Model summary */}
+        <div className="grid grid-cols-4 gap-3 text-center text-sm">
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="font-bold text-xs">{data.model_type === 'linear' ? 'R\u00B2' : 'Pseudo R\u00B2'}</p>
+            <p className="text-lg tabular-nums">{(data.r_squared ?? data.pseudo_r_squared ?? 0).toFixed(4)}</p>
+          </div>
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="font-bold text-xs">AIC</p>
+            <p className="text-lg tabular-nums">{data.aic?.toFixed(1)}</p>
+          </div>
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="font-bold text-xs">n</p>
+            <p className="text-lg tabular-nums">{data.n_observations}</p>
+          </div>
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="font-bold text-xs">{data.model_type === 'linear' ? 'F' : 'LL'}</p>
+            <p className="text-lg tabular-nums">{(data.f_statistic ?? data.log_likelihood ?? 0).toFixed(2)}</p>
+          </div>
+        </div>
+        {/* Coefficients table */}
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3 font-medium">{language === 'es' ? 'Variable' : 'Variable'}</th>
+              <th className="text-right py-2 px-3 font-medium">Coef</th>
+              <th className="text-right py-2 px-3 font-medium">SE</th>
+              <th className="text-right py-2 px-3 font-medium">p</th>
+              {data.model_type === 'linear' && <th className="text-right py-2 px-3 font-medium">VIF</th>}
+              <th className="text-right py-2 px-3 font-medium">Sig</th>
+            </tr>
+          </thead>
+          <tbody>
+            {coefficients.map((c, i) => (
+              <tr key={i} className={`border-b last:border-0 ${c.is_significant ? 'bg-green-50/50' : ''}`}>
+                <td className="py-1.5 px-3 text-xs">{c.label}</td>
+                <td className="text-right py-1.5 px-3 tabular-nums text-xs">{c.coefficient.toFixed(4)}</td>
+                <td className="text-right py-1.5 px-3 tabular-nums text-xs">{c.std_error.toFixed(4)}</td>
+                <td className="text-right py-1.5 px-3 tabular-nums text-xs">
+                  {c.p_value < 0.001 ? '<.001' : c.p_value.toFixed(3)}
+                </td>
+                {data.model_type === 'linear' && (
+                  <td className={`text-right py-1.5 px-3 tabular-nums text-xs ${c.vif > 10 ? 'text-red-600 font-bold' : ''}`}>
+                    {c.vif?.toFixed(1) ?? '-'}
+                  </td>
+                )}
+                <td className="text-right py-1.5 px-3 text-xs">
+                  {c.p_value < 0.001 ? '***' : c.p_value < 0.01 ? '**' : c.p_value < 0.05 ? '*' : ''}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {data.warnings && data.warnings.length > 0 && (
+          <div className="space-y-1">
+            {data.warnings.map((w: string, i: number) => (
+              <p key={i} className="text-xs text-amber-600">{w}</p>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Factor Analysis
+  if (analysisType === 'factor_analysis' && data.loadings) {
+    const loadings = data.loadings as Record<string, any>[];
+    const explained = data.explained_variance as Record<string, any>[];
+    const factorKeys = Object.keys(loadings[0] || {}).filter((k) => k.startsWith('factor_'));
+    return (
+      <div className="space-y-4">
+        {/* Summary cards */}
+        <div className="grid grid-cols-3 gap-3 text-center text-sm">
+          {data.kmo != null && (
+            <div className="p-3 bg-muted/50 rounded-lg">
+              <p className="font-bold text-xs">KMO</p>
+              <p className={`text-lg tabular-nums ${data.kmo < 0.6 ? 'text-red-500' : 'text-green-600'}`}>
+                {data.kmo.toFixed(3)}
+              </p>
+            </div>
+          )}
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="font-bold text-xs">{language === 'es' ? 'Factores' : 'Factors'}</p>
+            <p className="text-lg tabular-nums">{data.n_factors}</p>
+          </div>
+          <div className="p-3 bg-muted/50 rounded-lg">
+            <p className="font-bold text-xs">{language === 'es' ? 'Var. Expl.' : 'Var. Expl.'}</p>
+            <p className="text-lg tabular-nums">{data.total_variance_explained?.toFixed(1)}%</p>
+          </div>
+        </div>
+        {/* Variance explained */}
+        {explained && (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-1 px-3 text-xs font-medium">Factor</th>
+                <th className="text-right py-1 px-3 text-xs font-medium">Eigenvalue</th>
+                <th className="text-right py-1 px-3 text-xs font-medium">% Var</th>
+                <th className="text-right py-1 px-3 text-xs font-medium">% Cum</th>
+              </tr>
+            </thead>
+            <tbody>
+              {explained.map((e, i) => (
+                <tr key={i} className="border-b last:border-0">
+                  <td className="py-1 px-3 text-xs">{e.factor}</td>
+                  <td className="text-right py-1 px-3 tabular-nums text-xs">{e.eigenvalue?.toFixed(3)}</td>
+                  <td className="text-right py-1 px-3 tabular-nums text-xs">{e.variance_pct?.toFixed(1)}%</td>
+                  <td className="text-right py-1 px-3 tabular-nums text-xs">{e.cumulative_pct?.toFixed(1)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        {/* Loadings matrix */}
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-2 px-3 font-medium text-xs">{language === 'es' ? 'Variable' : 'Variable'}</th>
+              {factorKeys.map((k) => (
+                <th key={k} className="text-right py-2 px-3 font-medium text-xs">
+                  {k.replace('factor_', 'F')}
+                </th>
+              ))}
+              <th className="text-right py-2 px-3 font-medium text-xs">h2</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loadings.map((row, i) => (
+              <tr key={i} className="border-b last:border-0">
+                <td className="py-1 px-3 text-xs truncate max-w-[200px]" title={row.label}>{row.label}</td>
+                {factorKeys.map((k) => {
+                  const val = row[k] as number;
+                  const abs = Math.abs(val);
+                  return (
+                    <td
+                      key={k}
+                      className={`text-right py-1 px-3 tabular-nums text-xs ${
+                        abs >= 0.5 ? 'font-bold text-primary' :
+                        abs >= 0.3 ? 'font-medium' : 'text-muted-foreground'
+                      }`}
+                    >
+                      {val.toFixed(3)}
+                    </td>
+                  );
+                })}
+                <td className="text-right py-1 px-3 tabular-nums text-xs">{row.communality?.toFixed(3)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {data.warnings && data.warnings.length > 0 && (
+          <div className="space-y-1">
+            {data.warnings.map((w: string, i: number) => (
+              <p key={i} className="text-xs text-amber-600">{w}</p>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // Fallback: render as JSON
   return (
     <pre className="bg-muted rounded-md p-3 text-xs overflow-x-auto max-h-96">

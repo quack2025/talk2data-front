@@ -159,7 +159,13 @@ function DeltaIndicator({
   delta,
   isPercentage,
 }: {
-  delta?: { value: number; direction: 'up' | 'down' | 'flat' };
+  delta?: {
+    value: number;
+    direction: 'up' | 'down' | 'flat';
+    p_value?: number | null;
+    is_significant?: boolean;
+    test_type?: string | null;
+  };
   isPercentage?: boolean;
 }) {
   if (!delta) return <span className="text-muted-foreground">-</span>;
@@ -171,19 +177,25 @@ function DeltaIndicator({
       ? TrendingDown
       : Minus;
 
-  const colorClass =
-    delta.direction === 'up'
-      ? 'text-green-600'
+  const colorClass = delta.is_significant
+    ? delta.direction === 'up'
+      ? 'text-green-600 font-semibold'
       : delta.direction === 'down'
-      ? 'text-red-600'
-      : 'text-muted-foreground';
+      ? 'text-red-600 font-semibold'
+      : 'text-muted-foreground'
+    : 'text-muted-foreground';
+
+  const title = delta.p_value != null
+    ? `p=${delta.p_value.toFixed(4)}${delta.test_type ? ` (${delta.test_type})` : ''}`
+    : undefined;
 
   return (
-    <span className={`inline-flex items-center gap-0.5 ${colorClass}`}>
+    <span className={`inline-flex items-center gap-0.5 ${colorClass}`} title={title}>
       <Icon className="h-3 w-3" />
       {delta.value > 0 ? '+' : ''}
       {delta.value}
       {isPercentage ? 'pp' : ''}
+      {delta.is_significant && <span className="text-[10px] ml-0.5">*</span>}
     </span>
   );
 }

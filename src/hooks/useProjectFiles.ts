@@ -25,15 +25,19 @@ export function useProjectFiles(projectId: string, toastMessages?: ToastMessages
   const uploadFile = useMutation({
     mutationFn: async ({ file, fileType }: {
       file: File;
-      fileType: 'spss' | 'questionnaire'
+      fileType: 'spss' | 'csv' | 'excel' | 'questionnaire'
     }) => {
       const formData = new FormData();
       formData.append('file', file);
 
       // Mapear tipo de archivo al enum del backend
-      const backendFileType: FileType = fileType === 'spss'
-        ? 'spss_data'
-        : 'questionnaire_pdf';
+      const fileTypeMap: Record<string, FileType> = {
+        spss: 'spss_data',
+        csv: 'csv_data',
+        excel: 'excel_data',
+        questionnaire: 'questionnaire_pdf',
+      };
+      const backendFileType: FileType = fileTypeMap[fileType] ?? 'spss_data';
 
       // El file_type va como query parameter
       const response = await api.uploadFile<ProjectFile>(

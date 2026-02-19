@@ -3,7 +3,7 @@
 
 export type OwnerType = 'user' | 'team';
 export type ProjectStatus = 'processing' | 'ready' | 'error';
-export type FileType = 'spss_data' | 'questionnaire_pdf' | 'questionnaire_text';
+export type FileType = 'spss_data' | 'questionnaire_pdf' | 'questionnaire_text' | 'csv_data' | 'excel_data';
 export type MessageRole = 'user' | 'assistant';
 export type ExportType = 'pdf' | 'excel' | 'pptx' | 'aggfile';
 

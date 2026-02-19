@@ -11,6 +11,9 @@ import {
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Play,
   Loader2,
@@ -21,6 +24,11 @@ import {
   TrendingUp,
   Star,
   MinusCircle,
+  CheckSquare,
+  Sigma,
+  Layers,
+  Lock,
+  Search,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { ExploreVariable, ExploreRunRequest, FilterCondition } from '@/types/explore';
@@ -35,6 +43,8 @@ interface AnalysisTypeDef {
   description: { es: string; en: string };
   needsCross?: boolean;
   needsSignificance?: boolean;
+  needsMultipleVars?: boolean;
+  isPremium?: boolean;
 }
 
 const ANALYSIS_TYPES: AnalysisTypeDef[] = [
@@ -84,6 +94,28 @@ const ANALYSIS_TYPES: AnalysisTypeDef[] = [
     label: { es: 'Net Score', en: 'Net Score' },
     description: { es: 'Top-2 menos Bottom-2', en: 'Top-2 minus Bottom-2' },
   },
+  {
+    id: 'multiple_response',
+    icon: CheckSquare,
+    label: { es: 'Resp. Multiple', en: 'Multiple Response' },
+    description: { es: 'Frecuencia de menciones', en: 'Mention frequency' },
+  },
+  {
+    id: 'regression',
+    icon: Sigma,
+    label: { es: 'Regresion', en: 'Regression' },
+    description: { es: 'Predecir variable dependiente', en: 'Predict dependent variable' },
+    needsMultipleVars: true,
+    isPremium: true,
+  },
+  {
+    id: 'factor_analysis',
+    icon: Layers,
+    label: { es: 'Anal. Factorial', en: 'Factor Analysis' },
+    description: { es: 'Reducir dimensiones (PCA/EFA)', en: 'Reduce dimensions (PCA/EFA)' },
+    needsMultipleVars: true,
+    isPremium: true,
+  },
 ];
 
 // ─── Props ──────────────────────────────────────────────────────────────────
@@ -110,6 +142,12 @@ export function AnalysisPanel({
   const [crossVariable, setCrossVariable] = useState<string>('');
   const [confidenceLevel, setConfidenceLevel] = useState(0.95);
   const [filters, setFilters] = useState<FilterCondition[]>([]);
+  // Multi-variable selection (regression + factor analysis)
+  const [selectedVars, setSelectedVars] = useState<string[]>([]);
+  const [varSearch, setVarSearch] = useState('');
+  // Factor analysis options
+  const [faMethod, setFaMethod] = useState('pca');
+  const [faRotation, setFaRotation] = useState('varimax');
 
   // When variable changes, reset to first suggested type
   useEffect(() => {
@@ -124,6 +162,13 @@ export function AnalysisPanel({
   const currentTypeDef = ANALYSIS_TYPES.find((a) => a.id === analysisType);
   const needsCross = currentTypeDef?.needsCross ?? false;
   const needsSignificance = currentTypeDef?.needsSignificance ?? false;
+  const needsMultipleVars = currentTypeDef?.needsMultipleVars ?? false;
+
+  const toggleVar = (varName: string) => {
+    setSelectedVars((prev) =>
+      prev.includes(varName) ? prev.filter((v) => v !== varName) : [...prev, varName]
+    );
+  };
 
   const handleRun = () => {
     if (!selectedVariable) return;
@@ -139,6 +184,23 @@ export function AnalysisPanel({
     }
     if (filters.length > 0) {
       request.filters = filters;
+    }
+    // MRS: auto-populate from group_key
+    if (analysisType === 'multiple_response' && selectedVariable.group_key) {
+      const groupVars = allVariables
+        .filter((v) => v.group_key === selectedVariable.group_key)
+        .map((v) => v.name);
+      request.mrs_variables = groupVars;
+      request.group_key = selectedVariable.group_key;
+    }
+    // Multi-variable analyses
+    if (needsMultipleVars && selectedVars.length > 0) {
+      request.variables = selectedVars;
+    }
+    // Factor analysis options
+    if (analysisType === 'factor_analysis') {
+      request.method = faMethod;
+      request.rotation = faRotation === 'none' ? null : faRotation;
     }
     onRun(request);
   };
@@ -218,6 +280,9 @@ export function AnalysisPanel({
                           ✓
                         </Badge>
                       )}
+                      {typeDef.isPremium && (
+                        <Lock className="h-3 w-3 text-amber-500" />
+                      )}
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
                       {typeDef.description[language as 'es' | 'en'] || typeDef.description.en}
@@ -287,6 +352,91 @@ export function AnalysisPanel({
           </div>
         )}
 
+        {/* ── Multi-variable selector (regression / factor analysis) ── */}
+        {needsMultipleVars && (
+          <div className="space-y-2 rounded-md border border-primary/20 bg-primary/5 p-3">
+            <Label className="text-xs font-medium">
+              {analysisType === 'regression'
+                ? (language === 'es' ? 'Variables independientes' : 'Independent variables')
+                : (language === 'es' ? 'Variables a analizar' : 'Variables to analyze')}
+              {selectedVars.length > 0 && (
+                <span className="ml-1 text-muted-foreground">({selectedVars.length})</span>
+              )}
+            </Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder={language === 'es' ? 'Buscar variable...' : 'Search variable...'}
+                value={varSearch}
+                onChange={(e) => setVarSearch(e.target.value)}
+                className="h-8 pl-7 text-xs"
+              />
+            </div>
+            <ScrollArea className="h-40 rounded-md border bg-background">
+              <div className="p-1">
+                {allVariables
+                  .filter((v) => v.name !== selectedVariable?.name)
+                  .filter((v) => {
+                    if (!varSearch) return true;
+                    const q = varSearch.toLowerCase();
+                    return v.name.toLowerCase().includes(q) || (v.label?.toLowerCase().includes(q) ?? false);
+                  })
+                  .map((v) => (
+                    <label
+                      key={v.name}
+                      className="flex items-center gap-2 px-2 py-1 rounded hover:bg-muted/50 cursor-pointer text-xs"
+                    >
+                      <Checkbox
+                        checked={selectedVars.includes(v.name)}
+                        onCheckedChange={() => toggleVar(v.name)}
+                      />
+                      <span className="font-mono text-[11px]">{v.name}</span>
+                      {v.label && (
+                        <span className="text-muted-foreground truncate">{v.label}</span>
+                      )}
+                    </label>
+                  ))}
+              </div>
+            </ScrollArea>
+            {selectedVars.length > 0 && (
+              <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={() => setSelectedVars([])}>
+                {language === 'es' ? 'Limpiar seleccion' : 'Clear selection'}
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* ── Factor Analysis options ── */}
+        {analysisType === 'factor_analysis' && (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">{language === 'es' ? 'Metodo' : 'Method'}</Label>
+              <Select value={faMethod} onValueChange={setFaMethod}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pca">PCA</SelectItem>
+                  <SelectItem value="efa">EFA</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{language === 'es' ? 'Rotacion' : 'Rotation'}</Label>
+              <Select value={faRotation} onValueChange={setFaRotation}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="varimax">Varimax</SelectItem>
+                  <SelectItem value="promax">Promax</SelectItem>
+                  <SelectItem value="none">{language === 'es' ? 'Sin rotacion' : 'None'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+
         {/* ── Filters ── */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -340,7 +490,7 @@ export function AnalysisPanel({
         {/* ── Run button ── */}
         <Button
           onClick={handleRun}
-          disabled={isRunning || !selectedVariable || (needsCross && !crossVariable)}
+          disabled={isRunning || !selectedVariable || (needsCross && !crossVariable) || (needsMultipleVars && selectedVars.length === 0)}
           className="w-full"
         >
           {isRunning ? (

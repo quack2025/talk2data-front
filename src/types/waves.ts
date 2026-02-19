@@ -33,6 +33,7 @@ export interface WaveComparisonRequest {
   wave_ids: string[];
   analysis_type: string;
   cross_variable?: string | null;
+  confidence_level?: number;
 }
 
 export interface WaveComparisonResult {
@@ -51,7 +52,13 @@ export interface WaveComparisonResult {
   deltas: {
     from_wave: string;
     to_wave: string;
-    changes: Record<string, { value: number; direction: 'up' | 'down' | 'flat' }>;
+    changes: Record<string, {
+      value: number;
+      direction: 'up' | 'down' | 'flat';
+      p_value?: number | null;
+      is_significant?: boolean;
+      test_type?: string | null;
+    }>;
   }[] | null;
   warnings: string[];
 }
