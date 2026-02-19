@@ -30,6 +30,7 @@ import {
   Lock,
   Search,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { ExploreVariable, ExploreRunRequest, FilterCondition } from '@/types/explore';
 import { cn } from '@/lib/utils';
@@ -250,45 +251,48 @@ export function AnalysisPanel({
           <Label className="text-xs text-muted-foreground uppercase tracking-wide">
             {t.explore?.analysisType || 'Tipo de análisis'}
           </Label>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5">
             {sortedTypes.map((typeDef) => {
               const Icon = typeDef.icon;
               const isSuggested = suggested.includes(typeDef.id);
               const isSelected = analysisType === typeDef.id;
               return (
-                <button
-                  key={typeDef.id}
-                  onClick={() => {
-                    setAnalysisType(typeDef.id);
-                    if (!typeDef.needsCross) setCrossVariable('');
-                  }}
-                  className={cn(
-                    'flex items-start gap-2 rounded-md border px-3 py-2 text-left transition-all text-sm',
-                    isSelected
-                      ? 'border-primary bg-primary/5 text-foreground'
-                      : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/50'
-                  )}
-                >
-                  <Icon className={cn('h-4 w-4 mt-0.5 flex-shrink-0', isSelected ? 'text-primary' : '')} />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 leading-none">
-                      <span className="font-medium truncate">
-                        {typeDef.label[language as 'es' | 'en'] || typeDef.label.en}
-                      </span>
-                      {isSuggested && (
-                        <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 leading-none">
-                          ✓
-                        </Badge>
-                      )}
-                      {typeDef.isPremium && (
-                        <Lock className="h-3 w-3 text-amber-500" />
-                      )}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
+                <TooltipProvider key={typeDef.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => {
+                          setAnalysisType(typeDef.id);
+                          if (!typeDef.needsCross) setCrossVariable('');
+                        }}
+                        className={cn(
+                          'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-left transition-all w-full',
+                          isSelected
+                            ? 'border-primary bg-primary/5 text-foreground'
+                            : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-muted/50'
+                        )}
+                      >
+                        <Icon className={cn('h-3.5 w-3.5 flex-shrink-0', isSelected ? 'text-primary' : '')} />
+                        <div className="min-w-0 flex items-center gap-1 flex-1">
+                          <span className="font-medium text-xs truncate">
+                            {typeDef.label[language as 'es' | 'en'] || typeDef.label.en}
+                          </span>
+                          {isSuggested && (
+                            <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 leading-none flex-shrink-0">
+                              ✓
+                            </Badge>
+                          )}
+                          {typeDef.isPremium && (
+                            <Lock className="h-3 w-3 text-amber-500 flex-shrink-0" />
+                          )}
+                        </div>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
                       {typeDef.description[language as 'es' | 'en'] || typeDef.description.en}
-                    </p>
-                  </div>
-                </button>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               );
             })}
           </div>
