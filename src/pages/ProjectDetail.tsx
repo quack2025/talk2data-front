@@ -93,6 +93,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AggfileGeneratorModal } from '@/components/aggfile';
 import { VariableGroupsManager } from '@/components/grouping';
 import { DataPrepManager } from '@/components/data-prep';
+import { SegmentManager } from '@/components/segments';
 import { WaveManager } from '@/components/waves';
 import { useProjectVariables } from '@/hooks/useProjectVariables';
 import {
@@ -687,6 +688,22 @@ export default function ProjectDetail() {
                     <VariableGroupsManager
                       projectId={projectId!}
                       availableVariables={variableNames}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Segment Manager */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t.segments?.title || 'Segmentos'}</CardTitle>
+                    <CardDescription>
+                      {t.segments?.subtitle || 'Define reusable audience segments to filter analyses'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <SegmentManager
+                      projectId={projectId!}
+                      availableVariables={explore.variables?.variables || []}
                     />
                   </CardContent>
                 </Card>

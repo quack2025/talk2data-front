@@ -13,6 +13,7 @@ import {
 import { Loader2, ArrowLeft, PanelRightOpen, PanelRightClose } from 'lucide-react';
 import { useProject } from '@/hooks/useProjects';
 import { useExplore } from '@/hooks/useExplore';
+import { useSegments } from '@/hooks/useSegments';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -21,6 +22,7 @@ import {
   ResultDisplay,
   BookmarkManager,
 } from '@/components/explore';
+import { SegmentSelector } from '@/components/segments';
 import type { ExploreVariable, ExploreRunRequest, ExploreBookmark } from '@/types/explore';
 
 export default function ProjectExplore() {
@@ -35,11 +37,15 @@ export default function ProjectExplore() {
   const [selectedVariable, setSelectedVariable] = useState<ExploreVariable | null>(null);
   const [currentRequest, setCurrentRequest] = useState<ExploreRunRequest | null>(null);
   const [showBookmarks, setShowBookmarks] = useState(true);
+  const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
 
-  // Load variables and bookmarks on mount
+  const { segments, fetchSegments } = useSegments(projectId!);
+
+  // Load variables, bookmarks, and segments on mount
   useEffect(() => {
     explore.fetchVariables();
     explore.fetchBookmarks();
+    fetchSegments();
   }, [projectId]);
 
   const handleSelectVariable = useCallback((variable: ExploreVariable) => {
@@ -208,12 +214,20 @@ export default function ProjectExplore() {
 
           {/* Center: Analysis + Results */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {segments.length > 0 && (
+              <SegmentSelector
+                segments={segments}
+                value={activeSegmentId}
+                onChange={setActiveSegmentId}
+              />
+            )}
             <AnalysisPanel
               selectedVariable={selectedVariable}
               allVariables={vars?.variables || []}
               banners={vars?.banners || []}
               isRunning={explore.isRunning}
               onRun={handleRun}
+              segmentId={activeSegmentId}
             />
 
             {explore.result && (

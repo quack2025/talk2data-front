@@ -127,6 +127,7 @@ interface AnalysisPanelProps {
   banners: string[];
   isRunning: boolean;
   onRun: (request: ExploreRunRequest) => void;
+  segmentId?: string | null;
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -137,6 +138,7 @@ export function AnalysisPanel({
   banners,
   isRunning,
   onRun,
+  segmentId,
 }: AnalysisPanelProps) {
   const { t, language } = useLanguage();
   const [analysisType, setAnalysisType] = useState('frequency');
@@ -202,6 +204,9 @@ export function AnalysisPanel({
     if (analysisType === 'factor_analysis') {
       request.method = faMethod;
       request.rotation = faRotation === 'none' ? null : faRotation;
+    }
+    if (segmentId) {
+      request.segment_id = segmentId;
     }
     onRun(request);
   };

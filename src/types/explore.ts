@@ -49,6 +49,8 @@ export interface ExploreRunRequest {
   n_factors?: number;
   method?: string; // "pca" or "efa"
   rotation?: string | null; // "varimax", "promax", or null
+  // Segment filter
+  segment_id?: string;
 }
 
 export interface ExploreRunResponse {
