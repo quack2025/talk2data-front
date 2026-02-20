@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Separator } from '@/components/ui/separator';
 import {
   Presentation,
   Download,
@@ -27,8 +28,10 @@ import {
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useReportGenerator } from '@/hooks/useReportGenerator';
 import { downloadFile } from '@/lib/downloadFile';
-import { REPORT_THEMES, REPORT_LANGUAGES } from '@/types/reports';
-import type { ReportOptions } from '@/types/reports';
+import { REPORT_THEMES, REPORT_LANGUAGES, REPORT_DEPTHS } from '@/types/reports';
+import type { ReportOptions, ReportDepth, ReportHistoryItem } from '@/types/reports';
+import { ConversationSelector } from './ConversationSelector';
+import { ReportHistory } from './ReportHistory';
 
 interface ReportGeneratorDialogProps {
   projectId: string;
@@ -50,22 +53,28 @@ export function ReportGeneratorDialog({
   conversationCount = 0,
 }: ReportGeneratorDialogProps) {
   const { t, language } = useLanguage();
+  const rpt = t.reports;
   const reportGen = useReportGenerator(projectId);
 
   // Config form state
   const [reportLanguage, setReportLanguage] = useState('es');
   const [theme, setTheme] = useState<'modern_dark' | 'corporate_light' | 'minimal'>('modern_dark');
+  const [depth, setDepth] = useState<ReportDepth>('standard');
   const [researchBrief, setResearchBrief] = useState(studyObjective || '');
   const [includeSpeakerNotes, setIncludeSpeakerNotes] = useState(true);
+  const [selectedConversationIds, setSelectedConversationIds] = useState<string[]>(
+    conversationIds ?? []
+  );
 
   const handleGenerate = async () => {
     const options: ReportOptions = {
       language: reportLanguage,
       theme,
+      depth,
       include_speaker_notes: includeSpeakerNotes,
       ...(researchBrief.trim() ? { research_brief: researchBrief.trim() } : {}),
-      ...(conversationIds && conversationIds.length > 0
-        ? { conversation_ids: conversationIds }
+      ...(selectedConversationIds.length > 0
+        ? { conversation_ids: selectedConversationIds }
         : {}),
     };
     await reportGen.generate(options);
@@ -97,20 +106,34 @@ export function ReportGeneratorDialog({
     onOpenChange(value);
   };
 
+  const handleRegenerate = (metadata: ReportHistoryItem['metadata']) => {
+    if (!metadata) return;
+    if (metadata.language) setReportLanguage(metadata.language);
+    if (metadata.theme) setTheme(metadata.theme as typeof theme);
+    if (metadata.depth) setDepth(metadata.depth as ReportDepth);
+    if (metadata.research_brief) setResearchBrief(metadata.research_brief);
+    if (metadata.include_speaker_notes !== undefined) {
+      setIncludeSpeakerNotes(metadata.include_speaker_notes);
+    }
+    if (metadata.conversation_ids) {
+      setSelectedConversationIds(metadata.conversation_ids);
+    }
+  };
+
   const phaseTexts = [
-    t.reports?.phase0 ?? 'Gathering analyses...',
-    t.reports?.phase1 ?? 'Identifying key findings...',
-    t.reports?.phase2 ?? 'Building slides...',
-    t.reports?.phase3 ?? 'Finalizing...',
+    rpt?.phase0 ?? 'Gathering analyses...',
+    rpt?.phase1 ?? 'Identifying key findings...',
+    rpt?.phase2 ?? 'Building slides...',
+    rpt?.phase3 ?? 'Finalizing...',
   ];
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Presentation className="h-5 w-5" />
-            {t.reports?.generateInsightsReport ?? 'Generate Insights Report'}
+            {rpt?.generateInsightsReport ?? 'Generate Insights Report'}
           </DialogTitle>
         </DialogHeader>
 
@@ -119,13 +142,13 @@ export function ReportGeneratorDialog({
           <div className="space-y-5 pt-2">
             {/* Data summary */}
             <p className="text-sm text-muted-foreground">
-              {conversationCount} {t.reports?.dataSummary ?? 'conversations - analyses performed'}
+              {conversationCount} {rpt?.dataSummary ?? 'conversations - analyses performed'}
               {analysisCount > 0 && ` - ${analysisCount}`}
             </p>
 
             {/* Language Select */}
             <div className="space-y-2">
-              <Label>{t.reports?.reportLanguage ?? 'Report language'}</Label>
+              <Label>{rpt?.reportLanguage ?? 'Report language'}</Label>
               <Select value={reportLanguage} onValueChange={setReportLanguage}>
                 <SelectTrigger>
                   <SelectValue />
@@ -142,7 +165,7 @@ export function ReportGeneratorDialog({
 
             {/* Theme selector */}
             <div className="space-y-2">
-              <Label>{t.reports?.visualTheme ?? 'Visual theme'}</Label>
+              <Label>{rpt?.visualTheme ?? 'Visual theme'}</Label>
               <RadioGroup
                 value={theme}
                 onValueChange={(v) =>
@@ -170,20 +193,58 @@ export function ReportGeneratorDialog({
               </RadioGroup>
             </div>
 
+            {/* Depth selector */}
+            <div className="space-y-2">
+              <Label>{rpt?.reportDepth ?? 'Report depth'}</Label>
+              <RadioGroup
+                value={depth}
+                onValueChange={(v) => setDepth(v as ReportDepth)}
+                className="grid grid-cols-3 gap-3"
+              >
+                {REPORT_DEPTHS.map((depthOption) => (
+                  <div key={depthOption.value}>
+                    <RadioGroupItem
+                      value={depthOption.value}
+                      id={`depth-${depthOption.value}`}
+                      className="peer sr-only"
+                    />
+                    <Label
+                      htmlFor={`depth-${depthOption.value}`}
+                      className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer text-center gap-1"
+                    >
+                      <span className="text-sm font-medium">
+                        {language === 'es' ? depthOption.labelEs : depthOption.labelEn}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-normal">
+                        {language === 'es' ? depthOption.descEs : depthOption.descEn}
+                      </span>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+
+            {/* Conversation selector */}
+            <ConversationSelector
+              projectId={projectId}
+              selectedIds={selectedConversationIds}
+              onSelectionChange={setSelectedConversationIds}
+            />
+
             {/* Research Brief */}
             <div className="space-y-2">
-              <Label>{t.reports?.researchBrief ?? 'Research Brief (optional)'}</Label>
+              <Label>{rpt?.researchBrief ?? 'Research Brief (optional)'}</Label>
               <Textarea
                 value={researchBrief}
                 onChange={(e) => setResearchBrief(e.target.value)}
                 placeholder={
-                  t.reports?.researchBriefPlaceholder ??
+                  rpt?.researchBriefPlaceholder ??
                   'E.g.: The goal is to understand...'
                 }
                 rows={3}
               />
               <p className="text-xs text-muted-foreground">
-                {t.reports?.researchBriefHint ??
+                {rpt?.researchBriefHint ??
                   'If not provided, inferred from context.'}
               </p>
             </div>
@@ -198,7 +259,7 @@ export function ReportGeneratorDialog({
                 }
               />
               <Label htmlFor="speaker-notes" className="text-sm font-normal cursor-pointer">
-                {t.reports?.includeSpeakerNotes ?? 'Include speaker notes'}
+                {rpt?.includeSpeakerNotes ?? 'Include speaker notes'}
               </Label>
             </div>
 
@@ -212,16 +273,23 @@ export function ReportGeneratorDialog({
                 disabled={conversationCount === 0}
               >
                 <Presentation className="h-4 w-4 mr-2" />
-                {t.reports?.generate ?? 'Generate'}
+                {rpt?.generate ?? 'Generate'}
               </Button>
             </div>
 
             {conversationCount === 0 && (
               <p className="text-xs text-destructive">
-                {t.reports?.noConversations ??
+                {rpt?.noConversations ??
                   'You need at least one conversation with analyses.'}
               </p>
             )}
+
+            {/* Report History */}
+            <Separator />
+            <ReportHistory
+              projectId={projectId}
+              onRegenerate={handleRegenerate}
+            />
           </div>
         )}
 
@@ -230,7 +298,7 @@ export function ReportGeneratorDialog({
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <p className="font-medium text-lg">
-              {t.reports?.generating ?? 'Generating your report...'}
+              {rpt?.generating ?? 'Generating your report...'}
             </p>
             <p className="text-sm text-muted-foreground animate-pulse">
               {phaseTexts[reportGen.progressPhase] ?? phaseTexts[0]}
@@ -245,17 +313,17 @@ export function ReportGeneratorDialog({
               <Check className="h-7 w-7 text-green-600 dark:text-green-400" />
             </div>
             <p className="font-medium text-lg">
-              {t.reports?.completed ?? 'Report ready'}
+              {rpt?.completed ?? 'Report ready'}
             </p>
             <Button onClick={handleDownload} size="lg" className="gap-2">
               <Download className="h-4 w-4" />
-              {t.reports?.download ?? 'Download PPTX'}
+              {rpt?.download ?? 'Download PPTX'}
             </Button>
             <button
               onClick={handleReset}
               className="text-sm text-muted-foreground hover:text-foreground underline"
             >
-              {t.reports?.generateAnother ?? 'Generate another'}
+              {rpt?.generateAnother ?? 'Generate another'}
             </button>
           </div>
         )}
@@ -267,7 +335,7 @@ export function ReportGeneratorDialog({
               <AlertCircle className="h-7 w-7 text-destructive" />
             </div>
             <p className="font-medium text-lg">
-              {t.reports?.error ?? 'Error generating report'}
+              {rpt?.error ?? 'Error generating report'}
             </p>
             {reportGen.error && (
               <p className="text-sm text-muted-foreground text-center max-w-sm">
@@ -275,7 +343,7 @@ export function ReportGeneratorDialog({
               </p>
             )}
             <Button onClick={handleReset} variant="outline" className="gap-2">
-              {t.reports?.retry ?? 'Retry'}
+              {rpt?.retry ?? 'Retry'}
             </Button>
           </div>
         )}
