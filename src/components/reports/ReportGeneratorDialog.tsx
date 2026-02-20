@@ -155,12 +155,24 @@ export function ReportGeneratorDialog({
     research_brief: researchBrief.trim() || undefined,
   };
 
-  const phaseTexts = [
-    rpt?.phase0 ?? 'Gathering analyses...',
-    rpt?.phase1 ?? 'Identifying key findings...',
-    rpt?.phase2 ?? 'Building slides...',
-    rpt?.phase3 ?? 'Finalizing...',
-  ];
+  const progressLabels: Record<string, { es: string; en: string }> = {
+    starting: { es: 'Iniciando...', en: 'Starting...' },
+    gathering_data: { es: 'Recopilando datos del proyecto...', en: 'Gathering project data...' },
+    analyzing_insights: { es: 'Analizando hallazgos clave (Claude Opus)...', en: 'Analyzing key findings (Claude Opus)...' },
+    writing_script: { es: 'Escribiendo guion de slides (Claude Sonnet)...', en: 'Writing slide script (Claude Sonnet)...' },
+    building_slides: { es: 'Construyendo presentacion PPTX...', en: 'Building PPTX presentation...' },
+    uploading: { es: 'Subiendo archivo...', en: 'Uploading file...' },
+    done: { es: 'Listo!', en: 'Done!' },
+  };
+
+  const getProgressText = (label: string) => {
+    const entry = progressLabels[label] || progressLabels['starting'];
+    return language === 'es' ? entry.es : entry.en;
+  };
+
+  const progressPct = reportGen.progress.total > 0
+    ? Math.round((reportGen.progress.step / reportGen.progress.total) * 100)
+    : 0;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -393,14 +405,29 @@ export function ReportGeneratorDialog({
 
         {/* === PROCESSING STATE === */}
         {reportGen.status === 'processing' && (
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+          <div className="flex flex-col items-center justify-center py-8 space-y-6">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <p className="font-medium text-lg">
               {rpt?.generating ?? 'Generating your report...'}
             </p>
-            <p className="text-sm text-muted-foreground animate-pulse">
-              {phaseTexts[reportGen.progressPhase] ?? phaseTexts[0]}
-            </p>
+
+            {/* Progress bar */}
+            <div className="w-full max-w-sm space-y-2">
+              <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-primary h-3 rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-muted-foreground">
+                  {getProgressText(reportGen.progress.label)}
+                </p>
+                <p className="text-sm font-medium text-muted-foreground">
+                  {reportGen.progress.step}/{reportGen.progress.total}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
