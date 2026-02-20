@@ -28,10 +28,11 @@ import {
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useReportGenerator } from '@/hooks/useReportGenerator';
 import { downloadFile } from '@/lib/downloadFile';
-import { REPORT_THEMES, REPORT_LANGUAGES, REPORT_DEPTHS } from '@/types/reports';
-import type { ReportOptions, ReportDepth, ReportHistoryItem } from '@/types/reports';
+import { REPORT_THEMES, REPORT_LANGUAGES, REPORT_DEPTHS, REPORT_TONES } from '@/types/reports';
+import type { ReportOptions, ReportDepth, ReportTone, ReportHistoryItem, ReportTemplate } from '@/types/reports';
 import { ConversationSelector } from './ConversationSelector';
 import { ReportHistory } from './ReportHistory';
+import { TemplateSelectorBar } from './TemplateSelectorBar';
 
 interface ReportGeneratorDialogProps {
   projectId: string;
@@ -60,8 +61,10 @@ export function ReportGeneratorDialog({
   const [reportLanguage, setReportLanguage] = useState('es');
   const [theme, setTheme] = useState<'modern_dark' | 'corporate_light' | 'minimal'>('modern_dark');
   const [depth, setDepth] = useState<ReportDepth>('standard');
+  const [tone, setTone] = useState<ReportTone>('executive');
   const [researchBrief, setResearchBrief] = useState(studyObjective || '');
   const [includeSpeakerNotes, setIncludeSpeakerNotes] = useState(true);
+  const [includeAppendix, setIncludeAppendix] = useState(false);
   const [selectedConversationIds, setSelectedConversationIds] = useState<string[]>(
     conversationIds ?? []
   );
@@ -71,7 +74,9 @@ export function ReportGeneratorDialog({
       language: reportLanguage,
       theme,
       depth,
+      tone,
       include_speaker_notes: includeSpeakerNotes,
+      include_appendix: includeAppendix,
       ...(researchBrief.trim() ? { research_brief: researchBrief.trim() } : {}),
       ...(selectedConversationIds.length > 0
         ? { conversation_ids: selectedConversationIds }
@@ -111,13 +116,43 @@ export function ReportGeneratorDialog({
     if (metadata.language) setReportLanguage(metadata.language);
     if (metadata.theme) setTheme(metadata.theme as typeof theme);
     if (metadata.depth) setDepth(metadata.depth as ReportDepth);
+    if (metadata.tone) setTone(metadata.tone as ReportTone);
     if (metadata.research_brief) setResearchBrief(metadata.research_brief);
     if (metadata.include_speaker_notes !== undefined) {
       setIncludeSpeakerNotes(metadata.include_speaker_notes);
     }
+    if (metadata.include_appendix !== undefined) {
+      setIncludeAppendix(metadata.include_appendix);
+    }
     if (metadata.conversation_ids) {
       setSelectedConversationIds(metadata.conversation_ids);
     }
+  };
+
+  const handleApplyTemplate = (config: ReportTemplate['config']) => {
+    if (config.language) setReportLanguage(config.language);
+    if (config.theme) setTheme(config.theme as typeof theme);
+    if (config.depth) setDepth(config.depth as ReportDepth);
+    if (config.tone) setTone(config.tone as ReportTone);
+    if (config.include_speaker_notes !== undefined) {
+      setIncludeSpeakerNotes(config.include_speaker_notes);
+    }
+    if (config.include_appendix !== undefined) {
+      setIncludeAppendix(config.include_appendix);
+    }
+    if (config.research_brief !== undefined) {
+      setResearchBrief(config.research_brief);
+    }
+  };
+
+  const currentConfig: ReportTemplate['config'] = {
+    language: reportLanguage,
+    theme,
+    depth,
+    tone,
+    include_speaker_notes: includeSpeakerNotes,
+    include_appendix: includeAppendix,
+    research_brief: researchBrief.trim() || undefined,
   };
 
   const phaseTexts = [
@@ -146,6 +181,16 @@ export function ReportGeneratorDialog({
               {analysisCount > 0 && ` - ${analysisCount}`}
             </p>
 
+            {/* Template selector bar */}
+            <div className="space-y-2">
+              <Label>{rpt?.template ?? 'Template'}</Label>
+              <TemplateSelectorBar
+                projectId={projectId}
+                onApplyTemplate={handleApplyTemplate}
+                currentConfig={currentConfig}
+              />
+            </div>
+
             {/* Language Select */}
             <div className="space-y-2">
               <Label>{rpt?.reportLanguage ?? 'Report language'}</Label>
@@ -161,6 +206,40 @@ export function ReportGeneratorDialog({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Tone selector */}
+            <div className="space-y-2">
+              <Label>{rpt?.narrativeTone ?? 'Narrative tone'}</Label>
+              <RadioGroup
+                value={tone}
+                onValueChange={(v) => setTone(v as ReportTone)}
+                className="grid grid-cols-3 gap-3"
+              >
+                {REPORT_TONES.map((toneOption) => (
+                  <div key={toneOption.value}>
+                    <RadioGroupItem
+                      value={toneOption.value}
+                      id={`tone-${toneOption.value}`}
+                      className="peer sr-only"
+                    />
+                    <Label
+                      htmlFor={`tone-${toneOption.value}`}
+                      className="flex flex-col items-center justify-center rounded-lg border-2 border-muted bg-popover p-3 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer text-center gap-1"
+                    >
+                      <span className="text-sm font-medium">
+                        {language === 'es' ? toneOption.labelEs : toneOption.labelEn}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-normal">
+                        {language === 'es' ? toneOption.descEs : toneOption.descEn}
+                      </span>
+                      <span className="text-xs text-muted-foreground/70 font-normal italic mt-1">
+                        {language === 'es' ? toneOption.exampleEs : toneOption.exampleEn}
+                      </span>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
             </div>
 
             {/* Theme selector */}
@@ -261,6 +340,25 @@ export function ReportGeneratorDialog({
               <Label htmlFor="speaker-notes" className="text-sm font-normal cursor-pointer">
                 {rpt?.includeSpeakerNotes ?? 'Include speaker notes'}
               </Label>
+            </div>
+
+            {/* Appendix Checkbox */}
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="include-appendix"
+                  checked={includeAppendix}
+                  onCheckedChange={(checked) =>
+                    setIncludeAppendix(checked === true)
+                  }
+                />
+                <Label htmlFor="include-appendix" className="text-sm font-normal cursor-pointer">
+                  {rpt?.includeAppendix ?? 'Include data appendix'}
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground ml-6">
+                {rpt?.appendixHint ?? 'Adds slides with data tables supporting each finding.'}
+              </p>
             </div>
 
             {/* Buttons */}
