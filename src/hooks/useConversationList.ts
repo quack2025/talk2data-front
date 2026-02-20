@@ -12,7 +12,7 @@ export function useConversationList(projectId: string) {
     setError(null);
     try {
       const response = await api.get<ConversationSummary[]>(
-        `/projects/${projectId}/conversations`
+        `/projects/${projectId}/reports/conversations`
       );
       setConversations(response);
     } catch (e) {
