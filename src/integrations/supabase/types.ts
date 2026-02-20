@@ -91,6 +91,7 @@ export type Database = {
           export_type: string
           generated_by: string
           id: string
+          metadata: Json | null
           project_id: string
           storage_url: string
         }
@@ -100,6 +101,7 @@ export type Database = {
           export_type: string
           generated_by: string
           id?: string
+          metadata?: Json | null
           project_id: string
           storage_url: string
         }
@@ -109,6 +111,7 @@ export type Database = {
           export_type?: string
           generated_by?: string
           id?: string
+          metadata?: Json | null
           project_id?: string
           storage_url?: string
         }
@@ -251,6 +254,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      report_templates: {
+        Row: {
+          config: Json
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          config: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       team_members: {
         Row: {
