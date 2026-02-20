@@ -11,10 +11,10 @@ export function useReportHistory(projectId: string) {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await api.get<ReportHistoryItem[]>(
+      const response = await api.get<{ reports: ReportHistoryItem[]; total: number }>(
         `/projects/${projectId}/reports/history`
       );
-      setReports(response);
+      setReports(response.reports);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error loading report history');
     } finally {
