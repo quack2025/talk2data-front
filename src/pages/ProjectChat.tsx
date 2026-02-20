@@ -7,11 +7,12 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
-import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw } from 'lucide-react';
+import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, Presentation } from 'lucide-react';
 import type { RefinementAction } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { useDataPrep } from '@/hooks/useDataPrep';
+import { ReportGeneratorDialog } from '@/components/reports';
 import { toast } from 'sonner';
 
 export default function ProjectChat() {
@@ -19,6 +20,7 @@ export default function ProjectChat() {
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
   const { dataPrepStatus } = useDataPrep(projectId!);
@@ -104,6 +106,18 @@ export default function ProjectChat() {
 
         {/* Chat Panel */}
         <div className="w-[400px] flex flex-col border-r bg-background">
+          {/* Chat toolbar */}
+          <div className="flex items-center justify-end px-3 py-2 border-b">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setReportDialogOpen(true)}
+              className="gap-1.5 text-xs"
+            >
+              <Presentation className="h-3.5 w-3.5" />
+              {t.reports?.generateReport ?? 'Generate Report'}
+            </Button>
+          </div>
           {/* Messages */}
           <div className="flex-1 overflow-y-auto">
             {conversationsLoading ? (
@@ -223,6 +237,15 @@ export default function ProjectChat() {
           analysisPerformed={Array.isArray(lastAnalysis?.analysis_performed) ? lastAnalysis.analysis_performed : []}
         />
       </div>
+
+      {/* Report Generator Dialog */}
+      <ReportGeneratorDialog
+        projectId={projectId!}
+        open={reportDialogOpen}
+        onOpenChange={setReportDialogOpen}
+        conversationIds={activeConversationId ? [activeConversationId] : undefined}
+        conversationCount={conversations.length}
+      />
     </AppLayout>
   );
 }

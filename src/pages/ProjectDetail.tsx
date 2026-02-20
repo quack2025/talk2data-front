@@ -79,6 +79,7 @@ import {
   CalendarIcon,
   PanelRightOpen,
   PanelRightClose,
+  Presentation,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -91,6 +92,8 @@ import { useExecutiveSummary } from '@/hooks/useExecutiveSummary';
 import { useExplore } from '@/hooks/useExplore';
 import { useToast } from '@/hooks/use-toast';
 import { AggfileGeneratorModal } from '@/components/aggfile';
+import { ReportGeneratorDialog } from '@/components/reports';
+import { useChat } from '@/hooks/useChat';
 import { VariableGroupsManager } from '@/components/grouping';
 import { DataPrepManager } from '@/components/data-prep';
 import { SegmentManager } from '@/components/segments';
@@ -125,6 +128,7 @@ export default function ProjectDetail() {
   const { setLastProjectId } = useLastProject();
   const { toast } = useToast();
   const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [exploreSubTab, setExploreSubTab] = useState<'table' | 'analysis'>('table');
   const [showBookmarks, setShowBookmarks] = useState(true);
@@ -154,6 +158,7 @@ export default function ProjectDetail() {
 
   const { data: project, isLoading: projectLoading } = useProject(projectId!);
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
+  const { conversations } = useChat(projectId!);
   const { data: summary } = useExecutiveSummary(projectId!);
   const { data: variableNames = [] } = useProjectVariables(projectId, project?.status);
   const updateProject = useUpdateProject();
@@ -409,6 +414,15 @@ export default function ProjectDetail() {
             >
               <Table2 className="h-4 w-4 mr-2" />
               {t.aggfile?.generateTables || 'Generar Tablas'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setReportDialogOpen(true)}
+              disabled={!hasReadyFiles}
+            >
+              <Presentation className="h-4 w-4 mr-2" />
+              {t.reports?.generateReport ?? 'Generate Report'}
             </Button>
             <Button
               size="sm"
@@ -1070,6 +1084,15 @@ export default function ProjectDetail() {
         open={aggfileModalOpen}
         onOpenChange={setAggfileModalOpen}
         projectId={projectId!}
+      />
+
+      {/* Report Generator Dialog */}
+      <ReportGeneratorDialog
+        projectId={projectId!}
+        open={reportDialogOpen}
+        onOpenChange={setReportDialogOpen}
+        studyObjective={project?.study_objective || undefined}
+        conversationCount={conversations?.length ?? 0}
       />
     </AppLayout>
   );
