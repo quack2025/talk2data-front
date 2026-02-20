@@ -58,7 +58,7 @@ export function useReportGenerator(projectId: string) {
             status: string;
             download_url?: string;
             error_message?: string;
-          }>(`/exports/${response.export_id}`);
+          }>(`/projects/${projectId}/reports/status/${response.export_id}`);
 
           if (exportData.status === 'completed') {
             setStatus('completed');
