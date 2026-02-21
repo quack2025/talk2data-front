@@ -7,7 +7,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
-import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, Presentation } from 'lucide-react';
+import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, Presentation, CheckCircle2 } from 'lucide-react';
 import type { RefinementAction } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -117,6 +117,13 @@ export default function ProjectChat() {
               <Presentation className="h-3.5 w-3.5" />
               {t.reports?.generateReport ?? 'Generate Report'}
             </Button>
+          </div>
+          {/* Transparency banner */}
+          <div className="bg-blue-50 dark:bg-blue-950/30 border-b border-blue-100 dark:border-blue-900/50 px-4 py-2 flex items-center gap-2">
+            <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span className="text-blue-600 dark:text-blue-400 text-xs">
+              {t.chat.transparencyBanner}
+            </span>
           </div>
           {/* Messages */}
           <div className="flex-1 overflow-y-auto">

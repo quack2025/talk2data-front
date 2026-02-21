@@ -120,13 +120,20 @@ export function ChatMessage({ message, onRefine, isRefining = false }: ChatMessa
         {/* Python code collapsible */}
         {!isUser && message.python_code && (
           <Collapsible open={codeOpen} onOpenChange={setCodeOpen} className="mt-3 w-full">
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 text-xs text-muted-foreground h-7 px-2">
-                <Code2 className="h-3.5 w-3.5" />
-                {codeOpen ? t.chat.hideCode : t.chat.showCode}
-                {codeOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-              </Button>
-            </CollapsibleTrigger>
+            <div className="flex items-center gap-2">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2 text-xs text-muted-foreground h-7 px-2">
+                  <Code2 className="h-3.5 w-3.5" />
+                  {codeOpen ? t.chat.hideCode : t.chat.showCode}
+                  {codeOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </Button>
+              </CollapsibleTrigger>
+              {!codeOpen && (
+                <span className="text-[10px] text-muted-foreground/60">
+                  {t.chat.reproducibleCode}
+                </span>
+              )}
+            </div>
             <CollapsibleContent>
               <div className="relative mt-1 rounded-lg border bg-zinc-950 text-zinc-50 overflow-hidden">
                 <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800 bg-zinc-900">

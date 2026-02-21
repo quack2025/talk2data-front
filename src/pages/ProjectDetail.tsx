@@ -407,7 +407,6 @@ export default function ProjectDetail() {
               {t.projectDetail.uploadFiles}
             </Button>
             <Button
-              variant="outline"
               size="sm"
               onClick={() => setAggfileModalOpen(true)}
               disabled={!hasReadyFiles}
@@ -425,6 +424,7 @@ export default function ProjectDetail() {
               {t.reports?.generateReport ?? 'Generate Report'}
             </Button>
             <Button
+              variant="outline"
               size="sm"
               onClick={() => navigate(`/projects/${projectId}/chat`)}
               disabled={!hasReadyFiles}

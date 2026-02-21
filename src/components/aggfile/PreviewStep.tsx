@@ -91,6 +91,18 @@ export function PreviewStep({
 
       <ScrollArea className="flex-1 px-4">
         <div className="space-y-4 pb-4">
+          {/* Estimation highlight */}
+          {preview && preview.total_analyses > 0 && (
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900/50 rounded-lg p-4">
+              <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                {t.aggfile?.tablesWillGenerate} {preview.total_analyses} {t.aggfile?.tablesAutomatic}
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                {t.aggfile?.estimatedWork} {Math.max(1, Math.round(preview.total_analyses * 0.1))} {t.aggfile?.hoursManual}
+              </p>
+            </div>
+          )}
+
           {/* Summary card */}
           <Card>
             <CardContent className="pt-4 space-y-3">
