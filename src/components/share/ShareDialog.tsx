@@ -16,6 +16,16 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Link, Copy, Trash2, Lock, Eye, Plus, Loader2 } from 'lucide-react';
 import { useShare } from '@/hooks/useShare';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -65,6 +75,7 @@ export function ShareDialog({
   const [notes, setNotes] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Fetch links when dialog opens
   useEffect(() => {
@@ -306,7 +317,7 @@ export function ShareDialog({
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7 text-destructive hover:text-destructive"
-                  onClick={() => handleDelete(link.id)}
+                  onClick={() => setConfirmDeleteId(link.id)}
                   disabled={deletingId === link.id}
                 >
                   {deletingId === link.id ? (
@@ -351,6 +362,29 @@ export function ShareDialog({
           ))}
         </div>
       </DialogContent>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.share?.confirmDeleteTitle || '¿Eliminar este enlace?'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.share?.confirmDeleteDesc || 'Esta acción no se puede deshacer. El enlace dejará de funcionar.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common?.cancel || 'Cancelar'}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDeleteId) handleDelete(confirmDeleteId);
+                setConfirmDeleteId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t.common?.delete || 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

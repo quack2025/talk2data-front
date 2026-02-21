@@ -15,6 +15,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Save, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -49,6 +59,7 @@ export function TemplateSelectorBar({
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTemplates();
@@ -115,7 +126,7 @@ export function TemplateSelectorBar({
                   className="p-1 mr-2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDelete(tmpl.id);
+                    setConfirmDeleteId(tmpl.id);
                   }}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -176,6 +187,29 @@ export function TemplateSelectorBar({
           </div>
         </PopoverContent>
       </Popover>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{rpt?.confirmDeleteTemplate ?? '¿Eliminar esta plantilla?'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {rpt?.confirmDeleteTemplateDesc ?? 'Esta acción no se puede deshacer.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common?.cancel ?? 'Cancelar'}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDeleteId) handleDelete(confirmDeleteId);
+                setConfirmDeleteId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t.common?.delete ?? 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

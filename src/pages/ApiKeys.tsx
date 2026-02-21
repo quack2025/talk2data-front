@@ -14,6 +14,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Key, Plus, Copy, Trash2, ShieldOff, Loader2, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useApiKeys } from '@/hooks/useApiKeys';
@@ -62,6 +72,7 @@ export default function ApiKeys() {
   const [showSecret, setShowSecret] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deactivatingId, setDeactivatingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Translation helpers with Spanish fallbacks
   const label = useCallback(
@@ -401,7 +412,7 @@ export default function ApiKeys() {
                         variant="outline"
                         size="sm"
                         className="gap-1.5 text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(apiKey.id)}
+                        onClick={() => setConfirmDeleteId(apiKey.id)}
                         disabled={deletingId === apiKey.id}
                         title={label('delete', 'Eliminar')}
                       >
@@ -422,6 +433,29 @@ export default function ApiKeys() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{label('confirmDeleteTitle', '¿Eliminar esta API key?')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {label('confirmDeleteDesc', 'Esta acción no se puede deshacer. La key será eliminada permanentemente.')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{(t as any).common?.cancel || 'Cancelar'}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDeleteId) handleDelete(confirmDeleteId);
+                setConfirmDeleteId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {(t as any).common?.delete || 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 }
