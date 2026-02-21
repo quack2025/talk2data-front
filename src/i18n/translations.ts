@@ -438,6 +438,34 @@ export const translations = {
       preferencesSaved: 'Preferencias guardadas',
       preferencesSavedDesc: 'Tus preferencias han sido actualizadas correctamente.',
     },
+    // Settings Tabs (global settings page)
+    settingsTabs: {
+      myAccount: 'Mi Cuenta',
+      planAndBilling: 'Plan y Facturación',
+      dangerZone: 'Zona de Peligro',
+      // My Account
+      fullName: 'Nombre completo',
+      email: 'Correo electrónico',
+      emailReadonly: 'Para cambiar tu correo contacta a soporte.',
+      aiPreferences: 'Preferencias de IA',
+      aiPreferencesDesc: 'Personaliza cómo la IA interactúa contigo.',
+      // Plan & Billing
+      currentPlan: 'Plan actual',
+      freePlan: 'Free',
+      freePlanDesc: 'Acceso básico con funcionalidad limitada.',
+      upgradeCta: 'Cambiar plan',
+      upgradeDesc: 'Desbloquea más consultas, exportaciones y funciones avanzadas.',
+      renewalDate: 'Fecha de renovación',
+      creditsUsed: 'Créditos usados',
+      noStripeYet: 'La gestión de pagos estará disponible pronto.',
+      // Danger Zone
+      deleteAccount: 'Eliminar cuenta',
+      deleteAccountDesc: 'Esta acción es permanente y no se puede deshacer.',
+      deleteAccountConfirm: '¿Eliminar tu cuenta?',
+      deleteAccountWarning: 'Se eliminarán permanentemente todos tus proyectos, archivos, conversaciones y datos asociados. Esta acción no se puede deshacer.',
+      deleteAccountButton: 'Eliminar cuenta',
+      deleteAccountCancel: 'Cancelar',
+    },
     // Aggfile Generator
     aggfile: {
       title: 'Generar Tablas',
@@ -1464,6 +1492,34 @@ export const translations = {
       unsavedChanges: 'Unsaved changes',
       preferencesSaved: 'Preferences saved',
       preferencesSavedDesc: 'Your preferences have been updated successfully.',
+    },
+    // Settings Tabs (global settings page)
+    settingsTabs: {
+      myAccount: 'My Account',
+      planAndBilling: 'Plan & Billing',
+      dangerZone: 'Danger Zone',
+      // My Account
+      fullName: 'Full name',
+      email: 'Email',
+      emailReadonly: 'To change your email, contact support.',
+      aiPreferences: 'AI Preferences',
+      aiPreferencesDesc: 'Customize how AI interacts with you.',
+      // Plan & Billing
+      currentPlan: 'Current plan',
+      freePlan: 'Free',
+      freePlanDesc: 'Basic access with limited functionality.',
+      upgradeCta: 'Change plan',
+      upgradeDesc: 'Unlock more queries, exports and advanced features.',
+      renewalDate: 'Renewal date',
+      creditsUsed: 'Credits used',
+      noStripeYet: 'Payment management will be available soon.',
+      // Danger Zone
+      deleteAccount: 'Delete account',
+      deleteAccountDesc: 'This action is permanent and cannot be undone.',
+      deleteAccountConfirm: 'Delete your account?',
+      deleteAccountWarning: 'All your projects, files, conversations and associated data will be permanently deleted. This action cannot be undone.',
+      deleteAccountButton: 'Delete account',
+      deleteAccountCancel: 'Cancel',
     },
     // Aggfile Generator
     aggfile: {
