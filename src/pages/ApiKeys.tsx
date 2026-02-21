@@ -165,7 +165,7 @@ export default function ApiKeys() {
 
   return (
     <AppLayout>
-      <div className="container max-w-4xl py-8 space-y-8">
+      <div className="p-4 md:p-8 max-w-4xl space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

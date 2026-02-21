@@ -221,7 +221,7 @@ export default function ProjectSettings() {
   if (!project) {
     return (
       <AppLayout>
-        <div className="p-6 lg:p-8 text-center">
+        <div className="p-4 md:p-8 text-center">
           <h1 className="text-2xl font-bold">{t.projectDetail.notFound}</h1>
           <Button
             variant="link"
@@ -237,7 +237,7 @@ export default function ProjectSettings() {
 
   return (
     <AppLayout>
-      <div className="p-6 lg:p-8 space-y-6 max-w-2xl">
+      <div className="p-4 md:p-8 space-y-6 max-w-2xl">
         {/* Breadcrumb */}
         <Breadcrumb>
           <BreadcrumbList>

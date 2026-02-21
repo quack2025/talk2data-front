@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -13,17 +13,43 @@ import {
   ExternalLink,
   Users,
   Key,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSummaryNotification } from "@/contexts/SummaryNotificationContext";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const { pendingCount } = useSummaryNotification();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
+  const userInitials = user?.email
+    ? user.email.substring(0, 2).toUpperCase()
+    : "T2";
 
   const navItems = [
     {
@@ -65,32 +91,32 @@ export function AppSidebar() {
         collapsed ? "w-16" : "w-64"
       )}
     >
-      {/* Header */}
-      <div className="flex h-16 items-center justify-between px-3 border-b border-sidebar-border">
-        <Link to="/projects" className="flex items-center gap-2 animate-fade-in">
-          <span className={cn(
-            "font-semibold text-sidebar-foreground transition-all duration-300",
-            collapsed ? "text-sm" : "text-lg"
-          )}>
-            {collapsed ? "SG" : "Survey Genius"}
-          </span>
-        </Link>
-        
-        {/* Background processing indicator */}
-        {pendingCount > 0 && (
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 text-primary animate-pulse">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                {!collapsed && <span className="text-xs font-medium">{pendingCount}</span>}
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              {t.summary?.generating || 'Generando resumen ejecutivo...'}
-            </TooltipContent>
-          </Tooltip>
-        )}
-      </div>
+      {/* Logo Block */}
+      <Link to="/projects" className="block">
+        <div className={cn(
+          "m-3 p-3 bg-white rounded-lg flex items-center gap-3 animate-fade-in",
+          collapsed && "justify-center"
+        )}>
+          <img src="/genius-labs-logo.webp" alt="Talk2data" className="w-8 h-8 object-contain shrink-0" />
+          {!collapsed && (
+            <span className="font-semibold text-sm text-foreground truncate">Talk2data</span>
+          )}
+          {/* Background processing indicator */}
+          {pendingCount > 0 && (
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-primary/10 text-primary animate-pulse ml-auto">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  {!collapsed && <span className="text-xs font-medium">{pendingCount}</span>}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                {t.summary?.generating || 'Generando resumen ejecutivo...'}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-2">
@@ -128,22 +154,73 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Settings & Collapse */}
-      <div className="border-t border-sidebar-border p-2 space-y-1">
+      {/* User Section — always at bottom */}
+      <div className="mt-auto border-t border-sidebar-border p-2 space-y-1">
+        {/* User info */}
+        {user && (
+          <div className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2.5",
+            collapsed && "justify-center"
+          )}>
+            <Avatar className="h-8 w-8 shrink-0 border border-sidebar-accent">
+              <AvatarImage src={user.user_metadata?.avatar_url} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  {user.user_metadata?.full_name || user.email}
+                </p>
+                <p className="text-xs text-sidebar-foreground/60 truncate">
+                  {user.email}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Settings */}
         {collapsed ? (
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Link
-                to="/settings"
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
-              >
-                <Settings className="h-5 w-5 shrink-0" />
-              </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="font-medium">
-              {t.sidebar.settings}
-            </TooltipContent>
-          </Tooltip>
+          <>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Link
+                  to="/settings"
+                  className="flex items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
+                >
+                  <Settings className="h-5 w-5 shrink-0" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="font-medium">
+                {t.sidebar.settings}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <LanguageSelector variant="ghost" className="w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="font-medium">
+                Language
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="w-full justify-center text-sidebar-foreground/70 hover:text-destructive hover:bg-sidebar-accent"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="font-medium">
+                {t.header?.signOut || 'Sign out'}
+              </TooltipContent>
+            </Tooltip>
+          </>
         ) : (
           <>
             <Link
@@ -162,9 +239,22 @@ export function AppSidebar() {
               <ExternalLink className="h-5 w-5 shrink-0" />
               <span>API Docs</span>
             </a>
+            <div className="flex items-center gap-1 px-2">
+              <LanguageSelector variant="ghost" className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="text-sidebar-foreground/70 hover:text-destructive hover:bg-sidebar-accent"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                <span>{t.header?.signOut || 'Sign out'}</span>
+              </Button>
+            </div>
           </>
         )}
 
+        {/* Collapse toggle */}
         <Button
           variant="ghost"
           size="sm"
