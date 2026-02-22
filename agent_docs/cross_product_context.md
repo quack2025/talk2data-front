@@ -35,3 +35,24 @@ Logo + Product Name
 - Folders: Survey Coder and AI Followup scope to organization_id, Voice Capture/Talk2Data scope to user_id
 - Auth: All use Supabase Auth. Survey Coder has session enforcement + encryption
 - Talk2Data unique: collapsible sidebar with FolderSection supporting collapsed mode (colored dots + tooltips), folder state from URL search params (?folder=)
+
+## UX Unification History
+
+### Phase 1: Design System Unification (Feb 2026)
+- Unified HSL-based CSS design tokens across all 4 products (primary #1E40AF)
+- Genius Labs AI Suite branding with shared logo
+- Consistent color palette, auth page gradients, dashboard metric cards
+
+### Phase 2: Sidebar Hierarchy Unification (Feb 2026)
+- All 4 products adopted Core Zone + Folder Section + Account Zone sidebar structure
+- Consistent icons: BarChart3 (Usage), CreditCard (Billing), Settings (gear)
+- Separators between zones, active state detection, i18n keys for all sidebar items
+
+### Phase 3: QA Audit + Fixes (Feb 2026)
+- Automated QA team audited all 4 products for UX consistency
+- 20 issues found (8 critical, 7 major, 5 minor), 17 fixed
+- Survey Coder: Sidebar restructured to show Core+Account zones on ALL pages; Language Switcher added
+- Voice Capture: ~30 Portuguese accent fixes; PlanBadge/UsageBadge now use design tokens; Loader for folders
+- AI Followup: OrganizationSwitcher + AdminOrganization fully i18n'd (3 locales); duplicate admin nav removed
+- Talk2Data: "API Docs" translated; all fallback operators standardized to `??` with English defaults
+- Commits: SC `d9b6482`, VC `dfb9eae`, AF `4ed1dbc`, T2D `b6ab6dd`
