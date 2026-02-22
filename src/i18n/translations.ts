@@ -88,6 +88,8 @@ export const translations = {
       collapse: 'Colapsar',
       teams: 'Equipos',
       apiKeys: 'API Keys',
+      usage: 'Uso',
+      billing: 'Facturación',
     },
     // Dashboard
     dashboard: {
@@ -1143,6 +1145,8 @@ export const translations = {
       collapse: 'Collapse',
       teams: 'Teams',
       apiKeys: 'API Keys',
+      usage: 'Usage',
+      billing: 'Billing',
     },
     // Dashboard
     dashboard: {

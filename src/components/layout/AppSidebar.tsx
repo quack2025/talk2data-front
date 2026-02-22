@@ -14,6 +14,8 @@ import {
   Users,
   Key,
   LogOut,
+  BarChart3,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -51,7 +53,7 @@ export function AppSidebar() {
     ? user.email.substring(0, 2).toUpperCase()
     : "T2";
 
-  const navItems = [
+  const coreItems = [
     {
       title: t.sidebar.projects,
       href: "/projects",
@@ -81,6 +83,24 @@ export function AppSidebar() {
       title: t.sidebar.apiKeys || 'API Keys',
       href: "/api-keys",
       icon: Key,
+    },
+  ];
+
+  const accountItems = [
+    {
+      title: t.sidebar.usage ?? 'Usage',
+      href: "/settings?tab=usage",
+      icon: BarChart3,
+    },
+    {
+      title: t.sidebar.billing ?? 'Billing',
+      href: "/settings?tab=billing",
+      icon: CreditCard,
+    },
+    {
+      title: t.sidebar.settings,
+      href: "/settings",
+      icon: Settings,
     },
   ];
 
@@ -119,39 +139,82 @@ export function AppSidebar() {
       </Link>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-2">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.href || 
-            (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
-          
-          const linkContent = (
-            <Link
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-smooth",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              )}
-            >
-              <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
-              {!collapsed && <span>{item.title}</span>}
-            </Link>
-          );
+      <nav className="flex-1 p-2 overflow-y-auto">
+        {/* Core Zone */}
+        <div className="space-y-1">
+          {coreItems.map((item) => {
+            const isActive = location.pathname === item.href ||
+              (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
 
-          if (collapsed) {
-            return (
-              <Tooltip key={item.href} delayDuration={0}>
-                <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                <TooltipContent side="right" className="font-medium">
-                  {item.title}
-                </TooltipContent>
-              </Tooltip>
+            const linkContent = (
+              <Link
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-smooth",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-primary"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
+                {!collapsed && <span>{item.title}</span>}
+              </Link>
             );
-          }
 
-          return <div key={item.href}>{linkContent}</div>;
-        })}
+            if (collapsed) {
+              return (
+                <Tooltip key={item.href} delayDuration={0}>
+                  <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                  <TooltipContent side="right" className="font-medium">
+                    {item.title}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
+            return <div key={item.href}>{linkContent}</div>;
+          })}
+        </div>
+
+        {/* Separator */}
+        <div className="my-3 mx-3 border-t border-sidebar-border" />
+
+        {/* Account Zone */}
+        <div className="space-y-1">
+          {accountItems.map((item) => {
+            const isActive = item.href === "/settings"
+              ? location.pathname === "/settings" && !location.search
+              : location.pathname + location.search === item.href;
+
+            const linkContent = (
+              <Link
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-smooth",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-primary"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
+                {!collapsed && <span>{item.title}</span>}
+              </Link>
+            );
+
+            if (collapsed) {
+              return (
+                <Tooltip key={item.href} delayDuration={0}>
+                  <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                  <TooltipContent side="right" className="font-medium">
+                    {item.title}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
+            return <div key={item.href}>{linkContent}</div>;
+          })}
+        </div>
       </nav>
 
       {/* User Section — always at bottom */}
@@ -181,20 +244,22 @@ export function AppSidebar() {
           </div>
         )}
 
-        {/* Settings */}
+        {/* Footer actions (API Docs, Language, Logout) */}
         {collapsed ? (
           <>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <Link
-                  to="/settings"
+                <a
+                  href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/docs`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
                 >
-                  <Settings className="h-5 w-5 shrink-0" />
-                </Link>
+                  <ExternalLink className="h-5 w-5 shrink-0" />
+                </a>
               </TooltipTrigger>
               <TooltipContent side="right" className="font-medium">
-                {t.sidebar.settings}
+                API Docs
               </TooltipContent>
             </Tooltip>
             <Tooltip delayDuration={0}>
@@ -223,13 +288,6 @@ export function AppSidebar() {
           </>
         ) : (
           <>
-            <Link
-              to="/settings"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
-            >
-              <Settings className="h-5 w-5 shrink-0" />
-              <span>{t.sidebar.settings}</span>
-            </Link>
             <a
               href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/docs`}
               target="_blank"
