@@ -23,7 +23,7 @@ npm run dev
 Create `.env.local` for local overrides (gitignored):
 ```
 VITE_API_BASE_URL=http://localhost:8000
-VITE_SUPABASE_URL=https://xithhxnnbvxkzxdmdpnn.supabase.co
+VITE_SUPABASE_URL=https://icxsetsaxifssotcodul.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
 ```
 

@@ -15,7 +15,7 @@ Talk2Data (Survey Genius Pro) is one of 4 products in the Genius Labs AI Suite. 
 | Survey Coder Pro | survey-coder-front | AI-powered survey response coding | Railway (Express) | czqrgdgyzvsrutymjssg |
 | Voice Capture | genius-voice-dashboard | Voice recording projects + transcription | Railway (Express) | hggwsdqjkwydiubhvrvq |
 | SurveyGenius AI | ai-followup-front | AI follow-up questions for surveys (Alchemer) | Express (api.survey-genius.ai) | yqaginukztblnwooxmwd |
-| Talk2Data | talk2data-front | Market research data analysis + AI chat | FastAPI (Railway) | xithhxnnbvxkzxdmdpnn |
+| Talk2Data | talk2data-front | Market research data analysis + AI chat | FastAPI (Railway) | icxsetsaxifssotcodul |
 
 ## GitHub Org
 All repos under quack2025 on GitHub.
