@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -17,6 +17,7 @@ import {
   BarChart3,
   CreditCard,
 } from "lucide-react";
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,6 +25,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useSummaryNotification } from "@/contexts/SummaryNotificationContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
+import { FolderSection } from "@/components/folders/FolderSection";
+import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
 export function AppSidebar() {
@@ -31,8 +34,83 @@ export function AppSidebar() {
   const [user, setUser] = useState<User | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const { pendingCount } = useSummaryNotification();
+
+  // Folder state — derived from URL search params on /projects
+  const selectedFolderId = useMemo(() => {
+    if (location.pathname !== "/projects") return null;
+    const folder = searchParams.get("folder");
+    return folder; // null = "All", "unorganized" = no folder, otherwise folder id
+  }, [location.pathname, searchParams]);
+
+  // Project counts for folder badges
+  const [projectCounts, setProjectCounts] = useState<Record<string, number>>({});
+  const [totalProjectCount, setTotalProjectCount] = useState(0);
+
+  useEffect(() => {
+    fetchProjectCounts();
+  }, []);
+
+  const fetchProjectCounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, folder_id");
+
+      if (error) throw error;
+      if (!data) return;
+
+      const counts: Record<string, number> = {};
+      let unorganized = 0;
+      data.forEach((p: any) => {
+        if (p.folder_id) {
+          counts[p.folder_id] = (counts[p.folder_id] ?? 0) + 1;
+        } else {
+          unorganized++;
+        }
+      });
+      counts["unorganized"] = unorganized;
+      setProjectCounts(counts);
+      setTotalProjectCount(data.length);
+    } catch (err) {
+      console.error("Error fetching project counts:", err);
+    }
+  };
+
+  const handleSelectFolder = (folderId: string | null) => {
+    if (folderId === null) {
+      navigate("/projects");
+    } else {
+      navigate(`/projects?folder=${folderId}`);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const projectId = active.data.current?.projectId;
+    const folderId = over.data.current?.folderId ?? null;
+
+    if (!projectId) return;
+
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ folder_id: folderId })
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      toast.success(t.folders?.title ?? "Moved");
+      fetchProjectCounts();
+    } catch (err) {
+      console.error("Error moving project:", err);
+      toast.error("Error");
+    }
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -105,6 +183,7 @@ export function AppSidebar() {
   ];
 
   return (
+    <DndContext onDragEnd={handleDragEnd}>
     <aside
       className={cn(
         "flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300",
@@ -175,6 +254,18 @@ export function AppSidebar() {
             return <div key={item.href}>{linkContent}</div>;
           })}
         </div>
+
+        {/* Separator */}
+        <div className="my-3 mx-3 border-t border-sidebar-border" />
+
+        {/* Folder Section */}
+        <FolderSection
+          collapsed={collapsed}
+          selectedFolderId={selectedFolderId}
+          onSelectFolder={handleSelectFolder}
+          projectCounts={projectCounts}
+          totalCount={totalProjectCount}
+        />
 
         {/* Separator */}
         <div className="my-3 mx-3 border-t border-sidebar-border" />
@@ -330,5 +421,6 @@ export function AppSidebar() {
         </Button>
       </div>
     </aside>
+    </DndContext>
   );
 }
