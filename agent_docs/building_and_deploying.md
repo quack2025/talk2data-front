@@ -69,7 +69,7 @@ npm run lint
 2. Lovable detects the push and triggers a build
 3. Lovable runs `npm run build` (reads `VITE_*` from committed `.env`)
 4. Built `dist/` is deployed to CDN
-5. Supabase migrations in `supabase/migrations/` are auto-applied
+5. **Note:** Supabase migrations are NOT auto-applied — the Supabase project is external. Run migrations manually via the Supabase SQL Editor.
 
 ### Critical Lovable Gotchas
 
@@ -79,27 +79,23 @@ npm run lint
 - Removing `.env` from git causes `supabaseUrl is required` crash at runtime
 - Only public keys go in `.env` (anon keys, URLs) — safe to commit
 
-**Supabase migrations auto-deploy:**
-- Files in `supabase/migrations/` are applied when pushed to `main`
+**Supabase migrations require manual execution:**
+- The Supabase project (`icxsetsaxifssotcodul`) is external — Lovable does NOT auto-deploy migrations
+- Run SQL files from `supabase/migrations/` manually via the Supabase SQL Editor
 - Use `gen_random_uuid()` not `uuid_generate_v4()` (PG17 compatibility)
-- No CLI needed — just push the migration SQL file
-
-**Edge functions:**
-- Files in `supabase/functions/<name>/index.ts` auto-deploy on push
-- No Supabase CLI needed
 
 ---
 
 ## Supabase Configuration
 
 ### Project
-- **Supabase project ID:** `icxsetsaxifssotcodul` (Lovable-managed)
+- **Supabase project ID:** `icxsetsaxifssotcodul` (external — NOT Lovable-managed)
 - Auth: Email/password with JWT (ES256)
 - Storage: SPSS file storage (managed by backend)
 
 ### Database Migrations
 
-Migrations live in the frontend repo because Lovable auto-deploys them:
+Migrations live in the frontend repo for version control (run manually via SQL Editor):
 ```
 supabase/migrations/
 ├── 20260219180000_add_segments_table.sql
@@ -107,7 +103,7 @@ supabase/migrations/
 └── ...
 ```
 
-Lovable auto-deploys migrations when pushed to `main` -- no Supabase CLI needed. Just add the `.sql` file and push.
+Migrations must be run manually via the Supabase SQL Editor. Add the `.sql` file to the repo for version control, then execute it in the dashboard.
 
 Create new migrations:
 ```sql
