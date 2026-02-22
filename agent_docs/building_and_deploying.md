@@ -93,7 +93,7 @@ npm run lint
 ## Supabase Configuration
 
 ### Project
-- **Supabase project ID:** `xithhxnnbvxkzxdmdpnn` (Lovable-managed)
+- **Supabase project ID:** `icxsetsaxifssotcodul` (Lovable-managed)
 - Auth: Email/password with JWT (ES256)
 - Storage: SPSS file storage (managed by backend)
 
