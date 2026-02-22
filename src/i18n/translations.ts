@@ -88,6 +88,20 @@ export const translations = {
       collapse: 'Colapsar',
       teams: 'Equipos',
       apiKeys: 'API Keys',
+      usage: 'Uso',
+      billing: 'Facturación',
+    },
+    // Folders
+    folders: {
+      title: 'Carpetas',
+      create: 'Nueva Carpeta',
+      all: 'Todos',
+      unorganized: 'Sin carpeta',
+      namePlaceholder: 'Nombre de la carpeta',
+      color: 'Color',
+      rename: 'Renombrar Carpeta',
+      deleteTitle: '\u00bfEliminar "{name}"?',
+      deleteDescription: 'Los proyectos de esta carpeta no se eliminar\u00e1n, solo se desagrupar\u00e1n.',
     },
     // Dashboard
     dashboard: {
@@ -1143,6 +1157,20 @@ export const translations = {
       collapse: 'Collapse',
       teams: 'Teams',
       apiKeys: 'API Keys',
+      usage: 'Usage',
+      billing: 'Billing',
+    },
+    // Folders
+    folders: {
+      title: 'Folders',
+      create: 'New Folder',
+      all: 'All',
+      unorganized: 'No folder',
+      namePlaceholder: 'Folder name',
+      color: 'Color',
+      rename: 'Rename Folder',
+      deleteTitle: 'Delete "{name}"?',
+      deleteDescription: 'Projects in this folder will not be deleted, just ungrouped.',
     },
     // Dashboard
     dashboard: {

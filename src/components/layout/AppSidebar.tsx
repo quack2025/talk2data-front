@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -14,7 +14,10 @@ import {
   Users,
   Key,
   LogOut,
+  BarChart3,
+  CreditCard,
 } from "lucide-react";
+import { DndContext, DragEndEvent } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +25,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useSummaryNotification } from "@/contexts/SummaryNotificationContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { supabase } from "@/integrations/supabase/client";
+import { FolderSection } from "@/components/folders/FolderSection";
+import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
 export function AppSidebar() {
@@ -29,8 +34,83 @@ export function AppSidebar() {
   const [user, setUser] = useState<User | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const { pendingCount } = useSummaryNotification();
+
+  // Folder state — derived from URL search params on /projects
+  const selectedFolderId = useMemo(() => {
+    if (location.pathname !== "/projects") return null;
+    const folder = searchParams.get("folder");
+    return folder; // null = "All", "unorganized" = no folder, otherwise folder id
+  }, [location.pathname, searchParams]);
+
+  // Project counts for folder badges
+  const [projectCounts, setProjectCounts] = useState<Record<string, number>>({});
+  const [totalProjectCount, setTotalProjectCount] = useState(0);
+
+  useEffect(() => {
+    fetchProjectCounts();
+  }, []);
+
+  const fetchProjectCounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, folder_id");
+
+      if (error) throw error;
+      if (!data) return;
+
+      const counts: Record<string, number> = {};
+      let unorganized = 0;
+      data.forEach((p: any) => {
+        if (p.folder_id) {
+          counts[p.folder_id] = (counts[p.folder_id] ?? 0) + 1;
+        } else {
+          unorganized++;
+        }
+      });
+      counts["unorganized"] = unorganized;
+      setProjectCounts(counts);
+      setTotalProjectCount(data.length);
+    } catch (err) {
+      console.error("Error fetching project counts:", err);
+    }
+  };
+
+  const handleSelectFolder = (folderId: string | null) => {
+    if (folderId === null) {
+      navigate("/projects");
+    } else {
+      navigate(`/projects?folder=${folderId}`);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const projectId = active.data.current?.projectId;
+    const folderId = over.data.current?.folderId ?? null;
+
+    if (!projectId) return;
+
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .update({ folder_id: folderId })
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      toast.success(t.folders?.title ?? "Moved");
+      fetchProjectCounts();
+    } catch (err) {
+      console.error("Error moving project:", err);
+      toast.error("Error");
+    }
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,7 +131,7 @@ export function AppSidebar() {
     ? user.email.substring(0, 2).toUpperCase()
     : "T2";
 
-  const navItems = [
+  const coreItems = [
     {
       title: t.sidebar.projects,
       href: "/projects",
@@ -84,7 +164,26 @@ export function AppSidebar() {
     },
   ];
 
+  const accountItems = [
+    {
+      title: t.sidebar.usage ?? 'Usage',
+      href: "/settings?tab=usage",
+      icon: BarChart3,
+    },
+    {
+      title: t.sidebar.billing ?? 'Billing',
+      href: "/settings?tab=billing",
+      icon: CreditCard,
+    },
+    {
+      title: t.sidebar.settings,
+      href: "/settings",
+      icon: Settings,
+    },
+  ];
+
   return (
+    <DndContext onDragEnd={handleDragEnd}>
     <aside
       className={cn(
         "flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300",
@@ -119,39 +218,94 @@ export function AppSidebar() {
       </Link>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-2">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.href || 
-            (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
-          
-          const linkContent = (
-            <Link
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-smooth",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              )}
-            >
-              <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
-              {!collapsed && <span>{item.title}</span>}
-            </Link>
-          );
+      <nav className="flex-1 p-2 overflow-y-auto">
+        {/* Core Zone */}
+        <div className="space-y-1">
+          {coreItems.map((item) => {
+            const isActive = location.pathname === item.href ||
+              (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
 
-          if (collapsed) {
-            return (
-              <Tooltip key={item.href} delayDuration={0}>
-                <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                <TooltipContent side="right" className="font-medium">
-                  {item.title}
-                </TooltipContent>
-              </Tooltip>
+            const linkContent = (
+              <Link
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-smooth",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-primary"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
+                {!collapsed && <span>{item.title}</span>}
+              </Link>
             );
-          }
 
-          return <div key={item.href}>{linkContent}</div>;
-        })}
+            if (collapsed) {
+              return (
+                <Tooltip key={item.href} delayDuration={0}>
+                  <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                  <TooltipContent side="right" className="font-medium">
+                    {item.title}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
+            return <div key={item.href}>{linkContent}</div>;
+          })}
+        </div>
+
+        {/* Separator */}
+        <div className="my-3 mx-3 border-t border-sidebar-border" />
+
+        {/* Folder Section */}
+        <FolderSection
+          collapsed={collapsed}
+          selectedFolderId={selectedFolderId}
+          onSelectFolder={handleSelectFolder}
+          projectCounts={projectCounts}
+          totalCount={totalProjectCount}
+        />
+
+        {/* Separator */}
+        <div className="my-3 mx-3 border-t border-sidebar-border" />
+
+        {/* Account Zone */}
+        <div className="space-y-1">
+          {accountItems.map((item) => {
+            const isActive = item.href === "/settings"
+              ? location.pathname === "/settings" && !location.search
+              : location.pathname + location.search === item.href;
+
+            const linkContent = (
+              <Link
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-smooth",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-primary"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-sidebar-primary")} />
+                {!collapsed && <span>{item.title}</span>}
+              </Link>
+            );
+
+            if (collapsed) {
+              return (
+                <Tooltip key={item.href} delayDuration={0}>
+                  <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                  <TooltipContent side="right" className="font-medium">
+                    {item.title}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            }
+
+            return <div key={item.href}>{linkContent}</div>;
+          })}
+        </div>
       </nav>
 
       {/* User Section — always at bottom */}
@@ -181,20 +335,22 @@ export function AppSidebar() {
           </div>
         )}
 
-        {/* Settings */}
+        {/* Footer actions (API Docs, Language, Logout) */}
         {collapsed ? (
           <>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <Link
-                  to="/settings"
+                <a
+                  href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/docs`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
                 >
-                  <Settings className="h-5 w-5 shrink-0" />
-                </Link>
+                  <ExternalLink className="h-5 w-5 shrink-0" />
+                </a>
               </TooltipTrigger>
               <TooltipContent side="right" className="font-medium">
-                {t.sidebar.settings}
+                API Docs
               </TooltipContent>
             </Tooltip>
             <Tooltip delayDuration={0}>
@@ -223,13 +379,6 @@ export function AppSidebar() {
           </>
         ) : (
           <>
-            <Link
-              to="/settings"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
-            >
-              <Settings className="h-5 w-5 shrink-0" />
-              <span>{t.sidebar.settings}</span>
-            </Link>
             <a
               href={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/docs`}
               target="_blank"
@@ -272,5 +421,6 @@ export function AppSidebar() {
         </Button>
       </div>
     </aside>
+    </DndContext>
   );
 }

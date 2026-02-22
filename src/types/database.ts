@@ -31,6 +31,7 @@ export interface Project {
   additional_context?: string;
   report_language?: string;
   data_prep_status?: 'pending' | 'confirmed' | 'skipped';
+  folder_id?: string | null;
 }
 
 export interface ProjectUpdateData {

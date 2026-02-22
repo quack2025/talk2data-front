@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, FileSpreadsheet, MessageSquare, CreditCard, Clock, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,12 +8,16 @@ import { AppLayout } from '@/components/layout';
 import { ProjectsTable } from '@/components/projects/ProjectsTable';
 import { ProjectFilters } from '@/components/projects/ProjectFilters';
 import { ProjectCard } from '@/components/projects/ProjectCard';
+import { DraggableProjectCard } from '@/components/dashboard/DraggableProjectCard';
 import { CreateProjectDialog } from '@/components/projects/CreateProjectDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Projects() {
   const { t } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const folderFilter = searchParams.get('folder'); // null = all, "unorganized" = no folder, otherwise folder id
   const { projects, isLoading } = useProjects({
     projectCreated: t.toasts.projectCreated,
     projectCreatedDesc: t.toasts.projectCreatedDesc,
@@ -26,6 +31,29 @@ export default function Projects() {
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [activeTab, setActiveTab] = useState('active');
 
+  // Folder assignments from Supabase (since backend API may not include folder_id yet)
+  const [folderAssignments, setFolderAssignments] = useState<Record<string, string | null>>({});
+
+  useEffect(() => {
+    const fetchFolderAssignments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('id, folder_id');
+        if (error) throw error;
+        if (!data) return;
+        const assignments: Record<string, string | null> = {};
+        data.forEach((p: any) => {
+          assignments[p.id] = p.folder_id;
+        });
+        setFolderAssignments(assignments);
+      } catch (err) {
+        console.error('Error fetching folder assignments:', err);
+      }
+    };
+    fetchFolderAssignments();
+  }, [projects]); // Refetch when projects change
+
   // Compute counts for tabs
   const counts = useMemo(() => {
     const active = projects.filter(
@@ -38,19 +66,33 @@ export default function Projects() {
     return { active, archived, error };
   }, [projects]);
 
-  // Filter projects by tab first, then by search and status filter
+  // Filter projects by folder, tab, search, and status
   const filteredProjects = useMemo(() => {
-    let tabFiltered = projects;
+    // 1. Apply folder filter
+    let folderFiltered = projects;
+    if (folderFilter === 'unorganized') {
+      folderFiltered = projects.filter(
+        (p) => !folderAssignments[p.id]
+      );
+    } else if (folderFilter) {
+      folderFiltered = projects.filter(
+        (p) => folderAssignments[p.id] === folderFilter
+      );
+    }
+
+    // 2. Apply tab filter
+    let tabFiltered = folderFiltered;
     if (activeTab === 'active') {
-      tabFiltered = projects.filter(
+      tabFiltered = folderFiltered.filter(
         (p) => p.status !== 'error' && (p as any).archived !== true
       );
     } else if (activeTab === 'archived') {
-      tabFiltered = projects.filter((p) => (p as any).archived === true);
+      tabFiltered = folderFiltered.filter((p) => (p as any).archived === true);
     } else if (activeTab === 'error') {
-      tabFiltered = projects.filter((p) => p.status === 'error');
+      tabFiltered = folderFiltered.filter((p) => p.status === 'error');
     }
 
+    // 3. Apply search and status filter
     return tabFiltered.filter((project) => {
       const matchesSearch =
         project.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -58,7 +100,7 @@ export default function Projects() {
       const matchesStatus = status === 'all' || project.status === status;
       return matchesSearch && matchesStatus;
     });
-  }, [projects, search, status, activeTab]);
+  }, [projects, search, status, activeTab, folderFilter, folderAssignments]);
 
   // Stat card values
   const activeSpssProjects = projects.filter(
@@ -198,7 +240,9 @@ export default function Projects() {
                   </div>
                 ) : (
                   filteredProjects.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
+                    <DraggableProjectCard key={project.id} projectId={project.id}>
+                      <ProjectCard project={project} />
+                    </DraggableProjectCard>
                   ))
                 )}
               </div>
