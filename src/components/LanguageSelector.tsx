@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { Language } from '@/i18n/translations';
+import type { Language } from '@/i18n/translations';
 
 const languages: { code: Language; label: string; flag: string }[] = [
   { code: 'es', label: 'Español', flag: '🇪🇸' },
@@ -20,7 +20,7 @@ interface LanguageSelectorProps {
 }
 
 export function LanguageSelector({ variant = 'ghost', className }: LanguageSelectorProps) {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const currentLanguage = languages.find((l) => l.code === language);
 
   return (
@@ -28,7 +28,7 @@ export function LanguageSelector({ variant = 'ghost', className }: LanguageSelec
       <DropdownMenuTrigger asChild>
         <Button variant={variant} size="icon" className={className}>
           <Globe className="h-4 w-4" />
-          <span className="sr-only">Select language</span>
+          <span className="sr-only">{t.header?.selectLanguage ?? 'Select language'}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

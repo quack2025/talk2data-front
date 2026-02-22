@@ -75,6 +75,7 @@ export const translations = {
       signOut: 'Cerrar sesión',
       proPlan: 'Plan Profesional',
       user: 'Usuario',
+      selectLanguage: 'Seleccionar idioma',
     },
     // Sidebar
     sidebar: {
@@ -90,6 +91,7 @@ export const translations = {
       apiKeys: 'API Keys',
       usage: 'Uso',
       billing: 'Facturación',
+      apiDocs: 'Documentación API',
     },
     // Folders
     folders: {
@@ -1144,6 +1146,7 @@ export const translations = {
       signOut: 'Sign out',
       proPlan: 'Pro Plan',
       user: 'User',
+      selectLanguage: 'Select language',
     },
     // Sidebar
     sidebar: {
@@ -1159,6 +1162,7 @@ export const translations = {
       apiKeys: 'API Keys',
       usage: 'Usage',
       billing: 'Billing',
+      apiDocs: 'API Docs',
     },
     // Folders
     folders: {

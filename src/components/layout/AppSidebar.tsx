@@ -153,12 +153,12 @@ export function AppSidebar() {
       icon: FileDown,
     },
     {
-      title: t.sidebar.teams || 'Equipos',
+      title: t.sidebar?.teams ?? 'Teams',
       href: "/teams",
       icon: Users,
     },
     {
-      title: t.sidebar.apiKeys || 'API Keys',
+      title: t.sidebar?.apiKeys ?? 'API Keys',
       href: "/api-keys",
       icon: Key,
     },
@@ -210,7 +210,7 @@ export function AppSidebar() {
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right">
-                {t.summary?.generating || 'Generando resumen ejecutivo...'}
+                {t.summary?.generating ?? 'Generating summary...'}
               </TooltipContent>
             </Tooltip>
           )}
@@ -350,7 +350,7 @@ export function AppSidebar() {
                 </a>
               </TooltipTrigger>
               <TooltipContent side="right" className="font-medium">
-                API Docs
+                {t.sidebar?.apiDocs ?? 'API Docs'}
               </TooltipContent>
             </Tooltip>
             <Tooltip delayDuration={0}>
@@ -358,7 +358,7 @@ export function AppSidebar() {
                 <LanguageSelector variant="ghost" className="w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
               </TooltipTrigger>
               <TooltipContent side="right" className="font-medium">
-                Language
+                {t.header?.selectLanguage ?? 'Select language'}
               </TooltipContent>
             </Tooltip>
             <Tooltip delayDuration={0}>
@@ -373,7 +373,7 @@ export function AppSidebar() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right" className="font-medium">
-                {t.header?.signOut || 'Sign out'}
+                {t.header?.signOut ?? 'Sign out'}
               </TooltipContent>
             </Tooltip>
           </>
@@ -386,7 +386,7 @@ export function AppSidebar() {
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-smooth"
             >
               <ExternalLink className="h-5 w-5 shrink-0" />
-              <span>API Docs</span>
+              <span>{t.sidebar?.apiDocs ?? 'API Docs'}</span>
             </a>
             <div className="flex items-center gap-1 px-2">
               <LanguageSelector variant="ghost" className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent" />
@@ -397,7 +397,7 @@ export function AppSidebar() {
                 className="text-sidebar-foreground/70 hover:text-destructive hover:bg-sidebar-accent"
               >
                 <LogOut className="h-4 w-4 mr-2" />
-                <span>{t.header?.signOut || 'Sign out'}</span>
+                <span>{t.header?.signOut ?? 'Sign out'}</span>
               </Button>
             </div>
           </>
@@ -415,7 +415,7 @@ export function AppSidebar() {
           ) : (
             <>
               <ChevronLeft className="h-4 w-4 mr-2" />
-              <span>{t.sidebar.collapse}</span>
+              <span>{t.sidebar?.collapse ?? 'Collapse'}</span>
             </>
           )}
         </Button>
