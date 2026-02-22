@@ -1,15 +1,17 @@
 # CLAUDE.md – Talk2Data Frontend
 
 > Internal development notes for AI-assisted sessions.
-> See also: [agent_docs/architecture.md](agent_docs/architecture.md) | [agent_docs/building_and_deploying.md](agent_docs/building_and_deploying.md) | [agent_docs/code_conventions.md](agent_docs/code_conventions.md)
+> See also: [agent_docs/architecture.md](agent_docs/architecture.md) | [agent_docs/building_and_deploying.md](agent_docs/building_and_deploying.md) | [agent_docs/code_conventions.md](agent_docs/code_conventions.md) | [agent_docs/cross_product_context.md](agent_docs/cross_product_context.md)
 
 ---
 
-## Project: Talk2Data (Survey Genius Pro) — Frontend
+## Project: Talk2Data (Survey Genius Pro) — Genius Labs AI Suite
+
+Part of the **Genius Labs AI Suite** (4 products sharing a unified design system). See [cross_product_context.md](agent_docs/cross_product_context.md) for suite-wide details.
 
 **Frontend:** https://github.com/quack2025/talk2data-front (React on Lovable)
 **Backend:** https://github.com/quack2025/talk2data (FastAPI on Railway)
-**Stack:** React 18 + TypeScript 5.8 + Vite 5.4 + Tailwind CSS 3.4 + shadcn/ui + Recharts
+**Stack:** React 18 + TypeScript 5.8 + Vite 5.4 + Tailwind CSS 3.4 + shadcn/ui + Recharts + @dnd-kit
 **Deployment:** Lovable (auto-deploy from `main` branch)
 **Domain:** talk2data.survey-genius.ai
 
@@ -52,12 +54,14 @@ src/
 │   ├── charts/             # Recharts wrappers (bar, crosstab, compare means, NPS, donut, line)
 │   ├── chat/               # Chat UI (messages, input, sidebar, results, refine actions)
 │   ├── aggfile/            # Generate Tables wizard (4 steps)
+│   ├── folders/            # Folder system (FolderSection, DroppableFolderItem) — drag-and-drop
+│   ├── dashboard/          # DraggableProjectCard — @dnd-kit useDraggable
 │   ├── segments/           # Segment CRUD + selector
 │   ├── data-prep/          # Data prep rules manager
 │   ├── grouping/           # Variable groups (auto-detect + manual)
 │   ├── waves/              # Wave management + comparison
 │   ├── help/               # Help chat dialog
-│   ├── layout/             # AppHeader, navigation
+│   ├── layout/             # AppSidebar (Core Zone + Folders + Account Zone), AppHeader
 │   └── ...
 ├── hooks/                  # Custom hooks (23 hooks)
 │   ├── useChat.ts          # Chat with retry, cache, refine
@@ -70,6 +74,7 @@ src/
 │   ├── explore.ts          # Explore types (ExploreRunRequest, ExploreVariable, etc.)
 │   ├── segments.ts         # Segment types + OPERATOR_LABELS
 │   ├── dataPrep.ts         # Data prep rule types
+│   ├── database.ts         # Database types (Project interface with folder_id)
 │   └── ...
 ├── lib/
 │   ├── api.ts              # ApiClient class (auth, retry, error handling, file upload/download)
@@ -100,6 +105,18 @@ All backend calls go through `ApiClient` in `src/lib/api.ts`:
 - Access via `const { t, language } = useLanguage()`
 - Pattern: `t.sectionName?.key ?? 'Fallback English text'`
 - Always provide fallback after `??` for safety
+- Sections: `sidebar` (sidebar.usage, sidebar.billing), `folders` (folder CRUD labels), and feature-specific sections
+
+### Sidebar Layout (AppSidebar.tsx)
+The sidebar is collapsible (w-64 expanded, w-16 collapsed) and has three zones:
+- **Core Zone** (`coreItems`): Projects, Upload, Chat, Export, Teams, API Keys
+- **Folder Section**: Drag-and-drop project folders with 8-color picker, collapsed mode shows colored dots + tooltips
+- **Account Zone** (`accountItems`): Usage (/settings?tab=usage), Billing (/settings?tab=billing), Settings
+
+The sidebar is wrapped in a `DndContext` (from @dnd-kit/core) to support dragging projects into folders. Folder state is derived from URL `?folder=` search params.
+
+### Design System
+Unified HSL-based CSS variables across all Genius Labs products. Primary color: `#1E40AF` (blue-800). Icons: Lucide React (includes BarChart3 for Usage, CreditCard for Billing).
 
 ### State Management
 - **Server state:** React Query (`@tanstack/react-query`) for backend data
@@ -119,6 +136,7 @@ All backend calls go through `ApiClient` in `src/lib/api.ts`:
 
 | Feature | Page | Components | Hook |
 |---------|------|------------|------|
+| Folders | AppSidebar | FolderSection, DroppableFolderItem, DraggableProjectCard | -- |
 | AI Chat | ProjectChat | ChatMessage, ResultsPanel, RefineActions, ChatInput | useChat |
 | Explore Mode | ProjectExplore | AnalysisPanel, SegmentSelector | useExplore |
 | Generate Tables | (modal) | BannerVariablesStep, AnalysisVariablesStep, ConfigureStep, PreviewStep | useAggfileGenerator |
@@ -157,6 +175,7 @@ Database migrations live in `supabase/migrations/` and auto-deploy when pushed t
 ```
 supabase/migrations/
 ├── 20260219180000_add_segments_table.sql
+├── 20260222_project_folders.sql          # Folder system (user_id scoped)
 └── ...
 ```
 

@@ -108,6 +108,71 @@ export function useFeature(projectId: string) {
 
 ---
 
+## Drag-and-Drop Pattern (@dnd-kit)
+
+The folder system uses @dnd-kit/core for drag-and-drop. The pattern has three parts:
+
+### DndContext (in AppSidebar)
+```typescript
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
+
+function AppSidebar() {
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over) {
+      // active.id = project ID, over.id = folder ID
+      // Update project's folder_id in Supabase
+    }
+  };
+
+  return (
+    <DndContext onDragEnd={handleDragEnd}>
+      <FolderSection />
+      {/* ... */}
+    </DndContext>
+  );
+}
+```
+
+### useDroppable (in DroppableFolderItem)
+```typescript
+import { useDroppable } from '@dnd-kit/core';
+
+function DroppableFolderItem({ folder }: { folder: Folder }) {
+  const { setNodeRef, isOver } = useDroppable({ id: folder.id });
+  return <div ref={setNodeRef} className={isOver ? 'bg-accent' : ''}>{folder.name}</div>;
+}
+```
+
+### useDraggable (in DraggableProjectCard)
+```typescript
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+
+function DraggableProjectCard({ project }: { project: Project }) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: project.id });
+  const style = { transform: CSS.Translate.toString(transform) };
+  return <div ref={setNodeRef} style={style} {...listeners} {...attributes}>{project.name}</div>;
+}
+```
+
+### Collapsed Sidebar Folder Rendering
+When the sidebar is collapsed (w-16), FolderSection renders folders as colored dots with tooltips instead of full rows:
+```typescript
+{isCollapsed ? (
+  <Tooltip>
+    <TooltipTrigger>
+      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: folder.color }} />
+    </TooltipTrigger>
+    <TooltipContent>{folder.name}</TooltipContent>
+  </Tooltip>
+) : (
+  <DroppableFolderItem folder={folder} />
+)}
+```
+
+---
+
 ## Internationalization
 
 ### Adding New Translations
@@ -116,6 +181,14 @@ In `src/i18n/translations.ts`:
 export const translations = {
   es: {
     // ...
+    sidebar: {
+      usage: 'Uso',
+      billing: 'Facturacion',
+      // ...
+    },
+    folders: {
+      // Folder CRUD labels (create, rename, delete, color picker, etc.)
+    },
     segments: {
       title: 'Segmentos',
       createSegment: 'Nuevo Segmento',
@@ -124,6 +197,14 @@ export const translations = {
   },
   en: {
     // ...
+    sidebar: {
+      usage: 'Usage',
+      billing: 'Billing',
+      // ...
+    },
+    folders: {
+      // Folder CRUD labels
+    },
     segments: {
       title: 'Segments',
       createSegment: 'New Segment',

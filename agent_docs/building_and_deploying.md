@@ -103,8 +103,11 @@ Migrations live in the frontend repo because Lovable auto-deploys them:
 ```
 supabase/migrations/
 ├── 20260219180000_add_segments_table.sql
+├── 20260222_project_folders.sql          # Folder system (user_id scoped, gen_random_uuid())
 └── ...
 ```
+
+Lovable auto-deploys migrations when pushed to `main` -- no Supabase CLI needed. Just add the `.sql` file and push.
 
 Create new migrations:
 ```sql
@@ -136,6 +139,8 @@ CREATE INDEX ix_segments_project_id ON segments(project_id);
 | zod | 3.25 | Schema validation |
 | sonner | 1.7 | Toast notifications |
 | lucide-react | 0.462 | Icons |
+| @dnd-kit/core | -- | Drag-and-drop (folder system) |
+| @dnd-kit/utilities | -- | CSS transform helpers for draggable items |
 | framer-motion | 12.34 | Animations |
 
 ### shadcn/ui
