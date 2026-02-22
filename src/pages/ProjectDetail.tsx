@@ -321,7 +321,7 @@ export default function ProjectDetail() {
   if (!project) {
     return (
       <AppLayout>
-        <div className="p-6 lg:p-8 text-center">
+        <div className="p-4 md:p-8 text-center">
           <h1 className="text-2xl font-bold">{t.projectDetail.notFound}</h1>
           <Button variant="link" onClick={() => navigate('/projects')} className="mt-4">
             {t.projectDetail.backToProjects}
@@ -349,7 +349,7 @@ export default function ProjectDetail() {
 
   return (
     <AppLayout>
-      <div className="p-6 lg:p-8 space-y-4">
+      <div className="p-4 md:p-8 space-y-4">
         {/* Breadcrumb */}
         <Breadcrumb>
           <BreadcrumbList>

@@ -8,6 +8,7 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { SummaryNotificationProvider } from "@/contexts/SummaryNotificationContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 // Pages
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -99,11 +100,12 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
+  <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        <Sonner position="bottom-right" />
         <BrowserRouter>
           <SummaryNotificationProvider>
           <Routes>
@@ -266,6 +268,7 @@ const App = () => (
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

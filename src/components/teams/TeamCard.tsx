@@ -41,6 +41,7 @@ export function TeamCard({ team }: TeamCardProps) {
   const { t } = useLanguage();
   const [showInvite, setShowInvite] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [removeMemberUserId, setRemoveMemberUserId] = useState<string | null>(null);
   const deleteTeam = useDeleteTeam();
   const removeMember = useRemoveMember();
   const updateRole = useUpdateMemberRole();
@@ -196,7 +197,7 @@ export function TeamCard({ team }: TeamCardProps) {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => handleRemoveMember(member.user_id)}
+                        onClick={() => setRemoveMemberUserId(member.user_id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -226,6 +227,29 @@ export function TeamCard({ team }: TeamCardProps) {
         teamId={team.id}
         teamName={team.name}
       />
+
+      <AlertDialog open={!!removeMemberUserId} onOpenChange={(open) => !open && setRemoveMemberUserId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.teams?.confirmRemoveMember || '¿Remover miembro?'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.teams?.confirmRemoveMemberDesc || 'El miembro perderá acceso al equipo. Puede ser re-invitado posteriormente.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common?.cancel || 'Cancelar'}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (removeMemberUserId) handleRemoveMember(removeMemberUserId);
+                setRemoveMemberUserId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t.teams?.removeMember || 'Remover'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>

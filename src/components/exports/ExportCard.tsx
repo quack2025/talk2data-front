@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +10,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { FileText, Download, Trash2, MoreVertical, FileSpreadsheet, Presentation, MessageSquare, Table2 } from 'lucide-react';
 import type { Export } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -28,6 +39,7 @@ interface ExportCardProps {
 
 export function ExportCard({ export_, onDelete, onDownload }: ExportCardProps) {
   const { t, language } = useLanguage();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const dateLocale = language === 'es' ? es : enUS;
   const formatInfo = formatConfig[export_.export_type] ?? { label: export_.export_type, color: 'text-muted-foreground', icon: FileText };
   const FormatIcon = formatInfo.icon;
@@ -35,6 +47,7 @@ export function ExportCard({ export_, onDelete, onDownload }: ExportCardProps) {
   const isConversation = !!export_.conversation_id;
 
   return (
+    <>
     <Card className="group hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
@@ -81,7 +94,7 @@ export function ExportCard({ export_, onDelete, onDownload }: ExportCardProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
-                    onClick={() => onDelete(export_.id)}
+                    onClick={() => setShowDeleteConfirm(true)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
                     {t.common.delete}
@@ -121,5 +134,26 @@ export function ExportCard({ export_, onDelete, onDownload }: ExportCardProps) {
         </div>
       </CardContent>
     </Card>
+
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t.common?.confirmDelete ?? '¿Eliminar este export?'}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t.common?.confirmDeleteDesc ?? 'Esta acción no se puede deshacer.'}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t.common?.cancel ?? 'Cancelar'}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => onDelete(export_.id)}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {t.common?.delete ?? 'Eliminar'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

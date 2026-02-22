@@ -15,6 +15,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Save,
   Trash2,
   FolderOpen,
@@ -53,6 +63,7 @@ export function TemplatesPanel({
   const [saveName, setSaveName] = useState('');
   const [saveDescription, setSaveDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchTemplates = useCallback(async () => {
     setIsLoading(true);
@@ -180,7 +191,7 @@ export function TemplatesPanel({
                       variant="ghost"
                       size="icon"
                       className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleDelete(template.id)}
+                      onClick={() => setConfirmDeleteId(template.id)}
                       title="Eliminar"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -192,6 +203,30 @@ export function TemplatesPanel({
           </div>
         </ScrollArea>
       )}
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta plantilla?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDeleteId) handleDelete(confirmDeleteId);
+                setConfirmDeleteId(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t.common.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Save dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>

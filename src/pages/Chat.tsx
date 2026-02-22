@@ -32,7 +32,7 @@ export default function Chat() {
   // Show selector if we have multiple projects and no last project
   return (
     <AppLayout>
-      <div className="container mx-auto py-8 px-4">
+      <div className="p-4 md:p-8">
         <ProjectSelector
           redirectPath="chat"
           title={t.sidebar.chat}

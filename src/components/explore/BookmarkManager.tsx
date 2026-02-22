@@ -1,6 +1,17 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Trash2, BookmarkIcon } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { ExploreBookmark } from '@/types/explore';
@@ -20,6 +31,7 @@ export function BookmarkManager({
 }: BookmarkManagerProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === 'es' ? es : enUS;
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   if (bookmarks.length === 0) {
     return (
@@ -36,6 +48,7 @@ export function BookmarkManager({
   }
 
   return (
+    <>
     <ScrollArea className="h-full">
       <div className="p-2 space-y-1.5">
         {bookmarks.map((b) => (
@@ -52,7 +65,7 @@ export function BookmarkManager({
                 className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete(b.id);
+                  setConfirmDeleteId(b.id);
                 }}
               >
                 <Trash2 className="h-3 w-3 text-destructive" />
@@ -73,5 +86,29 @@ export function BookmarkManager({
         ))}
       </div>
     </ScrollArea>
+
+    <AlertDialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t.explore?.confirmDeleteBookmark ?? '¿Eliminar este bookmark?'}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t.explore?.confirmDeleteBookmarkDesc ?? 'Esta acción no se puede deshacer.'}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t.common?.cancel ?? 'Cancelar'}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (confirmDeleteId) onDelete(confirmDeleteId);
+              setConfirmDeleteId(null);
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {t.common?.delete ?? 'Eliminar'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

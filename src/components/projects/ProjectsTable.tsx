@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +40,34 @@ interface ProjectsTableProps {
   isLoading: boolean;
 }
 
+// Status badge configuration per design system section 6.3
+const getStatusBadge = (
+  status: string,
+  t: any
+): { label: string; className: string } => {
+  const config: Record<string, { label: string; className: string }> = {
+    ready: {
+      label: t.projects.statusActive ?? 'Active',
+      className: 'bg-primary/10 text-primary',
+    },
+    processing: {
+      label: t.projects.statusProcessing ?? 'Processing',
+      className: 'bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]',
+    },
+    error: {
+      label: t.projects.statusError ?? 'Error',
+      className: 'bg-destructive/10 text-destructive',
+    },
+  };
+
+  return (
+    config[status] ?? {
+      label: status,
+      className: 'bg-muted text-muted-foreground',
+    }
+  );
+};
+
 export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
   const navigate = useNavigate();
   const { deleteProject } = useProjects();
@@ -47,12 +76,6 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
   const { t, language } = useLanguage();
 
   const dateLocale = language === 'es' ? es : enUS;
-
-  const statusConfig = {
-    processing: { label: t.projects.processing, variant: 'secondary' as const },
-    ready: { label: t.projects.completed, variant: 'default' as const },
-    error: { label: 'Error', variant: 'destructive' as const },
-  };
 
   const handleDelete = async () => {
     if (selectedProject) {
@@ -64,11 +87,10 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border bg-card">
-        <div className="p-8 text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="mt-4 text-sm text-muted-foreground">{t.projects.loadingProjects}</p>
-        </div>
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-lg" />
+        ))}
       </div>
     );
   }
@@ -95,75 +117,85 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
             <TableRow>
               <TableHead>{t.projects.name}</TableHead>
               <TableHead>{t.projects.status}</TableHead>
-              <TableHead className="text-center">Variables</TableHead>
-              <TableHead className="text-center">Casos</TableHead>
-              <TableHead>{t.common.create === 'Crear' ? 'Creado' : 'Created'}</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="text-center">{t.projects.spssFiles ?? 'SPSS Files'}</TableHead>
+              <TableHead>{t.projects.lastQuery ?? 'Last Query'}</TableHead>
+              <TableHead className="w-[50px]">{t.projects.actions ?? ''}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects.map((project) => (
-              <TableRow
-                key={project.id}
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => navigate(`/projects/${project.id}`)}
-              >
-                <TableCell>
-                  <div>
-                    <p className="font-medium">{project.name}</p>
-                    {project.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-1">
-                        {project.description}
-                      </p>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusConfig[project.status]?.variant ?? 'secondary'}>
-                    {statusConfig[project.status]?.label ?? project.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-center">{project.n_variables ?? '-'}</TableCell>
-                <TableCell className="text-center">{project.n_cases ?? '-'}</TableCell>
-                <TableCell>
-                  {format(new Date(project.created_at), "d MMM yyyy, HH:mm", {
-                    locale: dateLocale,
-                  })}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/projects/${project.id}/chat`);
-                        }}
-                      >
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        {t.projects.openChat}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedProject(project);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        {t.common.delete}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {projects.map((project) => {
+              const badge = getStatusBadge(project.status, t);
+
+              return (
+                <TableRow
+                  key={project.id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                >
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{project.name}</p>
+                      {project.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-1">
+                          {project.description}
+                        </p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {/* Status badge with whitespace-nowrap per section 6.3 */}
+                    <Badge className={`whitespace-nowrap ${badge.className}`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5" />
+                      {badge.label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {project.n_variables !== undefined && project.n_variables !== null
+                      ? '1'
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {project.created_at
+                      ? format(new Date(project.created_at), 'd MMM yyyy', {
+                          locale: dateLocale,
+                        })
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/projects/${project.id}/chat`);
+                          }}
+                        >
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          {t.projects.openChat}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProject(project);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          {t.common.delete}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

@@ -17,10 +17,20 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const { t, language } = useLanguage();
   const dateLocale = language === 'es' ? es : enUS;
 
-  const statusConfig = {
-    processing: { label: t.projects.statusProcessing, variant: 'secondary' as const },
-    ready: { label: t.projects.statusReady, variant: 'default' as const },
-    error: { label: t.projects.statusError, variant: 'destructive' as const },
+  // Status badge configuration per design system section 6.3
+  const statusConfig: Record<string, { label: string; className: string }> = {
+    ready: {
+      label: t.projects.statusActive ?? 'Active',
+      className: 'bg-primary/10 text-primary',
+    },
+    processing: {
+      label: t.projects.statusProcessing ?? 'Processing',
+      className: 'bg-[hsl(var(--warning))]/10 text-[hsl(var(--warning))]',
+    },
+    error: {
+      label: t.projects.statusError ?? 'Error',
+      className: 'bg-destructive/10 text-destructive',
+    },
   };
 
   return (
@@ -38,7 +48,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
               <h3 className="font-semibold line-clamp-1 group-hover:text-primary transition-colors">
                 {project.name}
               </h3>
-              <Badge variant={statusConfig[project.status]?.variant ?? 'secondary'} className="mt-1">
+              <Badge className={`whitespace-nowrap mt-1 ${statusConfig[project.status]?.className ?? 'bg-muted text-muted-foreground'}`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5" />
                 {statusConfig[project.status]?.label ?? project.status}
               </Badge>
             </div>
