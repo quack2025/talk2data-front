@@ -96,6 +96,7 @@ import { ReportGeneratorDialog } from '@/components/reports';
 import { useChat } from '@/hooks/useChat';
 import { VariableGroupsManager } from '@/components/grouping';
 import { DataPrepManager } from '@/components/data-prep';
+import { VariableMetadataManager } from '@/components/dataprep/VariableMetadataManager';
 import { SegmentManager } from '@/components/segments';
 import { WaveManager } from '@/components/waves';
 import { useProjectVariables } from '@/hooks/useProjectVariables';
@@ -664,6 +665,7 @@ export default function ProjectDetail() {
           <TabsContent value="dataprep" className="space-y-6 mt-0">
             {hasReadyFiles && variableNames.length > 0 ? (
               <>
+                <VariableMetadataManager projectId={projectId!} />
                 <DataPrepManager
                   projectId={projectId!}
                   availableVariables={variableNames}
