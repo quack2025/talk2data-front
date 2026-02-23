@@ -1067,7 +1067,10 @@ export default function ProjectDetail() {
                           </p>
                         </div>
                         <Badge variant="outline">
-                          {file.file_type === 'spss_data' ? 'SPSS' : 'Cuestionario'}
+                          {file.file_type === 'spss_data' ? 'SPSS'
+                            : file.file_type === 'csv_data' ? 'CSV'
+                            : file.file_type === 'excel_data' ? 'Excel'
+                            : t.projectDetail?.questionnaire ?? 'Cuestionario'}
                         </Badge>
                       </div>
                     ))}
