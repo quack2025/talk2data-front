@@ -1,13 +1,15 @@
 import { useState, useCallback } from 'react';
-import { Check, Pencil, Upload, Tag, X, Search } from 'lucide-react';
+import { Check, Pencil, Upload, Tag, X, Search, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ToastAction } from '@/components/ui/toast';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useVariableMetadata, type VariableOverride } from '@/hooks/useVariableMetadata';
+import { useRegenerateSummary } from '@/hooks/useExecutiveSummary';
 import { ValueLabelsDialog } from './ValueLabelsDialog';
 import { CodebookImportDialog } from './CodebookImportDialog';
 
@@ -27,12 +29,30 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
     updateVariable,
     importCodebook,
   } = useVariableMetadata(projectId);
+  const regenerateSummary = useRegenerateSummary(projectId);
 
   const [editingVar, setEditingVar] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [valueLabelsVar, setValueLabelsVar] = useState<VariableOverride | null>(null);
   const [showCodebook, setShowCodebook] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const showRegeneratePrompt = useCallback(() => {
+    toast({
+      title: meta?.regeneratePrompt || 'Labels updated',
+      description: meta?.regeneratePromptDesc || 'Regenerate the executive summary to reflect the new labels.',
+      action: (
+        <ToastAction
+          altText={meta?.regenerateButton || 'Regenerate'}
+          onClick={() => regenerateSummary.mutate()}
+        >
+          <RefreshCw className="h-3.5 w-3.5 mr-1" />
+          {meta?.regenerateButton || 'Regenerate'}
+        </ToastAction>
+      ),
+      duration: 8000,
+    });
+  }, [toast, meta, regenerateSummary]);
 
   const startEditing = useCallback((v: VariableOverride) => {
     setEditingVar(v.name);
@@ -52,13 +72,13 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
         varName,
         override: { label: trimmed },
       });
-      toast({ title: meta?.saved || 'Label saved' });
+      showRegeneratePrompt();
     } catch {
       toast({ title: meta?.saveError || 'Error saving label', variant: 'destructive' });
     }
     setEditingVar(null);
     setEditValue('');
-  }, [editValue, updateVariable, toast, meta]);
+  }, [editValue, updateVariable, toast, meta, showRegeneratePrompt]);
 
   const saveValueLabels = useCallback(async (labels: Record<string, string>) => {
     if (!valueLabelsVar) return;
@@ -70,21 +90,18 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
           value_labels: Object.keys(labels).length > 0 ? labels : undefined,
         },
       });
-      toast({ title: meta?.saved || 'Value labels saved' });
+      showRegeneratePrompt();
     } catch {
       toast({ title: meta?.saveError || 'Error saving', variant: 'destructive' });
     }
     setValueLabelsVar(null);
-  }, [valueLabelsVar, updateVariable, toast, meta]);
+  }, [valueLabelsVar, updateVariable, toast, meta, showRegeneratePrompt]);
 
   const handleImportCodebook = useCallback(async (file: File) => {
     try {
       const result = await importCodebook.mutateAsync(file);
-      toast({
-        title: meta?.codebookImported?.replace('{n}', String(result.imported_count))
-          || `${result.imported_count} variables imported`,
-      });
       setShowCodebook(false);
+      showRegeneratePrompt();
     } catch (err) {
       toast({
         title: meta?.importError || 'Import failed',
@@ -92,7 +109,7 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
         variant: 'destructive',
       });
     }
-  }, [importCodebook, toast, meta]);
+  }, [importCodebook, toast, meta, showRegeneratePrompt]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent, varName: string) => {
     if (e.key === 'Enter') saveLabel(varName);

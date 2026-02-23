@@ -775,6 +775,9 @@ export const translations = {
         valuesLabel: 'etiquetas',
         searchPlaceholder: 'Buscar variables...',
         noResults: 'No se encontraron variables',
+        regeneratePrompt: 'Etiquetas actualizadas',
+        regeneratePromptDesc: 'Regenera el resumen ejecutivo para reflejar las nuevas etiquetas.',
+        regenerateButton: 'Regenerar',
       },
       // Data readiness gate
       confirmReady: 'Confirmar datos listos',
@@ -1877,6 +1880,9 @@ export const translations = {
         valuesLabel: 'labels',
         searchPlaceholder: 'Search variables...',
         noResults: 'No matching variables',
+        regeneratePrompt: 'Labels updated',
+        regeneratePromptDesc: 'Regenerate the executive summary to reflect the new labels.',
+        regenerateButton: 'Regenerate',
       },
       // Data readiness gate
       confirmReady: 'Confirm data ready',

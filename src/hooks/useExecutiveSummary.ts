@@ -42,7 +42,7 @@ export function useRegenerateSummary(projectId: string) {
 
   return useMutation({
     mutationFn: async () => {
-      return api.post<ExecutiveSummary>(`/analysis/projects/${projectId}/summary`);
+      return api.post<ExecutiveSummary>(`/analysis/projects/${projectId}/summary`, { force: true });
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['executive-summary', projectId], data);

@@ -665,7 +665,9 @@ export default function ProjectDetail() {
           <TabsContent value="dataprep" className="space-y-6 mt-0">
             {hasReadyFiles && variableNames.length > 0 ? (
               <>
-                <VariableMetadataManager projectId={projectId!} />
+                {files?.some(f => f.file_type === 'csv_data' || f.file_type === 'excel_data') && (
+                  <VariableMetadataManager projectId={projectId!} />
+                )}
                 <DataPrepManager
                   projectId={projectId!}
                   availableVariables={variableNames}
