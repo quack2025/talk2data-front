@@ -95,10 +95,10 @@ export function FolderSection({
 
   const fetchFolders = async () => {
     try {
-      const { data, error } = await supabase
-        .from("project_folders")
+      const { data, error } = await (supabase
+        .from("project_folders" as any)
         .select("*")
-        .order("sort_order", { ascending: true });
+        .order("sort_order", { ascending: true }) as any);
 
       if (error) throw error;
       setFolders((data as ProjectFolder[]) ?? []);
@@ -116,7 +116,7 @@ export function FolderSection({
       const { data: session } = await supabase.auth.getSession();
       if (!session.session?.user) return;
 
-      const { error } = await supabase.from("project_folders").insert({
+      const { error } = await (supabase.from("project_folders" as any) as any).insert({
         user_id: session.session.user.id,
         name: folderName.trim(),
         color: folderColor,
@@ -140,8 +140,8 @@ export function FolderSection({
     if (!selectedFolder || !folderName.trim()) return;
 
     try {
-      const { error } = await supabase
-        .from("project_folders")
+      const { error } = await (supabase
+        .from("project_folders" as any) as any)
         .update({ name: folderName.trim(), color: folderColor })
         .eq("id", selectedFolder.id);
 
@@ -162,8 +162,8 @@ export function FolderSection({
     if (!selectedFolder) return;
 
     try {
-      const { error } = await supabase
-        .from("project_folders")
+      const { error } = await (supabase
+        .from("project_folders" as any) as any)
         .delete()
         .eq("id", selectedFolder.id);
 
