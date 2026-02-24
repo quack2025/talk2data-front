@@ -52,7 +52,7 @@ export function useRegenerateSummary(projectId: string) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.message || 'Error al regenerar el resumen',
+        description: error.message || 'Failed to regenerate summary',
       });
     },
   });

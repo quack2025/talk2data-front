@@ -200,6 +200,7 @@ export const translations = {
       tabFiles: 'Archivos',
       goToDataPrep: 'Ir a preparación',
       dataPrepBanner: 'Revisa y confirma la preparación de datos antes de iniciar el análisis',
+      cases: 'casos',
     },
     // Project Upload
     projectUpload: {
@@ -933,6 +934,8 @@ export const translations = {
       exportStarted: 'Descarga iniciada',
       exportError: 'Error al exportar',
       error: 'Error',
+      browse: 'Explorar',
+      analyze: 'Analizar',
     },
     // Share Links
     share: {
@@ -1305,6 +1308,7 @@ export const translations = {
       tabFiles: 'Files',
       goToDataPrep: 'Go to data prep',
       dataPrepBanner: 'Review and confirm data preparation before starting analysis',
+      cases: 'cases',
     },
     // Project Upload
     projectUpload: {
@@ -2038,6 +2042,8 @@ export const translations = {
       exportStarted: 'Download started',
       exportError: 'Export error',
       error: 'Error',
+      browse: 'Browse',
+      analyze: 'Analyze',
     },
     // Share Links
     share: {

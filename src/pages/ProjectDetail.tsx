@@ -391,7 +391,7 @@ export default function ProjectDetail() {
               {project.n_cases !== undefined && (
                 <span className="flex items-center gap-1">
                   <Database className="h-3.5 w-3.5" />
-                  {project.n_cases} casos
+                  {project.n_cases} {t.projectDetail?.cases || 'cases'}
                 </span>
               )}
             </div>
@@ -757,14 +757,14 @@ export default function ProjectDetail() {
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-2 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground flex items-center gap-2"
                     >
                       <Eye className="h-4 w-4" />
-                      Browse
+                      {t.explore?.browse || 'Browse'}
                     </TabsTrigger>
                     <TabsTrigger
                       value="analysis"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3 pt-2 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground flex items-center gap-2"
                     >
                       <BarChart3 className="h-4 w-4" />
-                      Analyze
+                      {t.explore?.analyze || 'Analyze'}
                     </TabsTrigger>
                   </TabsList>
                 </div>

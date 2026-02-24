@@ -99,7 +99,7 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
 
   const handleImportCodebook = useCallback(async (file: File) => {
     try {
-      const result = await importCodebook.mutateAsync(file);
+      await importCodebook.mutateAsync(file);
       setShowCodebook(false);
       showRegeneratePrompt();
     } catch (err) {
