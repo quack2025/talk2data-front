@@ -866,6 +866,7 @@ export const translations = {
         exportBoth: 'Etiquetas + Valores',
         apply: 'Aplicar',
         cancel: 'Cancelar',
+        allGroups: 'Todos los grupos',
       },
     },
     // Landing page
@@ -2017,6 +2018,7 @@ export const translations = {
         exportBoth: 'Labels + Values',
         apply: 'Apply',
         cancel: 'Cancel',
+        allGroups: 'All groups',
       },
     },
     // Landing page

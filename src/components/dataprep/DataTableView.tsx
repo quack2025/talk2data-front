@@ -13,7 +13,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
-import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search, Download, Tags, EyeOff, FileSpreadsheet } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, BarChart3, Columns3, Check, Search, Download, Tags, EyeOff, FileSpreadsheet, FolderOpen } from 'lucide-react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import {
@@ -24,10 +24,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDataTable } from '@/hooks/useDataTable';
 import { ColumnDistributionSheet } from './ColumnDistributionSheet';
 import type { ColumnMeta } from '@/hooks/useDataTable';
+import type { ExploreVariableGroup } from '@/types/explore';
 
 export interface RulePrefill {
   rule_type: string;
@@ -36,12 +44,13 @@ export interface RulePrefill {
 
 interface DataTableViewProps {
   projectId: string;
+  groups?: ExploreVariableGroup[];
   onCreateRule: (prefill: RulePrefill) => void;
 }
 
 const LIMIT = 50;
 
-export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
+export function DataTableView({ projectId, groups = [], onCreateRule }: DataTableViewProps) {
   const { t } = useLanguage();
   const dt = (t.dataPrep as Record<string, unknown>).dataTab as Record<string, string> | undefined;
 
@@ -65,9 +74,17 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [showLabels, setShowLabels] = useState(true);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [groupFilter, setGroupFilter] = useState<string>('all');
 
   const allColumns = tableData?.columns ?? [];
-  const visibleColumns = allColumns.filter(c => !hiddenCols.has(c.name));
+  const visibleColumns = allColumns.filter(c => {
+    if (hiddenCols.has(c.name)) return false;
+    if (groupFilter !== 'all') {
+      const group = groups.find((g) => g.name === groupFilter);
+      if (group && !group.variables.includes(c.name)) return false;
+    }
+    return true;
+  });
   const filteredColumns = allColumns.filter(col => {
     const q = colSearch.toLowerCase();
     return col.name.toLowerCase().includes(q) || (col.label && col.label.toLowerCase().includes(q));
@@ -199,6 +216,23 @@ export function DataTableView({ projectId, onCreateRule }: DataTableViewProps) {
             <Badge variant="outline" className="text-xs">
               {totalRows.toLocaleString()} {dt?.rows || 'rows'} × {totalCols} {dt?.columns || 'columns'}
             </Badge>
+          )}
+          {/* Group filter */}
+          {groups.length > 0 && (
+            <Select value={groupFilter} onValueChange={setGroupFilter}>
+              <SelectTrigger className="h-7 w-auto min-w-[140px] text-xs gap-1.5">
+                <FolderOpen className="h-3.5 w-3.5 shrink-0" />
+                <SelectValue placeholder={dt?.allGroups || 'All groups'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{dt?.allGroups || 'All groups'}</SelectItem>
+                {groups.map((g) => (
+                  <SelectItem key={g.name} value={g.name}>
+                    {g.name} ({g.variables.length})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           {/* Column selector */}
           {allColumns.length > 0 && (

@@ -784,6 +784,7 @@ export default function ProjectDetail() {
                 <TabsContent value="table" className="mt-0 h-[calc(100vh-290px)] overflow-hidden">
                   <DataTableView
                     projectId={projectId!}
+                    groups={explore.variables?.groups}
                     onCreateRule={handleCreateRuleFromExplorer}
                   />
                 </TabsContent>
