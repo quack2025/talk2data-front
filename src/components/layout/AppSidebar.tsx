@@ -97,8 +97,8 @@ export function AppSidebar() {
     if (!projectId) return;
 
     try {
-      const { error } = await supabase
-        .from("projects")
+      const { error } = await (supabase
+        .from("projects") as any)
         .update({ folder_id: folderId })
         .eq("id", projectId);
 

@@ -208,11 +208,45 @@ export type Database = {
           },
         ]
       }
+      project_folders: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          icon: string | null
+          id: string
+          name: string
+          sort_order: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          sort_order?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       projects: {
         Row: {
           created_at: string
           description: string | null
           file_count: number
+          folder_id: string | null
           id: string
           last_activity: string | null
           name: string
@@ -225,6 +259,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           file_count?: number
+          folder_id?: string | null
           id?: string
           last_activity?: string | null
           name: string
@@ -237,6 +272,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           file_count?: number
+          folder_id?: string | null
           id?: string
           last_activity?: string | null
           name?: string
@@ -246,6 +282,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "project_folders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_team_id_fkey"
             columns: ["team_id"]

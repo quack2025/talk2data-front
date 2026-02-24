@@ -31,12 +31,12 @@ export default function ProjectChat() {
   useEffect(() => {
     if (dataPrepStatus === 'pending') {
       // If project has data and is ready, auto-skip the gate
-      if (project?.status === 'ready') {
+      if ((project?.status as string) === 'ready') {
         skipDataPrep();
         return;
       }
       // Only redirect if project is loaded and NOT ready
-      if (project && project.status !== 'ready') {
+      if (project && (project.status as string) !== 'ready') {
         toast.info(t.dataPrep?.gateTooltip || 'Confirm data preparation first');
         navigate(`/projects/${projectId}`, { replace: true });
       }

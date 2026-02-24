@@ -6,6 +6,7 @@ export const translations = {
     common: {
       loading: 'Cargando...',
       save: 'Guardar',
+      saving: 'Guardando...',
       cancel: 'Cancelar',
       delete: 'Eliminar',
       edit: 'Editar',
@@ -19,6 +20,8 @@ export const translations = {
       confirm: 'Confirmar',
       yes: 'Sí',
       no: 'No',
+      confirmDelete: '¿Eliminar este elemento?',
+      confirmDeleteDesc: 'Esta acción no se puede deshacer.',
     },
     // Auth page
     auth: {
@@ -201,6 +204,7 @@ export const translations = {
       goToDataPrep: 'Ir a preparación',
       dataPrepBanner: 'Revisa y confirma la preparación de datos antes de iniciar el análisis',
       cases: 'casos',
+      questionnaire: 'Cuestionario',
     },
     // Project Upload
     projectUpload: {
@@ -699,6 +703,9 @@ export const translations = {
       removeFromTeam: 'Quitar del equipo',
       selectTeam: 'Seleccionar equipo',
       noTeamAssigned: 'Sin equipo asignado',
+      confirmRemoveMember: '¿Remover miembro?',
+      confirmRemoveMemberDesc: 'El miembro perderá acceso al equipo. Puede ser re-invitado posteriormente.',
+      removeMember: 'Remover',
     },
     // Data Preparation
     dataPrep: {
@@ -966,6 +973,8 @@ export const translations = {
       error: 'Error',
       browse: 'Explorar',
       analyze: 'Analizar',
+      confirmDeleteBookmark: '¿Eliminar este bookmark?',
+      confirmDeleteBookmarkDesc: 'Esta acción no se puede deshacer.',
     },
     // Share Links
     share: {
@@ -993,6 +1002,8 @@ export const translations = {
       createError: 'No se pudo crear el enlace.',
       deleteError: 'No se pudo eliminar el enlace.',
       copyError: 'No se pudo copiar el enlace.',
+      confirmDeleteTitle: '¿Eliminar este enlace?',
+      confirmDeleteDesc: 'Esta acción no se puede deshacer. El enlace dejará de funcionar.',
     },
     // API Keys
     apiKeys: {
@@ -1108,6 +1119,8 @@ export const translations = {
       templateDeleted: 'Plantilla eliminada',
       manageTemplates: 'Gestionar plantillas',
       useTemplate: 'Usar plantilla',
+      confirmDeleteTemplate: '¿Eliminar esta plantilla?',
+      confirmDeleteTemplateDesc: 'Esta acción no se puede deshacer.',
     },
     segments: {
       title: 'Segmentos',
@@ -1144,6 +1157,7 @@ export const translations = {
     common: {
       loading: 'Loading...',
       save: 'Save',
+      saving: 'Saving...',
       cancel: 'Cancel',
       delete: 'Delete',
       edit: 'Edit',
@@ -1157,6 +1171,8 @@ export const translations = {
       confirm: 'Confirm',
       yes: 'Yes',
       no: 'No',
+      confirmDelete: 'Delete this item?',
+      confirmDeleteDesc: 'This action cannot be undone.',
     },
     // Auth page
     auth: {
@@ -1339,6 +1355,7 @@ export const translations = {
       goToDataPrep: 'Go to data prep',
       dataPrepBanner: 'Review and confirm data preparation before starting analysis',
       cases: 'cases',
+      questionnaire: 'Questionnaire',
     },
     // Project Upload
     projectUpload: {
@@ -1837,6 +1854,9 @@ export const translations = {
       removeFromTeam: 'Remove from team',
       selectTeam: 'Select team',
       noTeamAssigned: 'No team assigned',
+      confirmRemoveMember: 'Remove member?',
+      confirmRemoveMemberDesc: 'The member will lose access to the team. They can be re-invited later.',
+      removeMember: 'Remove',
     },
     // Data Preparation
     dataPrep: {
@@ -2104,6 +2124,8 @@ export const translations = {
       error: 'Error',
       browse: 'Browse',
       analyze: 'Analyze',
+      confirmDeleteBookmark: 'Delete this bookmark?',
+      confirmDeleteBookmarkDesc: 'This action cannot be undone.',
     },
     // Share Links
     share: {
@@ -2131,6 +2153,8 @@ export const translations = {
       createError: 'Could not create the link.',
       deleteError: 'Could not delete the link.',
       copyError: 'Could not copy the link.',
+      confirmDeleteTitle: 'Delete this link?',
+      confirmDeleteDesc: 'This action cannot be undone. The link will stop working.',
     },
     // API Keys
     apiKeys: {
@@ -2246,6 +2270,8 @@ export const translations = {
       templateDeleted: 'Template deleted',
       manageTemplates: 'Manage templates',
       useTemplate: 'Use template',
+      confirmDeleteTemplate: 'Delete this template?',
+      confirmDeleteTemplateDesc: 'This action cannot be undone.',
     },
     segments: {
       title: 'Segments',
