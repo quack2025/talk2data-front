@@ -149,11 +149,11 @@ export const MAX_BANNER_VARIABLES = 20;
 export const DEFAULT_DECIMAL_PLACES = 1;
 
 export const ANALYSIS_TYPE_LABELS: Record<AnalysisTypeOption, string> = {
-  frequency: 'Frecuencias',
-  crosstab: 'Tablas cruzadas',
-  mean: 'Media',
-  compare_means: 'Comparar medias',
+  frequency: 'Frequencies',
+  crosstab: 'Cross tables',
+  mean: 'Mean',
+  compare_means: 'Compare means',
   nps: 'NPS',
   net_score: 'Net Score',
-  crosstab_with_significance: 'Crosstab con significancia',
+  crosstab_with_significance: 'Crosstab with significance',
 };
