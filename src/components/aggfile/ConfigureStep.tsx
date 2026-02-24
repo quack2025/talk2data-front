@@ -29,6 +29,7 @@ interface ConfigureStepProps {
     includeBases: boolean;
     includeSignificance: boolean;
     significanceLevel: number;
+    minBaseSize: number | null;
   };
   title: string;
   currentConfig?: GenerateTablesConfig;
@@ -38,6 +39,7 @@ interface ConfigureStepProps {
   onSetIncludeBases: (include: boolean) => void;
   onSetIncludeSignificance: (include: boolean) => void;
   onSetSignificanceLevel: (level: number) => void;
+  onSetMinBaseSize: (size: number | null) => void;
   onSetTitle: (title: string) => void;
   onLoadTemplate?: (config: GenerateTablesConfig) => void;
   onBack: () => void;
@@ -57,6 +59,7 @@ export function ConfigureStep({
   onSetIncludeBases,
   onSetIncludeSignificance,
   onSetSignificanceLevel,
+  onSetMinBaseSize,
   onSetTitle,
   onLoadTemplate,
   onBack,
@@ -237,6 +240,29 @@ export function ConfigureStep({
                 </RadioGroup>
               </div>
             )}
+
+            {/* Minimum base size */}
+            <div className="space-y-2">
+              <Label htmlFor="min-base-size">
+                {t.aggfile?.minBaseSize || 'Minimum base size'}
+              </Label>
+              <Input
+                id="min-base-size"
+                type="number"
+                min={1}
+                max={100}
+                value={format.minBaseSize ?? ''}
+                onChange={(e) =>
+                  onSetMinBaseSize(e.target.value ? Number(e.target.value) : null)
+                }
+                placeholder="30"
+                className="w-32"
+              />
+              <p className="text-xs text-muted-foreground">
+                {t.aggfile?.minBaseSizeHelp ||
+                  'Columns below this threshold show ** instead of data'}
+              </p>
+            </div>
           </div>
 
           {/* Templates */}

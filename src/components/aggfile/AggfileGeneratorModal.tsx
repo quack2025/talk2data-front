@@ -97,10 +97,13 @@ export function AggfileGeneratorModal({
 
           {generator.step === 'stubs' && (
             <AnalysisVariablesStep
+              projectId={projectId}
               variables={generator.analysisVariables}
               selectedAnalysis={generator.selectedAnalysis}
+              selectedGroups={generator.selectedGroups}
               isLoading={generator.isLoadingAnalysis}
               onToggle={generator.toggleAnalysis}
+              onToggleGroup={generator.toggleGroup}
               onSetMode={generator.setAnalysisMode}
               onBack={generator.goToPrevStep}
               onNext={generator.goToNextStep}
@@ -122,6 +125,7 @@ export function AggfileGeneratorModal({
               onSetIncludeBases={generator.setIncludeBases}
               onSetIncludeSignificance={generator.setIncludeSignificance}
               onSetSignificanceLevel={generator.setSignificanceLevel}
+              onSetMinBaseSize={generator.setMinBaseSize}
               onSetTitle={generator.setTitle}
               onBack={generator.goToPrevStep}
               onNext={generator.goToNextStep}

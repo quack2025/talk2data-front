@@ -76,6 +76,8 @@ export interface GenerateTablesConfig {
   confidence_level: number;
   net_definitions?: NetDefinition[] | null;
   title?: string | null;
+  variable_group_ids?: string[];
+  min_base_size?: number | null;
 }
 
 export interface GenerateTablesPreviewResponse {
@@ -105,6 +107,15 @@ export interface GenerateTablesResponse {
   warnings: string[];
 }
 
+export interface GenerateTablesExportResponse {
+  export_id: string;
+  download_url: string;
+  title: string | null;
+  total_analyses: number;
+  execution_time_ms: number;
+  warnings: string[];
+}
+
 // --- Wizard state ---
 
 export type AggfileStep =
@@ -122,6 +133,7 @@ export interface AggfileState {
   analysisVariables: AnalysisVariable[];
   selectedBanners: string[];
   selectedAnalysis: string[] | 'all';
+  selectedGroups: string[];
   analysisTypes: AnalysisTypeOption[];
   format: {
     valueType: ValueFormat;
@@ -129,6 +141,7 @@ export interface AggfileState {
     includeBases: boolean;
     includeSignificance: boolean;
     significanceLevel: number;
+    minBaseSize: number | null;
   };
   filters: FilterConfig[];
   netDefinitions: NetDefinition[];

@@ -14,6 +14,7 @@ import type {
   GenerateTablesConfig,
   GenerateTablesPreviewResponse,
   GenerateTablesResponse,
+  GenerateTablesExportResponse,
 } from '@/types/aggfile';
 import { MAX_BANNER_VARIABLES, DEFAULT_DECIMAL_PLACES } from '@/types/aggfile';
 
@@ -23,6 +24,7 @@ const initialState: AggfileState = {
   analysisVariables: [],
   selectedBanners: [],
   selectedAnalysis: 'all',
+  selectedGroups: [],
   analysisTypes: ['crosstab'],
   format: {
     valueType: 'percentage',
@@ -30,6 +32,7 @@ const initialState: AggfileState = {
     includeBases: true,
     includeSignificance: false,
     significanceLevel: 0.95,
+    minBaseSize: null,
   },
   filters: [],
   netDefinitions: [],
@@ -104,6 +107,9 @@ export function useAggfileGenerator(projectId: string) {
       net_definitions:
         s.netDefinitions.length > 0 ? s.netDefinitions : null,
       title: s.title || null,
+      variable_group_ids:
+        s.selectedGroups.length > 0 ? s.selectedGroups : undefined,
+      min_base_size: s.format.minBaseSize ?? undefined,
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -197,6 +203,30 @@ export function useAggfileGenerator(projectId: string) {
     });
   }, []);
 
+  const toggleGroup = useCallback((groupId: string, groupVars: string[]) => {
+    setState((prev) => {
+      const isSelected = prev.selectedGroups.includes(groupId);
+      if (isSelected) {
+        return {
+          ...prev,
+          selectedGroups: prev.selectedGroups.filter((id) => id !== groupId),
+          selectedAnalysis:
+            prev.selectedAnalysis === 'all'
+              ? 'all'
+              : prev.selectedAnalysis.filter((v) => !groupVars.includes(v)),
+        };
+      }
+      return {
+        ...prev,
+        selectedGroups: [...prev.selectedGroups, groupId],
+        selectedAnalysis:
+          prev.selectedAnalysis === 'all'
+            ? 'all'
+            : [...prev.selectedAnalysis, ...groupVars],
+      };
+    });
+  }, []);
+
   const setAnalysisMode = useCallback((mode: 'all' | 'selected') => {
     setState((prev) => ({
       ...prev,
@@ -249,6 +279,13 @@ export function useAggfileGenerator(projectId: string) {
     setState((prev) => ({
       ...prev,
       format: { ...prev.format, significanceLevel },
+    }));
+  }, []);
+
+  const setMinBaseSize = useCallback((minBaseSize: number | null) => {
+    setState((prev) => ({
+      ...prev,
+      format: { ...prev.format, minBaseSize },
     }));
   }, []);
 
@@ -387,26 +424,53 @@ export function useAggfileGenerator(projectId: string) {
 
   // --- Export to Excel ---
   const exportToExcel = useCallback(async () => {
+    setState((prev) => ({
+      ...prev,
+      step: 'generating',
+      isGenerating: true,
+      error: null,
+    }));
+    startProgress();
+
     try {
       const config = buildConfig();
       config.output_format = 'excel';
-      const blob = await api.downloadBlob(
+      const response = await api.post<GenerateTablesExportResponse>(
         `/projects/${projectId}/generate-tables/export`,
-        'POST',
         config
       );
+
+      stopProgress();
+
+      // Download from the signed URL
       const filename = `tables_${projectId}_${new Date().toISOString().split('T')[0]}.xlsx`;
-      const url = URL.createObjectURL(blob);
-      downloadFile(url, filename);
-      URL.revokeObjectURL(url);
-    } catch (error) {
+      downloadFile(response.download_url, filename);
+
       setState((prev) => ({
         ...prev,
+        step: 'success',
+        generateTablesResult: {
+          title: response.title,
+          total_analyses: response.total_analyses,
+          results: [],
+          python_code: null,
+          execution_time_ms: response.execution_time_ms,
+          warnings: response.warnings,
+        },
+        isGenerating: false,
+        progress: 100,
+      }));
+    } catch (error) {
+      stopProgress();
+      setState((prev) => ({
+        ...prev,
+        step: 'error',
         error:
           error instanceof Error ? error.message : 'Error exporting to Excel',
+        isGenerating: false,
       }));
     }
-  }, [projectId, buildConfig]);
+  }, [projectId, buildConfig, startProgress, stopProgress]);
 
   // Legacy generate (keeping for backward compat)
   const generateAggfile = useCallback(async () => {
@@ -484,6 +548,7 @@ export function useAggfileGenerator(projectId: string) {
       ...initialState,
       bannerVariables: state.bannerVariables,
       analysisVariables: state.analysisVariables,
+      selectedGroups: [],
     });
   }, [state.bannerVariables, state.analysisVariables, stopProgress]);
 
@@ -528,6 +593,7 @@ export function useAggfileGenerator(projectId: string) {
     fetchAnalysisVariables,
     toggleBanner,
     toggleAnalysis,
+    toggleGroup,
     setAnalysisMode,
     toggleAnalysisType,
     setValueType,
@@ -535,6 +601,7 @@ export function useAggfileGenerator(projectId: string) {
     setIncludeBases,
     setIncludeSignificance,
     setSignificanceLevel,
+    setMinBaseSize,
     setTitle,
     addFilter,
     removeFilter,

@@ -573,6 +573,12 @@ export const translations = {
       templateNamePlaceholder: 'Ej: Cruces de satisfacción',
       templateDescription: 'Descripción (opcional)',
       templateDescPlaceholder: 'Breve descripción',
+      step2DescriptionGroups: 'Selecciona los grupos de preguntas para cruzar con los banners',
+      variables: 'variables',
+      ungroupedVars: 'Variables sin agrupar',
+      minBaseSize: 'Tamaño mínimo de base',
+      minBaseSizeHelp: 'Las columnas por debajo de este umbral muestran ** en lugar de datos',
+      savedToExports: 'Guardado en la sección de Exportaciones',
     },
     // Variable Grouping
     grouping: {
@@ -1725,6 +1731,12 @@ export const translations = {
       templateNamePlaceholder: 'E.g.: Satisfaction crosstabs',
       templateDescription: 'Description (optional)',
       templateDescPlaceholder: 'Brief description',
+      step2DescriptionGroups: 'Select question groups to cross with the banner variables',
+      variables: 'variables',
+      ungroupedVars: 'Ungrouped variables',
+      minBaseSize: 'Minimum base size',
+      minBaseSizeHelp: 'Columns below this threshold show ** instead of data',
+      savedToExports: 'Saved to the Exports section',
     },
     // Variable Grouping
     grouping: {
