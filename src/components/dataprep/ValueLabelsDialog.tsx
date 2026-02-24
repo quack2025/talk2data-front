@@ -50,11 +50,11 @@ export function ValueLabelsDialog({
   };
 
   const handleSave = () => {
-    // Only save labels that differ from auto
+    // Only save labels that differ from auto and are non-empty
     const overrides: Record<string, string> = {};
     for (const [code, label] of Object.entries(editedLabels)) {
-      if (label !== autoLabels[code]) {
-        overrides[code] = label;
+      if (label && label.trim() && label !== autoLabels[code]) {
+        overrides[code] = label.trim();
       }
     }
     onSave(overrides);

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Check, Pencil, Upload, Tag, X, Search, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,10 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
 
   const saveLabel = useCallback(async (varName: string) => {
     const trimmed = editValue.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      cancelEditing();
+      return;
+    }
     try {
       await updateVariable.mutateAsync({
         varName,
@@ -78,7 +81,7 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
     }
     setEditingVar(null);
     setEditValue('');
-  }, [editValue, updateVariable, toast, meta, showRegeneratePrompt]);
+  }, [editValue, updateVariable, toast, meta, showRegeneratePrompt, cancelEditing]);
 
   const saveValueLabels = useCallback(async (labels: Record<string, string>) => {
     if (!valueLabelsVar) return;
@@ -115,6 +118,23 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
     if (e.key === 'Enter') saveLabel(varName);
     if (e.key === 'Escape') cancelEditing();
   }, [saveLabel, cancelEditing]);
+
+  // Memoize props for ValueLabelsDialog to prevent useEffect resets on parent re-render
+  const valueLabelsCurrentLabels = useMemo(() => {
+    if (!valueLabelsVar) return {};
+    return valueLabelsVar.has_value_label_overrides
+      ? Object.fromEntries(
+          Object.entries(valueLabelsVar.value_labels).filter(
+            ([k]) => !(k in valueLabelsVar.auto_value_labels) ||
+              valueLabelsVar.value_labels[k] !== valueLabelsVar.auto_value_labels[k]
+          )
+        )
+      : {};
+  }, [valueLabelsVar]);
+
+  const valueLabelsAutoLabels = useMemo(() => {
+    return valueLabelsVar?.auto_value_labels ?? {};
+  }, [valueLabelsVar]);
 
   // Filter variables by search query
   const filtered = searchQuery
@@ -183,8 +203,9 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
           </div>
 
           {/* Variable table */}
+          <div className="overflow-x-auto">
           <ScrollArea className="max-h-[420px]">
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 min-w-[500px]">
               {/* Header */}
               <div className="grid grid-cols-[180px_1fr_120px_80px] gap-2 text-xs font-medium text-muted-foreground px-2 py-1.5 border-b">
                 <span>{meta?.variableCol || 'Variable'}</span>
@@ -282,6 +303,7 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
               )}
             </div>
           </ScrollArea>
+          </div>
         </CardContent>
       </Card>
 
@@ -292,16 +314,8 @@ export function VariableMetadataManager({ projectId }: VariableMetadataManagerPr
           onOpenChange={open => { if (!open) setValueLabelsVar(null); }}
           variableName={valueLabelsVar.name}
           variableLabel={valueLabelsVar.label}
-          currentLabels={valueLabelsVar.has_value_label_overrides
-            ? Object.fromEntries(
-                Object.entries(valueLabelsVar.value_labels).filter(
-                  ([k]) => !(k in valueLabelsVar.auto_value_labels) ||
-                    valueLabelsVar.value_labels[k] !== valueLabelsVar.auto_value_labels[k]
-                )
-              )
-            : {}
-          }
-          autoLabels={valueLabelsVar.auto_value_labels}
+          currentLabels={valueLabelsCurrentLabels}
+          autoLabels={valueLabelsAutoLabels}
           onSave={saveValueLabels}
           isSaving={updateVariable.isPending}
         />
