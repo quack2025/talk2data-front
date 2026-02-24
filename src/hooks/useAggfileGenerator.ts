@@ -57,16 +57,24 @@ export function useAggfileGenerator(projectId: string) {
   const [state, setState] = useState<AggfileState>(initialState);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Keep a ref to latest state so buildConfig stays identity-stable.
+  // Without this, buildConfig depends on [state] → fetchPreview depends on
+  // [buildConfig] → PreviewStep's useEffect fires on every state change →
+  // infinite API call loop that exhausts the DB connection pool.
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   // --- Build GenerateTablesConfig from wizard state ---
   const buildConfig = useCallback((): GenerateTablesConfig => {
+    const s = stateRef.current;
     const analysisVars =
-      state.selectedAnalysis === 'all'
-        ? state.analysisVariables.map((v) => v.name)
-        : state.selectedAnalysis;
+      s.selectedAnalysis === 'all'
+        ? s.analysisVariables.map((v) => v.name)
+        : s.selectedAnalysis;
 
     // Determine analysis types based on configuration
-    let analysisTypes = [...state.analysisTypes];
-    if (state.format.includeSignificance && analysisTypes.includes('crosstab')) {
+    let analysisTypes = [...s.analysisTypes];
+    if (s.format.includeSignificance && analysisTypes.includes('crosstab')) {
       analysisTypes = analysisTypes.filter((t) => t !== 'crosstab');
       if (!analysisTypes.includes('crosstab_with_significance')) {
         analysisTypes.push('crosstab_with_significance');
@@ -83,21 +91,22 @@ export function useAggfileGenerator(projectId: string) {
       crosstab_config: hasCrosstab
         ? {
             row_variables: analysisVars,
-            column_variables: state.selectedBanners,
-            include_percentages: state.format.valueType === 'percentage',
-            chi_square_test: state.format.includeSignificance,
+            column_variables: s.selectedBanners,
+            include_percentages: s.format.valueType === 'percentage',
+            chi_square_test: s.format.includeSignificance,
           }
         : null,
-      filters: state.filters.length > 0 ? state.filters : null,
+      filters: s.filters.length > 0 ? s.filters : null,
       output_format: 'json',
-      confidence_level: state.format.includeSignificance
-        ? state.format.significanceLevel
+      confidence_level: s.format.includeSignificance
+        ? s.format.significanceLevel
         : 0.95,
       net_definitions:
-        state.netDefinitions.length > 0 ? state.netDefinitions : null,
-      title: state.title || null,
+        s.netDefinitions.length > 0 ? s.netDefinitions : null,
+      title: s.title || null,
     };
-  }, [state]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- Fetch variables ---
   const fetchBannerVariables = useCallback(async () => {
@@ -308,7 +317,13 @@ export function useAggfileGenerator(projectId: string) {
   }, []);
 
   // --- Preview ---
+  const isPreviewFetchingRef = useRef(false);
+
   const fetchPreview = useCallback(async () => {
+    // Guard against concurrent/duplicate calls
+    if (isPreviewFetchingRef.current) return;
+    isPreviewFetchingRef.current = true;
+
     setState((prev) => ({ ...prev, isLoadingPreview: true, error: null }));
     try {
       const config = buildConfig();
@@ -328,6 +343,8 @@ export function useAggfileGenerator(projectId: string) {
         error:
           error instanceof Error ? error.message : 'Error loading preview',
       }));
+    } finally {
+      isPreviewFetchingRef.current = false;
     }
   }, [projectId, buildConfig]);
 
