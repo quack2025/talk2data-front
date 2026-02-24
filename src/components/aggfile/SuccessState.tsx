@@ -34,9 +34,9 @@ export function SuccessState({
   const { t } = useLanguage();
 
   const formatLabels: Record<ValueFormat, string> = {
-    percentage: t.aggfile?.percentages || 'Porcentajes',
-    decimal: t.aggfile?.decimals || 'Decimales',
-    count: t.aggfile?.frequencies || 'Frecuencias',
+    percentage: t.aggfile?.percentages || 'Percentages',
+    decimal: t.aggfile?.decimals || 'Decimals',
+    count: t.aggfile?.frequencies || 'Frequencies',
   };
 
   const isGenerateTables = !!generateTablesResult;
@@ -52,13 +52,13 @@ export function SuccessState({
 
       <div className="text-center space-y-2">
         <h3 className="font-semibold text-lg">
-          {t.aggfile?.successTitle || '¡Tablas generadas!'}
+          {t.aggfile?.successTitle || 'Tables generated!'}
         </h3>
         <p className="text-sm text-muted-foreground">
           {isGenerateTables
-            ? `${totalAnalyses} análisis completados en ${(executionTime / 1000).toFixed(1)}s`
+            ? `${totalAnalyses} analyses completed in ${(executionTime / 1000).toFixed(1)}s`
             : t.aggfile?.successDescription ||
-              'Tu archivo Excel está listo para descargar'}
+              'Your Excel file is ready to download'}
         </p>
       </div>
 
@@ -70,18 +70,18 @@ export function SuccessState({
             {isGenerateTables ? (
               <>
                 <p className="font-medium">
-                  {generateTablesResult.title || 'Tablas generadas'}
+                  {generateTablesResult.title || 'Generated tables'}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {totalAnalyses} análisis ·{' '}
-                  {generateTablesResult.results?.length ?? 0} resultados
+                  {totalAnalyses} analyses ·{' '}
+                  {generateTablesResult.results?.length ?? 0} results
                 </p>
               </>
             ) : result ? (
               <>
                 <p className="font-medium">Aggfile.xlsx</p>
                 <p className="text-xs text-muted-foreground">
-                  {result.n_questions} {t.aggfile?.questions || 'preguntas'} ×{' '}
+                  {result.n_questions} {t.aggfile?.questions || 'questions'} ×{' '}
                   {result.n_banners} banners
                 </p>
               </>
@@ -93,16 +93,16 @@ export function SuccessState({
           <Badge variant="outline">{formatLabels[format.valueType]}</Badge>
           {format.valueType !== 'count' && (
             <Badge variant="outline">
-              {format.decimalPlaces} {t.aggfile?.decimalPlaces || 'decimales'}
+              {format.decimalPlaces} {t.aggfile?.decimalPlaces || 'decimal places'}
             </Badge>
           )}
           {format.includeBases && (
             <Badge variant="outline">
-              {t.aggfile?.withBases || 'Con bases'}
+              {t.aggfile?.withBases || 'With bases'}
             </Badge>
           )}
           {format.includeSignificance && (
-            <Badge variant="outline">Significancia</Badge>
+            <Badge variant="outline">{t.aggfile?.significance || 'Significance'}</Badge>
           )}
         </div>
 
@@ -122,12 +122,12 @@ export function SuccessState({
         {isGenerateTables ? (
           <Button onClick={onExportExcel} className="w-full gap-2">
             <Download className="h-4 w-4" />
-            Descargar Excel
+            {t.aggfile?.downloadExcel || 'Download Excel'}
           </Button>
         ) : (
           <Button onClick={onDownload} className="w-full gap-2">
             <Download className="h-4 w-4" />
-            {t.aggfile?.downloadExcel || 'Descargar Excel'}
+            {t.aggfile?.downloadExcel || 'Download Excel'}
           </Button>
         )}
         <Button variant="ghost" onClick={onClose}>
@@ -137,7 +137,7 @@ export function SuccessState({
 
       <p className="text-xs text-muted-foreground text-center">
         {t.aggfile?.alsoInExports ||
-          'También disponible en la sección de Exportaciones'}
+          'Also available in the Exports section'}
       </p>
     </div>
   );

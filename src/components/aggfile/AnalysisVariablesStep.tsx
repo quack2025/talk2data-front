@@ -57,11 +57,11 @@ export function AnalysisVariablesStep({
     <div className="flex flex-col h-full">
       <div className="px-4 pt-4 pb-2 space-y-1">
         <h3 className="font-semibold">
-          {t.aggfile?.step2Title || 'Selecciona las preguntas a analizar'}
+          {t.aggfile?.step2Title || 'Select questions to analyze'}
         </h3>
         <p className="text-sm text-muted-foreground">
           {t.aggfile?.step2Description ||
-            'Elige qué preguntas cruzar con las variables de banner'}
+            'Choose which questions to cross with the banner variables'}
         </p>
       </div>
 
@@ -76,13 +76,13 @@ export function AnalysisVariablesStep({
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="all" id="all" />
                 <Label htmlFor="all" className="cursor-pointer">
-                  {t.aggfile?.allQuestions || 'Todas las preguntas'} ({variables.length})
+                  {t.aggfile?.allQuestions || 'All questions'} ({variables.length})
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="selected" id="selected" />
                 <Label htmlFor="selected" className="cursor-pointer">
-                  {t.aggfile?.onlySelected || 'Solo las seleccionadas'}
+                  {t.aggfile?.onlySelected || 'Only selected'}
                 </Label>
               </div>
             </RadioGroup>

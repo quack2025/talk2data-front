@@ -19,13 +19,11 @@ export function GeneratingState({ progress, nQuestions, nBanners }: GeneratingSt
 
       <div className="text-center space-y-2">
         <h3 className="font-semibold text-lg">
-          {t.aggfile?.generatingTitle || 'Generando tablas cruzadas'}
+          {t.aggfile?.generatingTitle || 'Generating cross tables'}
         </h3>
         <p className="text-sm text-muted-foreground">
           {t.aggfile?.generatingDescription ||
-            `Calculando cruces para ${nQuestions} preguntas con ${nBanners} banners...`
-              .replace('${nQuestions}', String(nQuestions))
-              .replace('${nBanners}', String(nBanners))}
+            `Calculating cross tables for ${nQuestions} questions with ${nBanners} banners...`}
         </p>
       </div>
 
@@ -38,7 +36,7 @@ export function GeneratingState({ progress, nQuestions, nBanners }: GeneratingSt
 
       <p className="text-xs text-muted-foreground text-center max-w-sm">
         {t.aggfile?.generatingHint ||
-          'Este proceso puede tomar unos segundos dependiendo del volumen de datos'}
+          'This process may take a few seconds depending on data volume'}
       </p>
     </div>
   );

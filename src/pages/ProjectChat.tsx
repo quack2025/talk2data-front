@@ -12,6 +12,7 @@ import type { RefinementAction } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { useDataPrep } from '@/hooks/useDataPrep';
+import { useProject } from '@/hooks/useProjects';
 import { ReportGeneratorDialog } from '@/components/reports';
 import { toast } from 'sonner';
 
@@ -23,15 +24,24 @@ export default function ProjectChat() {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
-  const { dataPrepStatus } = useDataPrep(projectId!);
+  const { dataPrepStatus, skipDataPrep } = useDataPrep(projectId!);
+  const { data: project } = useProject(projectId!);
 
-  // Guard: redirect if data prep not confirmed
+  // Guard: auto-skip data prep gate if project is ready
   useEffect(() => {
     if (dataPrepStatus === 'pending') {
-      toast.info(t.dataPrep?.gateTooltip || 'Confirma la preparación de datos primero');
-      navigate(`/projects/${projectId}`, { replace: true });
+      // If project has data and is ready, auto-skip the gate
+      if (project?.status === 'ready') {
+        skipDataPrep();
+        return;
+      }
+      // Only redirect if project is loaded and NOT ready
+      if (project && project.status !== 'ready') {
+        toast.info(t.dataPrep?.gateTooltip || 'Confirm data preparation first');
+        navigate(`/projects/${projectId}`, { replace: true });
+      }
     }
-  }, [dataPrepStatus, projectId, navigate, t]);
+  }, [dataPrepStatus, project, projectId, navigate, t, skipDataPrep]);
 
   const toastMessages = {
     conversationError: t.toasts.conversationError,

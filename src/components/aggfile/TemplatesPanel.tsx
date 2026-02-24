@@ -127,7 +127,7 @@ export function TemplatesPanel({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium">Plantillas guardadas</h4>
+        <h4 className="text-sm font-medium">{t.aggfile?.savedTemplates || 'Saved templates'}</h4>
         <Button
           variant="outline"
           size="sm"
@@ -135,7 +135,7 @@ export function TemplatesPanel({
           className="gap-1.5"
         >
           <Save className="h-3.5 w-3.5" />
-          Guardar actual
+          {t.aggfile?.saveCurrent || 'Save current'}
         </Button>
       </div>
 
@@ -147,7 +147,7 @@ export function TemplatesPanel({
         </div>
       ) : templates.length === 0 ? (
         <p className="text-xs text-muted-foreground py-4 text-center">
-          No hay plantillas guardadas
+          {t.aggfile?.noTemplates || 'No saved templates'}
         </p>
       ) : (
         <ScrollArea className="max-h-[200px]">
@@ -183,7 +183,7 @@ export function TemplatesPanel({
                       size="icon"
                       className="h-7 w-7"
                       onClick={() => handleLoad(template)}
-                      title="Cargar plantilla"
+                      title={t.aggfile?.loadTemplate || 'Load template'}
                     >
                       <FolderOpen className="h-3.5 w-3.5" />
                     </Button>
@@ -192,7 +192,7 @@ export function TemplatesPanel({
                       size="icon"
                       className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                       onClick={() => setConfirmDeleteId(template.id)}
-                      title="Eliminar"
+                      title={t.common?.delete || 'Delete'}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -208,9 +208,9 @@ export function TemplatesPanel({
       <AlertDialog open={!!confirmDeleteId} onOpenChange={(open) => !open && setConfirmDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar esta plantilla?</AlertDialogTitle>
+            <AlertDialogTitle>{t.aggfile?.deleteTemplate || 'Delete this template?'}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer.
+              {t.aggfile?.deleteTemplateConfirm || 'This action cannot be undone.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -232,29 +232,29 @@ export function TemplatesPanel({
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Guardar plantilla</DialogTitle>
+            <DialogTitle>{t.aggfile?.saveTemplate || 'Save template'}</DialogTitle>
             <DialogDescription>
-              Guarda la configuración actual para reutilizarla después
+              {t.aggfile?.saveTemplateDescription || 'Save the current configuration for later reuse'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="template-name">Nombre</Label>
+              <Label htmlFor="template-name">{t.aggfile?.templateName || 'Name'}</Label>
               <Input
                 id="template-name"
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
-                placeholder="Ej: Cruces de satisfacción"
+                placeholder={t.aggfile?.templateNamePlaceholder || 'E.g.: Satisfaction crosstabs'}
                 autoFocus
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="template-desc">Descripción (opcional)</Label>
+              <Label htmlFor="template-desc">{t.aggfile?.templateDescription || 'Description (optional)'}</Label>
               <Input
                 id="template-desc"
                 value={saveDescription}
                 onChange={(e) => setSaveDescription(e.target.value)}
-                placeholder="Breve descripción"
+                placeholder={t.aggfile?.templateDescPlaceholder || 'Brief description'}
               />
             </div>
           </div>
@@ -269,7 +269,7 @@ export function TemplatesPanel({
               onClick={handleSave}
               disabled={!saveName.trim() || isSaving}
             >
-              {isSaving ? 'Guardando...' : 'Guardar'}
+              {isSaving ? (t.common?.saving || 'Saving...') : (t.common?.save || 'Save')}
             </Button>
           </DialogFooter>
         </DialogContent>

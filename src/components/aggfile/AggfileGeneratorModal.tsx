@@ -61,22 +61,22 @@ export function AggfileGeneratorModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-lg h-[80vh] max-h-[700px] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-lg h-[80vh] max-h-[700px] flex flex-col p-0 gap-0" onInteractOutside={e => e.preventDefault()}>
         <DialogHeader className="px-4 pt-4 pb-2 shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle>
-              {t.aggfile?.title || 'Generar Tablas Cruzadas'}
+              {t.aggfile?.title || 'Generate Tables'}
             </DialogTitle>
             {stepInfo && (
               <span className="text-sm text-muted-foreground">
-                {t.aggfile?.step || 'Paso'} {stepInfo.step}/{stepInfo.total}
+                {t.aggfile?.step || 'Step'} {stepInfo.step}/{stepInfo.total}
               </span>
             )}
           </div>
           {stepInfo && (
             <DialogDescription>
               {t.aggfile?.description ||
-                'Genera un archivo Excel con tablas cruzadas para tu estudio'}
+                'Generate an Excel file with cross tables for your study'}
             </DialogDescription>
           )}
         </DialogHeader>

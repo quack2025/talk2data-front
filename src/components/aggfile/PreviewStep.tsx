@@ -70,7 +70,7 @@ export function PreviewStep({
             {t.common.back}
           </Button>
           <Button onClick={onFetchPreview} className="flex-1">
-            Reintentar
+            {t.aggfile?.retry || 'Retry'}
           </Button>
         </div>
       </div>
@@ -81,11 +81,11 @@ export function PreviewStep({
     <div className="flex flex-col h-full">
       <div className="px-4 pt-4 pb-2 space-y-1">
         <h3 className="font-semibold">
-          {t.aggfile?.step4Title || 'Vista previa'}
+          {t.aggfile?.step4Title || 'Preview'}
         </h3>
         <p className="text-sm text-muted-foreground">
           {t.aggfile?.step4Description ||
-            'Revisa el plan de análisis antes de generar'}
+            'Review the analysis plan before generating'}
         </p>
       </div>
 
@@ -108,13 +108,13 @@ export function PreviewStep({
             <CardContent className="pt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  Variables de banner
+                  {t.aggfile?.bannerVariables || 'Banner variables'}
                 </span>
                 <Badge variant="secondary">{selectedBannersCount}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  Variables de análisis
+                  {t.aggfile?.analysisVariables || 'Analysis variables'}
                 </span>
                 <Badge variant="secondary">{selectedAnalysisCount}</Badge>
               </div>
@@ -122,7 +122,7 @@ export function PreviewStep({
                 <>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
-                      Total de análisis
+                      {t.aggfile?.totalAnalyses || 'Total analyses'}
                     </span>
                     <Badge variant="default">
                       {preview.total_analyses}
@@ -130,7 +130,7 @@ export function PreviewStep({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
-                      Variables estimadas
+                      {t.aggfile?.estimatedVariables || 'Estimated variables'}
                     </span>
                     <Badge variant="secondary">
                       {preview.estimated_variables}
@@ -144,7 +144,7 @@ export function PreviewStep({
           {/* Analysis plan */}
           {preview && preview.analyses_plan.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium">Plan de análisis</h4>
+              <h4 className="text-sm font-medium">{t.aggfile?.analysisPlan || 'Analysis plan'}</h4>
               <div className="space-y-1">
                 {preview.analyses_plan.map((plan, idx) => (
                   <div
@@ -169,7 +169,7 @@ export function PreviewStep({
           {preview && preview.warnings.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-amber-600">
-                Advertencias
+                {t.aggfile?.warnings || 'Warnings'}
               </h4>
               {preview.warnings.map((warning, idx) => (
                 <div
@@ -186,7 +186,7 @@ export function PreviewStep({
           {/* Filters summary */}
           {preview?.filters_summary && preview.filters_summary.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-medium">Filtros aplicados</h4>
+              <h4 className="text-sm font-medium">{t.aggfile?.appliedFilters || 'Applied filters'}</h4>
               <div className="flex flex-wrap gap-1">
                 {preview.filters_summary.map((filter, idx) => (
                   <Badge key={idx} variant="outline" className="text-xs">
@@ -211,7 +211,7 @@ export function PreviewStep({
             className="flex-1 gap-2"
           >
             <BarChart3 className="h-4 w-4" />
-            Generar tablas
+            {t.aggfile?.generateTables || 'Generate tables'}
           </Button>
         </div>
         <Button
@@ -221,7 +221,7 @@ export function PreviewStep({
           className="w-full gap-2"
         >
           <Download className="h-4 w-4" />
-          Exportar directo a Excel
+          {t.aggfile?.exportDirectExcel || 'Export directly to Excel'}
         </Button>
       </div>
     </div>

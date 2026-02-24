@@ -54,16 +54,16 @@ export function BannerVariablesStep({
     <div className="flex flex-col h-full">
       <div className="px-4 pt-4 pb-2 space-y-1">
         <h3 className="font-semibold">
-          {t.aggfile?.step1Title || 'Selecciona las variables de banner'}
+          {t.aggfile?.step1Title || 'Select banner variables'}
         </h3>
         <p className="text-sm text-muted-foreground">
           {t.aggfile?.step1Description ||
-            'Los banners son las columnas de tus tablas cruzadas (ej: género, edad, NSE)'}
+            'Banners are the columns of your cross tables (e.g.: gender, age, SES)'}
         </p>
         <div className="flex items-center justify-between text-sm">
           <span className={isAtMax ? 'text-destructive font-medium' : 'text-muted-foreground'}>
-            {t.aggfile?.selected || 'Seleccionadas'}: {selectedBanners.length}{' '}
-            {t.aggfile?.ofMax || 'de'} {maxBanners} {t.aggfile?.max || 'máximo'}
+            {t.aggfile?.selected || 'Selected'}: {selectedBanners.length}{' '}
+            {t.aggfile?.ofMax || 'of'} {maxBanners} {t.aggfile?.max || 'max'}
           </span>
         </div>
       </div>
@@ -73,7 +73,7 @@ export function BannerVariablesStep({
           {suggested.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">
-                {t.aggfile?.suggestedSection || 'Sugeridas'}
+                {t.aggfile?.suggestedSection || 'Suggested'}
               </h4>
               <div className="space-y-2">
                 {suggested.map((variable) => (
@@ -95,7 +95,7 @@ export function BannerVariablesStep({
           {others.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">
-                {t.aggfile?.othersSection || 'Otras disponibles'}
+                {t.aggfile?.othersSection || 'Other available'}
               </h4>
               <div className="space-y-2">
                 {others.map((variable) => (

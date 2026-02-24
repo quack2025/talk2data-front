@@ -11,6 +11,8 @@ import { TemplatesPanel } from './TemplatesPanel';
 import type { ValueFormat, AnalysisTypeOption, GenerateTablesConfig } from '@/types/aggfile';
 import { ANALYSIS_TYPE_LABELS } from '@/types/aggfile';
 
+const FALLBACK_LABELS = ANALYSIS_TYPE_LABELS;
+
 const AVAILABLE_ANALYSIS_TYPES: AnalysisTypeOption[] = [
   'crosstab',
   'frequency',
@@ -67,11 +69,11 @@ export function ConfigureStep({
     <div className="flex flex-col h-full">
       <div className="px-4 pt-4 pb-2 space-y-1">
         <h3 className="font-semibold">
-          {t.aggfile?.step3Title || 'Configura el análisis'}
+          {t.aggfile?.step3Title || 'Configure analysis'}
         </h3>
         <p className="text-sm text-muted-foreground">
           {t.aggfile?.step3Description ||
-            'Elige el tipo de análisis y opciones de formato'}
+            'Choose analysis type and format options'}
         </p>
       </div>
 
@@ -80,13 +82,13 @@ export function ConfigureStep({
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="table-title">
-              {t.aggfile?.titleLabel || 'Título (opcional)'}
+              {t.aggfile?.titleLabel || 'Title (optional)'}
             </Label>
             <Input
               id="table-title"
               value={title}
               onChange={(e) => onSetTitle(e.target.value)}
-              placeholder={t.aggfile?.titlePlaceholder || 'Ej: Tablas de satisfacción por segmento'}
+              placeholder={t.aggfile?.titlePlaceholder || 'E.g.: Satisfaction tables by segment'}
               maxLength={255}
             />
           </div>
@@ -95,7 +97,7 @@ export function ConfigureStep({
 
           {/* Analysis types */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">{t.aggfile?.analysisTypeLabel || 'Tipo de análisis'}</h4>
+            <h4 className="text-sm font-medium">{t.aggfile?.analysisTypeLabel || 'Analysis type'}</h4>
             <div className="space-y-2">
               {AVAILABLE_ANALYSIS_TYPES.map((type) => (
                 <div key={type} className="flex items-center space-x-2">
@@ -108,7 +110,7 @@ export function ConfigureStep({
                     htmlFor={`analysis-${type}`}
                     className="cursor-pointer"
                   >
-                    {ANALYSIS_TYPE_LABELS[type]}
+                    {t.aggfile?.analysisTypes?.[type] ?? FALLBACK_LABELS[type]}
                   </Label>
                 </div>
               ))}
@@ -120,7 +122,7 @@ export function ConfigureStep({
           {/* Format options */}
           <div className="space-y-3">
             <h4 className="text-sm font-medium">
-              {t.aggfile?.formatLabel || 'Formato de valores'}
+              {t.aggfile?.formatLabel || 'Value format'}
             </h4>
             <RadioGroup
               value={format.valueType}
@@ -129,19 +131,19 @@ export function ConfigureStep({
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="percentage" id="percentage" />
                 <Label htmlFor="percentage" className="cursor-pointer">
-                  {t.aggfile?.percentages || 'Porcentajes'} (%)
+                  {t.aggfile?.percentages || 'Percentages'} (%)
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="decimal" id="decimal" />
                 <Label htmlFor="decimal" className="cursor-pointer">
-                  {t.aggfile?.decimals || 'Decimales'} (0.XX)
+                  {t.aggfile?.decimals || 'Decimals'} (0.XX)
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="count" id="count" />
                 <Label htmlFor="count" className="cursor-pointer">
-                  {t.aggfile?.frequencies || 'Frecuencias'} (n)
+                  {t.aggfile?.frequencies || 'Frequencies'} (n)
                 </Label>
               </div>
             </RadioGroup>
@@ -150,7 +152,7 @@ export function ConfigureStep({
           {/* Decimal places */}
           {format.valueType !== 'count' && (
             <div className="space-y-2">
-              <Label>{t.aggfile?.decimalPlaces || 'Decimales'}</Label>
+              <Label>{t.aggfile?.decimalPlaces || 'Decimal places'}</Label>
               <RadioGroup
                 value={String(format.decimalPlaces)}
                 onValueChange={(v) => onSetDecimalPlaces(Number(v))}
@@ -172,7 +174,7 @@ export function ConfigureStep({
 
           {/* Options */}
           <div className="space-y-3">
-            <h4 className="text-sm font-medium">{t.aggfile?.optionsLabel || 'Opciones'}</h4>
+            <h4 className="text-sm font-medium">{t.aggfile?.optionsLabel || 'Options'}</h4>
 
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -183,7 +185,7 @@ export function ConfigureStep({
                 }
               />
               <Label htmlFor="include-bases" className="cursor-pointer">
-                {t.aggfile?.includeBases || 'Incluir fila de bases (n)'}
+                {t.aggfile?.includeBases || 'Include base row (n)'}
               </Label>
             </div>
 
@@ -196,14 +198,14 @@ export function ConfigureStep({
                 }
               />
               <Label htmlFor="include-significance" className="cursor-pointer">
-                {t.aggfile?.includeSignificance || 'Incluir letras de significancia (A, B, C)'}
+                {t.aggfile?.includeSignificance || 'Include significance letters (A, B, C)'}
               </Label>
             </div>
 
             {/* Significance level */}
             {format.includeSignificance && (
               <div className="pl-6 space-y-2">
-                <Label>{t.aggfile?.confidenceLevel || 'Nivel de confianza'}</Label>
+                <Label>{t.aggfile?.confidenceLevel || 'Confidence level'}</Label>
                 <RadioGroup
                   value={String(format.significanceLevel)}
                   onValueChange={(v) =>
@@ -257,7 +259,7 @@ export function ConfigureStep({
           {t.common.back}
         </Button>
         <Button onClick={onNext} disabled={!canProceed} className="flex-1">
-          {t.aggfile?.preview || 'Vista previa'}
+          {t.aggfile?.preview || 'Preview'}
         </Button>
       </div>
     </div>

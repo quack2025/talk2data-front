@@ -161,7 +161,7 @@ export default function ProjectDetail() {
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
   const { conversations } = useChat(projectId!);
   const { data: summary } = useExecutiveSummary(projectId!);
-  const { data: variableNames = [] } = useProjectVariables(projectId, project?.status);
+  const { data: variableNames = [], isLoading: variablesLoading } = useProjectVariables(projectId, project?.status);
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
   const explore = useExplore(projectId!);
@@ -663,7 +663,8 @@ export default function ProjectDetail() {
 
           {/* === TAB: DATA PREPARATION === */}
           <TabsContent value="dataprep" className="space-y-6 mt-0">
-            {hasReadyFiles && variableNames.length > 0 ? (
+            {hasReadyFiles ? (
+              variableNames.length > 0 ? (
               <>
                 {files?.some(f => f.file_type === 'csv_data' || f.file_type === 'excel_data') && (
                   <VariableMetadataManager projectId={projectId!} />
@@ -726,6 +727,16 @@ export default function ProjectDetail() {
                   </CardContent>
                 </Card>
               </>
+              ) : (
+                <Card>
+                  <CardContent className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-muted-foreground">
+                      {t.common?.loading || 'Loading...'}
+                    </span>
+                  </CardContent>
+                </Card>
+              )
             ) : (
               <Card className="border-dashed">
                 <CardContent className="flex flex-col items-center justify-center py-12 text-center">
