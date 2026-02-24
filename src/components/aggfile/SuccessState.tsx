@@ -45,7 +45,7 @@ export function SuccessState({
   const warnings = generateTablesResult?.warnings ?? [];
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-8 space-y-6">
+    <div className="flex flex-col items-center h-full p-8 space-y-6 overflow-y-auto">
       <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center">
         <CheckCircle className="h-8 w-8 text-green-500" />
       </div>
@@ -108,7 +108,10 @@ export function SuccessState({
 
         {/* Warnings */}
         {warnings.length > 0 && (
-          <div className="space-y-1">
+          <div className="space-y-1 max-h-40 overflow-y-auto border border-amber-200 rounded-md p-2 bg-amber-50/50">
+            <p className="text-xs font-medium text-amber-700 sticky top-0 bg-amber-50/90">
+              {warnings.length} {warnings.length === 1 ? 'warning' : 'warnings'}
+            </p>
             {warnings.map((w, i) => (
               <p key={i} className="text-xs text-amber-600">
                 {w}
