@@ -26,8 +26,13 @@ export interface GlobalFilterConfig {
 
 export interface DashboardTheme {
   primary_color: string;
+  accent_color: string;
+  background_color: string;
+  text_color: string;
+  font_family: string;
   logo_url?: string | null;
   company_name?: string | null;
+  header_style: 'default' | 'minimal' | 'branded';
 }
 
 export interface WidgetAnalysisConfig {

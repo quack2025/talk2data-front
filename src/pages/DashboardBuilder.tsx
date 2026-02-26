@@ -5,7 +5,7 @@
  * Widgets render their cached_result via DashboardWidgetRenderer.
  * Layout changes are debounced and saved to the backend.
  *
- * Sprint 17a (Gap G4)
+ * Sprint 17a (Gap G4) + Sprint 17b (Theme customization)
  */
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
@@ -29,13 +29,16 @@ import {
   Trash2,
   Globe,
   GripVertical,
+  Palette,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDashboards } from '@/hooks/useDashboards';
 import { DashboardWidgetRenderer } from '@/components/dashboards/DashboardWidgetRenderer';
 import { WidgetConfigEditor } from '@/components/dashboards/WidgetConfigEditor';
+import { ThemeEditor } from '@/components/dashboards/ThemeEditor';
 import type {
   DashboardWidget,
+  DashboardTheme,
   WidgetType,
   WidgetCreateRequest,
   WidgetLayoutItem,
@@ -73,6 +76,7 @@ export default function DashboardBuilder() {
   const dash = dashboards.activeDashboard;
 
   const [editingWidget, setEditingWidget] = useState<DashboardWidget | null>(null);
+  const [showThemeEditor, setShowThemeEditor] = useState(false);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load dashboard on mount
@@ -197,6 +201,28 @@ export default function DashboardBuilder() {
     await dashboards.refreshDashboard(dash.id);
   }, [dash, dashboards]);
 
+  // Save theme
+  const handleSaveTheme = useCallback(
+    (theme: DashboardTheme) => {
+      if (!dash) return;
+      dashboards.updateDashboard(dash.id, { theme });
+    },
+    [dash, dashboards],
+  );
+
+  // Derive theme CSS custom properties for live preview
+  const themeStyles = useMemo(() => {
+    const t = dash?.theme as DashboardTheme | null | undefined;
+    if (!t) return {};
+    return {
+      '--dash-primary': t.primary_color || '#1e40af',
+      '--dash-accent': t.accent_color || '#f59e0b',
+      '--dash-bg': t.background_color || '#ffffff',
+      '--dash-text': t.text_color || '#1f2937',
+      '--dash-font': t.font_family || 'Inter',
+    } as React.CSSProperties;
+  }, [dash?.theme]);
+
   if (!projectId || !dashboardId) {
     return <div className="p-8 text-center">Missing project or dashboard ID</div>;
   }
@@ -263,6 +289,20 @@ export default function DashboardBuilder() {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Theme */}
+        <Button
+          variant={showThemeEditor ? 'default' : 'outline'}
+          size="sm"
+          className="gap-1.5"
+          onClick={() => {
+            setShowThemeEditor((v) => !v);
+            if (!showThemeEditor) setEditingWidget(null);
+          }}
+        >
+          <Palette className="h-3.5 w-3.5" />
+          {lang === 'es' ? 'Tema' : 'Theme'}
+        </Button>
+
         {/* Refresh */}
         <Button
           variant="outline"
@@ -280,8 +320,16 @@ export default function DashboardBuilder() {
 
       {/* Main content area */}
       <div className="flex flex-1 min-h-0">
-        {/* Grid */}
-        <div className="flex-1 overflow-auto p-4">
+        {/* Grid — apply theme styles */}
+        <div
+          className="flex-1 overflow-auto p-4"
+          style={{
+            backgroundColor: themeStyles['--dash-bg'] as string || undefined,
+            color: themeStyles['--dash-text'] as string || undefined,
+            fontFamily: themeStyles['--dash-font'] as string || undefined,
+            ...themeStyles,
+          }}
+        >
           {dash.widgets.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <Plus className="h-12 w-12 mb-3 opacity-30" />
@@ -323,7 +371,10 @@ export default function DashboardBuilder() {
                         variant="ghost"
                         size="icon"
                         className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => setEditingWidget(widget)}
+                        onClick={() => {
+                          setEditingWidget(widget);
+                          setShowThemeEditor(false);
+                        }}
                       >
                         <Settings2 className="h-3 w-3" />
                       </Button>
@@ -348,13 +399,24 @@ export default function DashboardBuilder() {
         </div>
 
         {/* Config editor panel */}
-        {editingWidget && (
+        {editingWidget && !showThemeEditor && (
           <div className="w-72 shrink-0">
             <WidgetConfigEditor
               widget={editingWidget}
               projectId={projectId}
               onSave={handleSaveWidgetConfig}
               onClose={() => setEditingWidget(null)}
+            />
+          </div>
+        )}
+
+        {/* Theme editor panel */}
+        {showThemeEditor && (
+          <div className="w-72 shrink-0">
+            <ThemeEditor
+              theme={(dash.theme as DashboardTheme) || null}
+              onSave={handleSaveTheme}
+              onClose={() => setShowThemeEditor(false)}
             />
           </div>
         )}

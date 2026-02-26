@@ -24,7 +24,7 @@ import {
   Type,
   Hash,
 } from "lucide-react";
-import type { PublicDashboardResponse, DashboardWidget } from "@/types/dashboard";
+import type { PublicDashboardResponse, DashboardWidget, DashboardTheme } from "@/types/dashboard";
 import { WIDGET_TYPE_LABELS } from "@/types/dashboard";
 
 const API_BASE_URL =
@@ -365,30 +365,64 @@ export default function PublicDashboardView() {
   }
 
   // Theme branding
-  const themeColor =
+  const theme: DashboardTheme | null =
     state.kind === "success" && state.data.theme
-      ? (state.data.theme.primary_color as string)
-      : undefined;
-  const companyName =
-    state.kind === "success" && state.data.theme
-      ? (state.data.theme.company_name as string)
-      : undefined;
+      ? (state.data.theme as DashboardTheme)
+      : null;
+
+  const bodyStyle: React.CSSProperties = theme
+    ? {
+        backgroundColor: theme.background_color || undefined,
+        color: theme.text_color || undefined,
+        fontFamily: theme.font_family || undefined,
+      }
+    : {};
+
+  const headerIsBranded = theme?.header_style === "branded";
+  const headerIsMinimal = theme?.header_style === "minimal";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={bodyStyle}>
       {/* Top bar */}
-      <header className="border-b bg-card">
+      <header
+        className="border-b"
+        style={
+          headerIsBranded && theme
+            ? { backgroundColor: theme.primary_color, color: "#fff" }
+            : undefined
+        }
+      >
         <div className="container mx-auto flex h-14 items-center px-4 sm:px-6">
-          <a href="/" className="flex items-center gap-2">
-            <span
-              className="font-heading text-lg font-bold"
-              style={themeColor ? { color: themeColor } : undefined}
-            >
-              {companyName || "Survey Genius Pro"}
-            </span>
-          </a>
+          <div className="flex items-center gap-3">
+            {theme?.logo_url && (
+              <img
+                src={theme.logo_url}
+                alt="Logo"
+                className="h-8 max-w-[120px] object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            )}
+            {!headerIsMinimal && (
+              <span
+                className="font-heading text-lg font-bold"
+                style={
+                  headerIsBranded
+                    ? { color: "#fff" }
+                    : theme?.primary_color
+                      ? { color: theme.primary_color }
+                      : undefined
+                }
+              >
+                {theme?.company_name || "Survey Genius Pro"}
+              </span>
+            )}
+          </div>
           <div className="ml-auto">
-            <Badge variant="outline" className="text-xs font-normal">
+            <Badge
+              variant="outline"
+              className="text-xs font-normal"
+              style={headerIsBranded ? { borderColor: "rgba(255,255,255,0.4)", color: "#fff" } : undefined}
+            >
               Shared Dashboard
             </Badge>
           </div>
@@ -401,7 +435,10 @@ export default function PublicDashboardView() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-6 text-center text-xs text-muted-foreground">
+      <footer
+        className="border-t py-6 text-center text-xs"
+        style={{ opacity: 0.5 }}
+      >
         Powered by Survey Genius Pro
       </footer>
     </div>
