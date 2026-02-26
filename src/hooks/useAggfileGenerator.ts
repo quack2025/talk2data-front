@@ -16,6 +16,8 @@ import type {
   GenerateTablesPreviewResponse,
   GenerateTablesResponse,
   GenerateTablesExportResponse,
+  ExportTaskCreatedResponse,
+  ExportTaskStatusResponse,
 } from '@/types/aggfile';
 import { MAX_BANNER_VARIABLES, DEFAULT_DECIMAL_PLACES } from '@/types/aggfile';
 
@@ -445,46 +447,71 @@ export function useAggfileGenerator(projectId: string) {
     }
   }, [projectId, buildConfig, startProgress, stopProgress]);
 
-  // --- Export to Excel ---
+  // --- Export to Excel (async with real progress polling) ---
   const exportToExcel = useCallback(async () => {
     setState((prev) => ({
       ...prev,
       step: 'generating',
       isGenerating: true,
       error: null,
+      progress: 0,
     }));
-    startProgress();
 
     try {
       const config = buildConfig();
       config.output_format = 'excel';
-      const response = await api.post<GenerateTablesExportResponse>(
-        `/projects/${projectId}/generate-tables/export`,
+
+      // Start async export — returns immediately with task_id
+      const { task_id } = await api.post<ExportTaskCreatedResponse>(
+        `/projects/${projectId}/generate-tables/export-async`,
         config
       );
 
-      stopProgress();
+      // Poll for progress every 2 seconds
+      const poll = async (): Promise<ExportTaskStatusResponse> => {
+        const status = await api.get<ExportTaskStatusResponse>(
+          `/generate-tables/export-status/${task_id}`
+        );
+
+        if (status.status === 'completed') return status;
+        if (status.status === 'failed') {
+          throw new Error(status.error || 'Export failed');
+        }
+
+        // Update real progress
+        setState((prev) => ({
+          ...prev,
+          progress: Math.round(status.progress * 100),
+        }));
+
+        // Wait 2s then poll again
+        await new Promise((r) => setTimeout(r, 2000));
+        return poll();
+      };
+
+      const result = await poll();
 
       // Download from the signed URL
-      const filename = `tables_${projectId}_${new Date().toISOString().split('T')[0]}.xlsx`;
-      downloadFile(response.download_url, filename);
+      if (result.download_url) {
+        const filename = `tables_${projectId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        downloadFile(result.download_url, filename);
+      }
 
       setState((prev) => ({
         ...prev,
         step: 'success',
         generateTablesResult: {
-          title: response.title,
-          total_analyses: response.total_analyses,
+          title: result.title,
+          total_analyses: result.total_analyses,
           results: [],
           python_code: null,
-          execution_time_ms: response.execution_time_ms,
-          warnings: response.warnings,
+          execution_time_ms: result.execution_time_ms,
+          warnings: result.warnings,
         },
         isGenerating: false,
         progress: 100,
       }));
     } catch (error) {
-      stopProgress();
       setState((prev) => ({
         ...prev,
         step: 'error',
@@ -493,7 +520,7 @@ export function useAggfileGenerator(projectId: string) {
         isGenerating: false,
       }));
     }
-  }, [projectId, buildConfig, startProgress, stopProgress]);
+  }, [projectId, buildConfig]);
 
   // Legacy generate (keeping for backward compat)
   const generateAggfile = useCallback(async () => {

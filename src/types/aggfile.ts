@@ -121,6 +121,27 @@ export interface GenerateTablesExportResponse {
   warnings: string[];
 }
 
+export interface ExportTaskCreatedResponse {
+  task_id: string;
+  status: string;
+}
+
+export interface ExportTaskStatusResponse {
+  task_id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  stage: string;
+  tables_done: number;
+  tables_total: number;
+  download_url: string | null;
+  export_id: string | null;
+  title: string | null;
+  total_analyses: number;
+  execution_time_ms: number;
+  warnings: string[];
+  error: string | null;
+}
+
 // --- Wizard state ---
 
 export type AggfileStep =
