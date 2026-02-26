@@ -100,6 +100,7 @@ import { DataPrepManager } from '@/components/data-prep';
 import { VariableMetadataManager } from '@/components/dataprep/VariableMetadataManager';
 import { SegmentManager } from '@/components/segments';
 import { MergeWizardDialog } from '@/components/merge';
+import { SegmentationWizardDialog } from '@/components/segmentation';
 import { WaveManager } from '@/components/waves';
 import { useProjectVariables } from '@/hooks/useProjectVariables';
 import {
@@ -132,6 +133,7 @@ export default function ProjectDetail() {
   const { toast } = useToast();
   const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+  const [segmentationDialogOpen, setSegmentationDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [exploreSubTab, setExploreSubTab] = useState<'table' | 'analysis'>('table');
@@ -604,6 +606,31 @@ export default function ProjectDetail() {
                       ? language === 'es'
                         ? 'Combina múltiples datasets'
                         : 'Combine multiple datasets'
+                      : t.projectDetail.chatCardDisabled}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`cursor-pointer transition-colors ${
+                  hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+                }`}
+                onClick={() => hasReadyFiles && setSegmentationDialogOpen(true)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Target className="h-5 w-5 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardTitle className="text-base">
+                    {language === 'es' ? 'Segmentación' : 'Segmentation'}
+                  </CardTitle>
+                  <CardDescription>
+                    {hasReadyFiles
+                      ? language === 'es'
+                        ? 'Clustering K-Means / Jerárquico'
+                        : 'K-Means / Hierarchical Clustering'
                       : t.projectDetail.chatCardDisabled}
                   </CardDescription>
                 </CardContent>
@@ -1139,6 +1166,14 @@ export default function ProjectDetail() {
         onOpenChange={setMergeDialogOpen}
         projectId={projectId!}
         projectName={project?.name || 'Project'}
+      />
+
+      {/* Segmentation Wizard Dialog */}
+      <SegmentationWizardDialog
+        open={segmentationDialogOpen}
+        onOpenChange={setSegmentationDialogOpen}
+        projectId={projectId!}
+        variables={explore.variables?.variables ?? []}
       />
 
       {/* Report Generator Dialog */}
