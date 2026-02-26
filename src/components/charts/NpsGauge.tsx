@@ -22,9 +22,11 @@ export function NpsGauge({ data, title }: NpsGaugeProps) {
   if (data.labels.length >= 3) {
     // Calculate NPS from segments
     const total = data.values.reduce((a, b) => a + b, 0);
-    detractors = (data.values[0] / total) * 100;
-    passives = (data.values[1] / total) * 100;
-    promoters = (data.values[2] / total) * 100;
+    if (total > 0) {
+      detractors = (data.values[0] / total) * 100;
+      passives = (data.values[1] / total) * 100;
+      promoters = (data.values[2] / total) * 100;
+    }
     npsScore = Math.round(promoters - detractors);
   } else {
     // NPS score provided directly

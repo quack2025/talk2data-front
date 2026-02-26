@@ -290,10 +290,10 @@ function ResultTable({
               <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
                 <td className="py-1.5 px-3">{g.group ?? g.label ?? g.category}</td>
                 <td className="text-right py-1.5 px-3 tabular-nums">
-                  {(g.mean as number).toFixed(2)}
+                  {g.mean != null ? Number(g.mean).toFixed(2) : '—'}
                 </td>
                 <td className="text-right py-1.5 px-3 tabular-nums">
-                  {(g.std as number).toFixed(2)}
+                  {g.std != null ? Number(g.std).toFixed(2) : '—'}
                 </td>
                 <td className="text-right py-1.5 px-3 tabular-nums">{g.n ?? g.count}</td>
               </tr>
@@ -307,12 +307,12 @@ function ResultTable({
     return (
       <div className="grid grid-cols-3 gap-4 text-center">
         <div className="p-4 bg-muted/50 rounded-lg">
-          <p className="text-2xl font-bold tabular-nums">{(data.mean as number).toFixed(2)}</p>
+          <p className="text-2xl font-bold tabular-nums">{data.mean != null ? Number(data.mean).toFixed(2) : '—'}</p>
           <p className="text-xs text-muted-foreground">{language === 'es' ? 'Media' : 'Mean'}</p>
         </div>
         {data.std != null && (
           <div className="p-4 bg-muted/50 rounded-lg">
-            <p className="text-2xl font-bold tabular-nums">{(data.std as number).toFixed(2)}</p>
+            <p className="text-2xl font-bold tabular-nums">{Number(data.std).toFixed(2)}</p>
             <p className="text-xs text-muted-foreground">Std Dev</p>
           </div>
         )}

@@ -27,7 +27,6 @@ import {
   CheckSquare,
   Sigma,
   Layers,
-  Lock,
   Search,
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -45,7 +44,6 @@ interface AnalysisTypeDef {
   needsCross?: boolean;
   needsSignificance?: boolean;
   needsMultipleVars?: boolean;
-  isPremium?: boolean;
 }
 
 const ANALYSIS_TYPES: AnalysisTypeDef[] = [
@@ -107,7 +105,6 @@ const ANALYSIS_TYPES: AnalysisTypeDef[] = [
     label: { es: 'Regresion', en: 'Regression' },
     description: { es: 'Predecir variable dependiente', en: 'Predict dependent variable' },
     needsMultipleVars: true,
-    isPremium: true,
   },
   {
     id: 'factor_analysis',
@@ -115,7 +112,6 @@ const ANALYSIS_TYPES: AnalysisTypeDef[] = [
     label: { es: 'Anal. Factorial', en: 'Factor Analysis' },
     description: { es: 'Reducir dimensiones (PCA/EFA)', en: 'Reduce dimensions (PCA/EFA)' },
     needsMultipleVars: true,
-    isPremium: true,
   },
 ];
 
@@ -286,9 +282,6 @@ export function AnalysisPanel({
                             <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 leading-none flex-shrink-0">
                               ✓
                             </Badge>
-                          )}
-                          {typeDef.isPremium && (
-                            <Lock className="h-3 w-3 text-amber-500 flex-shrink-0" />
                           )}
                         </div>
                       </button>

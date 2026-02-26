@@ -24,15 +24,16 @@ interface CompareMeansChartProps {
 export function CompareMeansChart({ data, title }: CompareMeansChartProps) {
   const chartData = data.labels.map((label, index) => ({
     name: label,
-    mean: data.values[index],
+    mean: data.values[index] ?? 0,
     errorBar: data.error_bars?.[index] ?? 0,
     color: data.colors?.[index] ?? getChartColor(index),
   }));
 
   // Calculate overall mean for reference line
+  const validValues = data.values.filter((v) => v != null && !isNaN(v));
   const overallMean =
-    data.values.length > 0
-      ? data.values.reduce((sum, v) => sum + v, 0) / data.values.length
+    validValues.length > 0
+      ? validValues.reduce((sum, v) => sum + v, 0) / validValues.length
       : 0;
 
   // Calculate left margin based on longest label
@@ -61,7 +62,7 @@ export function CompareMeansChart({ data, title }: CompareMeansChartProps) {
           <XAxis
             type="number"
             domain={[domainMin, domainMax]}
-            tickFormatter={(value) => value.toFixed(1)}
+            tickFormatter={(value) => value != null ? Number(value).toFixed(1) : ''}
             tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
           />
           <YAxis
@@ -72,9 +73,10 @@ export function CompareMeansChart({ data, title }: CompareMeansChartProps) {
           />
           <Tooltip
             formatter={(value: number, _name: string, props: { payload: { errorBar: number } }) => {
-              const stdDev = props.payload.errorBar;
+              const stdDev = props.payload?.errorBar;
+              if (value == null || stdDev == null) return ['—', 'Mean ± SD'];
               return [
-                `${value.toFixed(2)} ± ${stdDev.toFixed(2)}`,
+                `${Number(value).toFixed(2)} ± ${Number(stdDev).toFixed(2)}`,
                 'Mean ± SD',
               ];
             }}
@@ -90,7 +92,7 @@ export function CompareMeansChart({ data, title }: CompareMeansChartProps) {
             stroke="hsl(var(--muted-foreground))"
             strokeDasharray="3 3"
             label={{
-              value: `Avg: ${overallMean.toFixed(2)}`,
+              value: overallMean != null && !isNaN(overallMean) ? `Avg: ${overallMean.toFixed(2)}` : '',
               position: 'top',
               fill: 'hsl(var(--muted-foreground))',
               fontSize: 11,
