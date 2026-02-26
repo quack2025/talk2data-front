@@ -28,6 +28,7 @@ import Landing from "./pages/Landing";
 import ApiKeys from "./pages/ApiKeys";
 import SharedView from "./pages/SharedView";
 import PublicDashboardView from "./pages/PublicDashboardView";
+import DashboardBuilder from "./pages/DashboardBuilder";
 import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -250,6 +251,16 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ApiKeys />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Dashboard Builder (Sprint 17a) */}
+            <Route
+              path="/projects/:projectId/dashboards/:dashboardId"
+              element={
+                <ProtectedRoute>
+                  <DashboardBuilder />
                 </ProtectedRoute>
               }
             />

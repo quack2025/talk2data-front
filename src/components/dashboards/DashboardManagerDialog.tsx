@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ import {
   Copy,
   Check,
   Globe,
+  ExternalLink,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDashboards } from '@/hooks/useDashboards';
@@ -51,6 +53,7 @@ export function DashboardManagerDialog({
   projectId,
 }: DashboardManagerDialogProps) {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const dashboards = useDashboards(projectId);
   const [view, setView] = useState<View>('list');
   const [newName, setNewName] = useState('');
@@ -92,6 +95,14 @@ export function DashboardManagerDialog({
       setView('detail');
     },
     [dashboards]
+  );
+
+  const handleOpenBuilder = useCallback(
+    (dashboardId: string) => {
+      onOpenChange(false);
+      navigate(`/projects/${projectId}/dashboards/${dashboardId}`);
+    },
+    [navigate, projectId, onOpenChange]
   );
 
   const handleAddWidget = useCallback(
@@ -422,6 +433,14 @@ export function DashboardManagerDialog({
             {t.common.back}
           </Button>
           <Button
+            variant="default"
+            onClick={() => handleOpenBuilder(dash.id)}
+            className="flex-1 gap-2"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {lang === 'es' ? 'Abrir editor' : 'Open Builder'}
+          </Button>
+          <Button
             variant="outline"
             onClick={handleRefresh}
             disabled={dashboards.isRefreshing || dash.widgets.length === 0}
@@ -430,7 +449,6 @@ export function DashboardManagerDialog({
             <RefreshCw
               className={`h-4 w-4 ${dashboards.isRefreshing ? 'animate-spin' : ''}`}
             />
-            {lang === 'es' ? 'Actualizar' : 'Refresh'}
           </Button>
         </div>
       </div>
