@@ -211,3 +211,14 @@ function ProjectDetail() {
 ```
 
 Each Manager component is self-contained: it fetches its own data via its hook, renders its own CRUD UI, and manages its own dialogs.
+
+---
+
+## Backend API Endpoints (Not Yet in Frontend)
+
+These Sprint 12 backend endpoints are available but lack frontend integration:
+- **TabSpec Import:** `POST .../data-prep/import-tabspec` (multipart) + `POST .../data-prep/apply-tabspec`
+- **Data Prep V2:** `GET .../data-prep/variable-profiles`, `/qc-report`, `/suggestions`, `/data-table`, `/column-distribution/{col}`
+- **Templates:** `GET .../data-prep/templates`, `POST .../data-prep/apply-template`
+
+These would integrate into `DataPrepManager` (new tabs or sub-panels) using the existing hook pattern.
