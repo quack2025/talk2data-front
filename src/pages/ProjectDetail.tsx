@@ -86,6 +86,7 @@ import {
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { api } from '@/lib/api';
 import { useProject, useUpdateProject, useDeleteProject } from '@/hooks/useProjects';
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -445,8 +446,48 @@ export default function ProjectDetail() {
           </div>
         </div>
 
+        {/* Error Recovery Banner */}
+        {project.status === 'error' && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-2 text-destructive text-sm">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">
+                    {language === 'es' ? 'Error al procesar el archivo' : 'File processing failed'}
+                  </p>
+                  {(project as any).error_message && (
+                    <p className="text-xs mt-1 text-muted-foreground">
+                      {(project as any).error_message}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                  onClick={async () => {
+                    try {
+                      await api.post(`/projects/${projectId}/reprocess`, {});
+                      toast({ title: language === 'es' ? 'Estado reiniciado' : 'Status reset' });
+                      navigate(`/projects/${projectId}/upload`);
+                    } catch (e) {
+                      toast({ title: language === 'es' ? 'Error' : 'Error', description: e instanceof Error ? e.message : 'Unknown error', variant: 'destructive' });
+                    }
+                  }}
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                  {language === 'es' ? 'Reintentar' : 'Retry Upload'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Data Readiness Banner */}
-        {!dataPrepReady && hasFiles && (
+        {!dataPrepReady && hasFiles && project.status !== 'error' && (
           <div className="flex items-center justify-between rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
             <div className="flex items-center gap-2 text-warning-foreground text-sm" style={{ color: 'hsl(var(--warning))' }}>
               <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -805,7 +846,10 @@ export default function ProjectDetail() {
                       <WaveManager
                         projectId={projectId!}
                         availableFiles={
-                          files?.map((f) => ({ id: f.id, name: f.original_name })) || []
+                          (files ?? [])
+                            .filter((f) => f.file_type === 'spss_data')
+                            .filter((f, i, arr) => arr.findIndex((x) => x.original_name === f.original_name) === i)
+                            .map((f) => ({ id: f.id, name: f.original_name }))
                         }
                         availableVariables={variableNames}
                       />

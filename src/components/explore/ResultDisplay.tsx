@@ -88,6 +88,23 @@ export function ResultDisplay({
           </div>
         )}
 
+        {/* No valid data state */}
+        {result.sample_size === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+            <AlertTriangle className="h-8 w-8 text-amber-500" />
+            <p className="text-sm font-medium">
+              {language === 'es'
+                ? 'No hay datos válidos para analizar'
+                : 'No valid data to analyze'}
+            </p>
+            <p className="text-xs">
+              {language === 'es'
+                ? 'Esta variable tiene 100% valores faltantes. Selecciona otra variable o revisa la preparación de datos.'
+                : 'This variable has 100% missing values. Select a different variable or check your data preparation.'}
+            </p>
+          </div>
+        ) : (
+        <>
         {/* Result Table */}
         <div className="overflow-x-auto">
           <ResultTable analysisType={result.analysis_type} data={data} language={language} />
@@ -125,6 +142,8 @@ export function ResultDisplay({
             </Collapsible>
           )}
         </div>
+        </>
+        )}
       </CardContent>
     </Card>
   );

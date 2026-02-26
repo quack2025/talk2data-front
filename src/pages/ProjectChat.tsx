@@ -7,12 +7,19 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
-import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, Presentation, CheckCircle2 } from 'lucide-react';
+import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, Presentation, CheckCircle2, Download } from 'lucide-react';
 import type { RefinementAction } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useDataPrep } from '@/hooks/useDataPrep';
 import { useProject } from '@/hooks/useProjects';
+import { useExports } from '@/hooks/useExports';
 import { ReportGeneratorDialog } from '@/components/reports';
 import { toast } from 'sonner';
 
@@ -26,6 +33,7 @@ export default function ProjectChat() {
   const { t } = useLanguage();
   const { dataPrepStatus, skipDataPrep } = useDataPrep(projectId!);
   const { data: project } = useProject(projectId!);
+  const { createExport } = useExports(projectId!);
 
   // Guard: auto-skip data prep gate if project is ready
   useEffect(() => {
@@ -117,7 +125,41 @@ export default function ProjectChat() {
         {/* Chat Panel */}
         <div className="w-[400px] flex flex-col border-r bg-background">
           {/* Chat toolbar */}
-          <div className="flex items-center justify-end px-3 py-2 border-b">
+          <div className="flex items-center justify-end gap-1 px-3 py-2 border-b">
+            {activeConversationId && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    disabled={createExport.isPending}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {createExport.isPending
+                      ? (t.common?.exporting ?? 'Exporting...')
+                      : (t.chat?.exportConversation ?? 'Export')}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => createExport.mutate({ format: 'pdf', conversationId: activeConversationId })}
+                  >
+                    PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => createExport.mutate({ format: 'excel', conversationId: activeConversationId })}
+                  >
+                    Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => createExport.mutate({ format: 'pptx', conversationId: activeConversationId })}
+                  >
+                    PowerPoint
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <Button
               variant="ghost"
               size="sm"
