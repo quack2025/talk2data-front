@@ -43,6 +43,15 @@ export interface AutoDetectKResult {
   recommendation_reason: string;
 }
 
+export interface DendrogramData {
+  icoord: number[][];
+  dcoord: number[][];
+  ivl: string[];
+  color_list: string[];
+  n_leaves: number;
+  n_samples: number;
+}
+
 export interface ClusterResult {
   method: string;
   n_clusters: number;
@@ -54,6 +63,7 @@ export interface ClusterResult {
   auto_detect: AutoDetectKResult | null;
   segment_ids: string[];
   data_prep_rule_id: string | null;
+  dendrogram_data: DendrogramData | null;
 }
 
 export const METHOD_LABELS: Record<ClusterMethod, { es: string; en: string; desc_es: string; desc_en: string }> = {

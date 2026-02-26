@@ -40,6 +40,7 @@ import type {
 import { METHOD_LABELS } from '@/types/segmentation';
 import type { ExploreVariable } from '@/types/explore';
 import { toast } from 'sonner';
+import { DendrogramChart } from './DendrogramChart';
 
 interface SegmentationWizardDialogProps {
   open: boolean;
@@ -612,6 +613,18 @@ export function SegmentationWizardDialog({
                       </p>
                     )}
                   </div>
+
+                  {/* Dendrogram (hierarchical only) */}
+                  {seg.clusterResult.dendrogram_data && (
+                    <Card>
+                      <CardContent className="pt-4 pb-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                          {language === 'es' ? 'Dendrograma' : 'Dendrogram'}
+                        </p>
+                        <DendrogramChart data={seg.clusterResult.dendrogram_data} />
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* Cluster profiles */}
                   <div className="space-y-3">
