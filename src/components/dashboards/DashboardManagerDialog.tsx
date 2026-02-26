@@ -17,7 +17,11 @@ import {
   Trash2,
   RefreshCw,
   Eye,
+  EyeOff,
   ChevronLeft,
+  Copy,
+  Check,
+  Globe,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDashboards } from '@/hooks/useDashboards';
@@ -51,6 +55,8 @@ export function DashboardManagerDialog({
   const [view, setView] = useState<View>('list');
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -120,6 +126,25 @@ export function DashboardManagerDialog({
     if (!dashboards.activeDashboard) return;
     await dashboards.refreshDashboard(dashboards.activeDashboard.id);
   }, [dashboards]);
+
+  const handlePublish = useCallback(async () => {
+    if (!dashboards.activeDashboard) return;
+    setIsPublishing(true);
+    await dashboards.publishDashboard(dashboards.activeDashboard.id);
+    setIsPublishing(false);
+  }, [dashboards]);
+
+  const handleUnpublish = useCallback(async () => {
+    if (!dashboards.activeDashboard) return;
+    await dashboards.unpublishDashboard(dashboards.activeDashboard.id);
+  }, [dashboards]);
+
+  const handleCopyLink = useCallback((token: string) => {
+    const url = `${window.location.origin}/dashboard/view/${token}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, []);
 
   const lang = language as 'es' | 'en';
 
@@ -321,6 +346,65 @@ export function DashboardManagerDialog({
                   </Button>
                 ))}
               </div>
+            </div>
+
+            {/* Publish / Share section */}
+            <div className="pt-2 border-t">
+              <p className="text-sm font-medium mb-2">
+                <Globe className="h-3.5 w-3.5 inline mr-1.5" />
+                {lang === 'es' ? 'Compartir' : 'Share'}
+              </p>
+              {dash.is_published && dash.share_token ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                    <Eye className="h-3.5 w-3.5 text-green-600 shrink-0" />
+                    <span className="text-xs text-green-700 dark:text-green-400 font-medium">
+                      {lang === 'es' ? 'Publicado' : 'Published'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      readOnly
+                      value={`${window.location.origin}/dashboard/${dash.share_token}`}
+                      className="text-xs h-8"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8 shrink-0"
+                      onClick={() => handleCopyLink(dash.share_token!)}
+                    >
+                      {copied ? (
+                        <Check className="h-3.5 w-3.5 text-green-600" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-destructive hover:text-destructive w-full gap-1.5"
+                    onClick={handleUnpublish}
+                  >
+                    <EyeOff className="h-3.5 w-3.5" />
+                    {lang === 'es' ? 'Dejar de compartir' : 'Unpublish'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-1.5 text-xs"
+                  onClick={handlePublish}
+                  disabled={isPublishing || dash.widgets.length === 0}
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  {isPublishing
+                    ? (lang === 'es' ? 'Publicando...' : 'Publishing...')
+                    : (lang === 'es' ? 'Publicar dashboard' : 'Publish Dashboard')}
+                </Button>
+              )}
             </div>
           </div>
         </ScrollArea>

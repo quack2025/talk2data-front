@@ -120,6 +120,34 @@ export interface WidgetCacheRefreshResponse {
   errors: string[];
 }
 
+// --- Publish / Share (Sprint 16b) ---
+
+export interface PublishRequest {
+  password?: string | null;
+  expires_at?: string | null;
+}
+
+export interface PublishResponse {
+  share_token: string;
+  is_published: boolean;
+  has_password: boolean;
+  expires_at: string | null;
+}
+
+export interface PublicDashboardResponse {
+  name: string;
+  description: string | null;
+  layout: WidgetLayoutItem[];
+  global_filters: GlobalFilterConfig[];
+  theme: DashboardTheme | null;
+  widgets: DashboardWidget[];
+}
+
+export interface PublicFilterRequest {
+  filters: Array<{ variable: string; values: unknown[] }>;
+  password?: string | null;
+}
+
 // --- Constants ---
 
 export const WIDGET_TYPE_LABELS: Record<WidgetType, { es: string; en: string }> = {

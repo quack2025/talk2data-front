@@ -9,6 +9,8 @@ import type {
   WidgetCreateRequest,
   WidgetUpdateRequest,
   WidgetCacheRefreshResponse,
+  PublishRequest,
+  PublishResponse,
 } from '@/types/dashboard';
 
 interface UseDashboardsState {
@@ -293,6 +295,84 @@ export function useDashboards(projectId: string) {
     [projectId, fetchDashboard]
   );
 
+  // --- Publish dashboard ---
+  const publishDashboard = useCallback(
+    async (dashboardId: string, data: PublishRequest = {}) => {
+      try {
+        const response = await api.post<PublishResponse>(
+          `/projects/${projectId}/dashboards/${dashboardId}/publish`,
+          data
+        );
+        // Update local state
+        setState((prev) => ({
+          ...prev,
+          dashboards: prev.dashboards.map((d) =>
+            d.id === dashboardId
+              ? { ...d, is_published: true, share_token: response.share_token }
+              : d
+          ),
+          activeDashboard:
+            prev.activeDashboard?.id === dashboardId
+              ? {
+                  ...prev.activeDashboard,
+                  is_published: true,
+                  share_token: response.share_token,
+                }
+              : prev.activeDashboard,
+        }));
+        return response;
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Error publishing dashboard',
+        }));
+        return null;
+      }
+    },
+    [projectId]
+  );
+
+  // --- Unpublish dashboard ---
+  const unpublishDashboard = useCallback(
+    async (dashboardId: string) => {
+      try {
+        await api.delete(
+          `/projects/${projectId}/dashboards/${dashboardId}/publish`
+        );
+        setState((prev) => ({
+          ...prev,
+          dashboards: prev.dashboards.map((d) =>
+            d.id === dashboardId
+              ? { ...d, is_published: false, share_token: null }
+              : d
+          ),
+          activeDashboard:
+            prev.activeDashboard?.id === dashboardId
+              ? {
+                  ...prev.activeDashboard,
+                  is_published: false,
+                  share_token: null,
+                }
+              : prev.activeDashboard,
+        }));
+        return true;
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Error unpublishing dashboard',
+        }));
+        return false;
+      }
+    },
+    [projectId]
+  );
+
   // --- Clear active dashboard ---
   const clearActive = useCallback(() => {
     setState((prev) => ({ ...prev, activeDashboard: null }));
@@ -309,6 +389,8 @@ export function useDashboards(projectId: string) {
     updateWidget,
     deleteWidget,
     refreshDashboard,
+    publishDashboard,
+    unpublishDashboard,
     clearActive,
   };
 }

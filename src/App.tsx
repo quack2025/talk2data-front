@@ -27,6 +27,7 @@ import Teams from "./pages/Teams";
 import Landing from "./pages/Landing";
 import ApiKeys from "./pages/ApiKeys";
 import SharedView from "./pages/SharedView";
+import PublicDashboardView from "./pages/PublicDashboardView";
 import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -259,6 +260,9 @@ const App = () => (
 
             {/* Public shared resource viewer (no auth required) */}
             <Route path="/shared/:token" element={<SharedView />} />
+
+            {/* Public dashboard viewer (no auth required) */}
+            <Route path="/dashboard/view/:token" element={<PublicDashboardView />} />
 
             {/* Catch all */}
             <Route path="*" element={<NotFound />} />
