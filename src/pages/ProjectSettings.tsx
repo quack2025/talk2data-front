@@ -45,8 +45,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { ArrowLeft, Loader2, Save, Trash2, ChevronDown, X, CalendarIcon } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Trash2, ChevronDown, X, CalendarIcon, Users } from 'lucide-react';
 import { useProject, useUpdateProject, useDeleteProject } from '@/hooks/useProjects';
+import { useTeams, useAssignProjectToTeam } from '@/hooks/useTeams';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -84,6 +85,8 @@ export default function ProjectSettings() {
   const { data: project, isLoading } = useProject(projectId!);
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
+  const { data: teams } = useTeams();
+  const assignToTeam = useAssignProjectToTeam();
 
   const [isContextOpen, setIsContextOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -509,6 +512,54 @@ export default function ProjectSettings() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Team Assignment */}
+        {teams && teams.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                {t.teams?.assignToTeam || 'Assign to team'}
+              </CardTitle>
+              <CardDescription>
+                {language === 'es'
+                  ? 'Asigna este proyecto a un equipo para que todos los miembros puedan acceder.'
+                  : 'Assign this project to a team so all members can access it.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Select
+                value={project?.owner_type === 'team' ? String(project.owner_id) : '__personal__'}
+                onValueChange={(value) => {
+                  if (!projectId) return;
+                  if (value === '__personal__') return; // Can't unassign for now
+                  assignToTeam.mutate({ projectId, teamId: value });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={language === 'es' ? 'Selecciona un equipo' : 'Select a team'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__personal__">
+                    {language === 'es' ? 'Personal (solo yo)' : 'Personal (only me)'}
+                  </SelectItem>
+                  {teams.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name} ({team.member_count} {language === 'es' ? 'miembros' : 'members'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {project?.owner_type === 'team' && (
+                <p className="text-sm text-muted-foreground">
+                  {language === 'es'
+                    ? 'Este proyecto es accesible por todos los miembros del equipo.'
+                    : 'This project is accessible by all team members.'}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Danger Zone */}
         <Card className="border-destructive/50">

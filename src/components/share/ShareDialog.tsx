@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -175,6 +176,7 @@ export function ShareDialog({
             <Link className="h-5 w-5" />
             {t.share?.title || 'Compartir'}
           </DialogTitle>
+          <DialogDescription className="sr-only">Share project link settings</DialogDescription>
         </DialogHeader>
 
         {/* Create Link Form */}

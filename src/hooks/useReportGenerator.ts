@@ -16,6 +16,10 @@ export function useReportGenerator(projectId: string) {
   const [progress, setProgress] = useState<ReportProgress>({ step: 0, total: 5, label: 'starting' });
 
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollCountRef = useRef(0);
+  const lastStepRef = useRef(-1);
+  const stuckCountRef = useRef(0);
+  const MAX_STUCK_POLLS = 40; // ~2 minutes of no progress → timeout
 
   // Cleanup on unmount
   useEffect(() => {
@@ -36,6 +40,9 @@ export function useReportGenerator(projectId: string) {
     setError(null);
     setDownloadUrl(null);
     setProgress({ step: 0, total: 5, label: 'starting' });
+    pollCountRef.current = 0;
+    lastStepRef.current = -1;
+    stuckCountRef.current = 0;
 
     try {
       const response = await api.post<ReportGenerateResponse>(
@@ -66,11 +73,24 @@ export function useReportGenerator(projectId: string) {
             setError(exportData.error_message || 'Unknown error occurred');
             stopPolling();
           } else if (exportData.status === 'processing') {
+            const currentStep = exportData.progress_step ?? 0;
             setProgress({
-              step: exportData.progress_step ?? 0,
+              step: currentStep,
               total: exportData.progress_total ?? 5,
               label: exportData.progress_label ?? 'starting',
             });
+            // Detect stuck progress
+            if (currentStep === lastStepRef.current) {
+              stuckCountRef.current++;
+            } else {
+              stuckCountRef.current = 0;
+              lastStepRef.current = currentStep;
+            }
+            if (stuckCountRef.current >= MAX_STUCK_POLLS) {
+              setStatus('error');
+              setError('Report generation timed out. Please try again.');
+              stopPolling();
+            }
           }
         } catch (e) {
           setStatus('error');

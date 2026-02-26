@@ -130,13 +130,19 @@ export function DataPrepAIInput({ projectId, onRuleCreated, availableVariables =
   const handleCreateRule = async () => {
     if (!pendingRule) return;
     setIsLoading(true);
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false);
+      toast.error(language === 'es' ? 'Tiempo de espera agotado. Intenta de nuevo.' : 'Request timed out. Please try again.');
+    }, 30_000); // 30-second safety timeout
     try {
       await api.post(`/projects/${projectId}/data-prep`, pendingRule);
+      clearTimeout(timeoutId);
       toast.success(dp?.ruleCreated || 'Rule created');
       onRuleCreated();
       clearConversation();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error');
+      clearTimeout(timeoutId);
+      toast.error(e instanceof Error ? e.message : 'Error creating rule');
     } finally {
       setIsLoading(false);
     }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -182,6 +183,7 @@ export function ReportGeneratorDialog({
             <Presentation className="h-5 w-5" />
             {rpt?.generateInsightsReport ?? 'Generate Insights Report'}
           </DialogTitle>
+          <DialogDescription className="sr-only">Configure and generate AI insights report</DialogDescription>
         </DialogHeader>
 
         {/* === CONFIG STATE === */}

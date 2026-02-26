@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -266,6 +267,7 @@ export function SegmentationWizardDialog({
               <Target className="h-5 w-5" />
               {mg.title}
             </DialogTitle>
+            <DialogDescription className="sr-only">Segmentation clustering wizard</DialogDescription>
             <span className="text-sm text-muted-foreground">
               {stepIndex + 1} / {STEPS.length}
             </span>
