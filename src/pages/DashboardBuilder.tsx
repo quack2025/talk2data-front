@@ -30,6 +30,7 @@ import {
   Globe,
   GripVertical,
   Palette,
+  FileDown,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDashboards } from '@/hooks/useDashboards';
@@ -77,6 +78,7 @@ export default function DashboardBuilder() {
 
   const [editingWidget, setEditingWidget] = useState<DashboardWidget | null>(null);
   const [showThemeEditor, setShowThemeEditor] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load dashboard on mount
@@ -210,6 +212,14 @@ export default function DashboardBuilder() {
     [dash, dashboards],
   );
 
+  // Export PDF
+  const handleExportPdf = useCallback(async () => {
+    if (!dash) return;
+    setIsExporting(true);
+    await dashboards.exportPdf(dash.id);
+    setIsExporting(false);
+  }, [dash, dashboards]);
+
   // Derive theme CSS custom properties for live preview
   const themeStyles = useMemo(() => {
     const t = dash?.theme as DashboardTheme | null | undefined;
@@ -301,6 +311,20 @@ export default function DashboardBuilder() {
         >
           <Palette className="h-3.5 w-3.5" />
           {lang === 'es' ? 'Tema' : 'Theme'}
+        </Button>
+
+        {/* Export PDF */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={handleExportPdf}
+          disabled={isExporting || dash.widgets.length === 0}
+        >
+          <FileDown
+            className={`h-3.5 w-3.5 ${isExporting ? 'animate-pulse' : ''}`}
+          />
+          PDF
         </Button>
 
         {/* Refresh */}

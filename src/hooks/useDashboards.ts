@@ -373,6 +373,35 @@ export function useDashboards(projectId: string) {
     [projectId]
   );
 
+  // --- Export dashboard as PDF ---
+  const exportPdf = useCallback(
+    async (dashboardId: string) => {
+      try {
+        const blob = await api.downloadBlob(
+          `/projects/${projectId}/dashboards/${dashboardId}/export/pdf`,
+          'GET',
+        );
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dashboard_${dashboardId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return true;
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          error:
+            error instanceof Error ? error.message : 'Error exporting PDF',
+        }));
+        return false;
+      }
+    },
+    [projectId],
+  );
+
   // --- Clear active dashboard ---
   const clearActive = useCallback(() => {
     setState((prev) => ({ ...prev, activeDashboard: null }));
@@ -391,6 +420,7 @@ export function useDashboards(projectId: string) {
     refreshDashboard,
     publishDashboard,
     unpublishDashboard,
+    exportPdf,
     clearActive,
   };
 }
