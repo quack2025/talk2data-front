@@ -81,6 +81,7 @@ import {
   PanelRightClose,
   Presentation,
   Merge,
+  LayoutDashboard,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -101,6 +102,7 @@ import { VariableMetadataManager } from '@/components/dataprep/VariableMetadataM
 import { SegmentManager } from '@/components/segments';
 import { MergeWizardDialog } from '@/components/merge';
 import { SegmentationWizardDialog } from '@/components/segmentation';
+import { DashboardManagerDialog } from '@/components/dashboards';
 import { WaveManager } from '@/components/waves';
 import { useProjectVariables } from '@/hooks/useProjectVariables';
 import {
@@ -134,6 +136,7 @@ export default function ProjectDetail() {
   const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [segmentationDialogOpen, setSegmentationDialogOpen] = useState(false);
+  const [dashboardDialogOpen, setDashboardDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [exploreSubTab, setExploreSubTab] = useState<'table' | 'analysis'>('table');
@@ -631,6 +634,34 @@ export default function ProjectDetail() {
                       ? language === 'es'
                         ? 'Clustering K-Means / Jerárquico'
                         : 'K-Means / Hierarchical Clustering'
+                      : t.projectDetail.chatCardDisabled}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={cn(
+                  'transition-colors',
+                  hasReadyFiles
+                    ? 'cursor-pointer hover:border-primary/50'
+                    : 'opacity-50 cursor-not-allowed'
+                )}
+                onClick={() => hasReadyFiles && setDashboardDialogOpen(true)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <LayoutDashboard className="h-5 w-5 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardTitle className="text-base">
+                    {language === 'es' ? 'Dashboards' : 'Dashboards'}
+                  </CardTitle>
+                  <CardDescription>
+                    {hasReadyFiles
+                      ? language === 'es'
+                        ? 'Dashboards interactivos para compartir'
+                        : 'Interactive dashboards to share'
                       : t.projectDetail.chatCardDisabled}
                   </CardDescription>
                 </CardContent>
@@ -1174,6 +1205,13 @@ export default function ProjectDetail() {
         onOpenChange={setSegmentationDialogOpen}
         projectId={projectId!}
         variables={explore.variables?.variables ?? []}
+      />
+
+      {/* Dashboard Manager Dialog */}
+      <DashboardManagerDialog
+        open={dashboardDialogOpen}
+        onOpenChange={setDashboardDialogOpen}
+        projectId={projectId!}
       />
 
       {/* Report Generator Dialog */}
