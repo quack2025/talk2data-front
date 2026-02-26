@@ -11,6 +11,7 @@ import type {
   AnalysisTypeOption,
   FilterConfig,
   NetDefinition,
+  NestedBannerConfig,
   GenerateTablesConfig,
   GenerateTablesPreviewResponse,
   GenerateTablesResponse,
@@ -26,6 +27,7 @@ const initialState: AggfileState = {
   selectedAnalysis: 'all',
   selectedGroups: [],
   analysisTypes: ['crosstab'],
+  nestedBanners: [],
   format: {
     valueType: 'percentage',
     decimalPlaces: DEFAULT_DECIMAL_PLACES,
@@ -97,6 +99,7 @@ export function useAggfileGenerator(projectId: string) {
             column_variables: s.selectedBanners,
             include_percentages: s.format.valueType === 'percentage',
             chi_square_test: s.format.includeSignificance,
+            nested_banners: s.nestedBanners.length > 0 ? s.nestedBanners : undefined,
           }
         : null,
       filters: s.filters.length > 0 ? s.filters : null,
@@ -168,9 +171,14 @@ export function useAggfileGenerator(projectId: string) {
     setState((prev) => {
       const isSelected = prev.selectedBanners.includes(name);
       if (isSelected) {
+        // Also remove any nested banners that reference this variable
+        const cleanedNested = prev.nestedBanners.filter(
+          (nb) => !nb.variables.includes(name)
+        );
         return {
           ...prev,
           selectedBanners: prev.selectedBanners.filter((b) => b !== name),
+          nestedBanners: cleanedNested,
         };
       }
       if (prev.selectedBanners.length >= MAX_BANNER_VARIABLES) {
@@ -225,6 +233,21 @@ export function useAggfileGenerator(projectId: string) {
             : [...prev.selectedAnalysis, ...groupVars],
       };
     });
+  }, []);
+
+  // --- Nested banners ---
+  const addNestedBanner = useCallback((variables: string[]) => {
+    setState((prev) => ({
+      ...prev,
+      nestedBanners: [...prev.nestedBanners, { variables }],
+    }));
+  }, []);
+
+  const removeNestedBanner = useCallback((index: number) => {
+    setState((prev) => ({
+      ...prev,
+      nestedBanners: prev.nestedBanners.filter((_, i) => i !== index),
+    }));
   }, []);
 
   const setAnalysisMode = useCallback((mode: 'all' | 'selected') => {
@@ -594,6 +617,8 @@ export function useAggfileGenerator(projectId: string) {
     toggleBanner,
     toggleAnalysis,
     toggleGroup,
+    addNestedBanner,
+    removeNestedBanner,
     setAnalysisMode,
     toggleAnalysisType,
     setValueType,

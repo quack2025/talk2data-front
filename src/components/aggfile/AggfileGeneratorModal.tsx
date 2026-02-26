@@ -86,9 +86,12 @@ export function AggfileGeneratorModal({
             <BannerVariablesStep
               variables={generator.bannerVariables}
               selectedBanners={generator.selectedBanners}
+              nestedBanners={generator.nestedBanners}
               isLoading={generator.isLoadingBanners}
               maxBanners={generator.maxBanners}
               onToggle={generator.toggleBanner}
+              onAddNested={generator.addNestedBanner}
+              onRemoveNested={generator.removeNestedBanner}
               onNext={generator.goToNextStep}
               onFetch={generator.fetchBannerVariables}
               canProceed={generator.canProceedToStubs}

@@ -50,11 +50,16 @@ export type AnalysisTypeOption =
 
 export type OutputFormat = 'json' | 'excel' | 'spss';
 
+export interface NestedBannerConfig {
+  variables: string[];
+}
+
 export interface CrosstabConfig {
   row_variables: string[];
   column_variables: string[];
   include_percentages: boolean;
   chi_square_test: boolean;
+  nested_banners?: NestedBannerConfig[] | null;
 }
 
 export interface FilterConfig {
@@ -135,6 +140,7 @@ export interface AggfileState {
   selectedAnalysis: string[] | 'all';
   selectedGroups: string[];
   analysisTypes: AnalysisTypeOption[];
+  nestedBanners: NestedBannerConfig[];
   format: {
     valueType: ValueFormat;
     decimalPlaces: number;
