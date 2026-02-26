@@ -31,15 +31,18 @@ import {
   GripVertical,
   Palette,
   FileDown,
+  Filter,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDashboards } from '@/hooks/useDashboards';
 import { DashboardWidgetRenderer } from '@/components/dashboards/DashboardWidgetRenderer';
 import { WidgetConfigEditor } from '@/components/dashboards/WidgetConfigEditor';
 import { ThemeEditor } from '@/components/dashboards/ThemeEditor';
+import { FilterManager } from '@/components/dashboards/FilterManager';
 import type {
   DashboardWidget,
   DashboardTheme,
+  GlobalFilterConfig,
   WidgetType,
   WidgetCreateRequest,
   WidgetLayoutItem,
@@ -78,6 +81,7 @@ export default function DashboardBuilder() {
 
   const [editingWidget, setEditingWidget] = useState<DashboardWidget | null>(null);
   const [showThemeEditor, setShowThemeEditor] = useState(false);
+  const [showFilterManager, setShowFilterManager] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -220,6 +224,16 @@ export default function DashboardBuilder() {
     setIsExporting(false);
   }, [dash, dashboards]);
 
+  // Save global filters
+  const handleSaveFilters = useCallback(
+    (filters: GlobalFilterConfig[]) => {
+      if (!dash) return;
+      dashboards.updateDashboard(dash.id, { global_filters: filters });
+      setShowFilterManager(false);
+    },
+    [dash, dashboards],
+  );
+
   // Derive theme CSS custom properties for live preview
   const themeStyles = useMemo(() => {
     const t = dash?.theme as DashboardTheme | null | undefined;
@@ -306,11 +320,36 @@ export default function DashboardBuilder() {
           className="gap-1.5"
           onClick={() => {
             setShowThemeEditor((v) => !v);
-            if (!showThemeEditor) setEditingWidget(null);
+            if (!showThemeEditor) {
+              setEditingWidget(null);
+              setShowFilterManager(false);
+            }
           }}
         >
           <Palette className="h-3.5 w-3.5" />
           {lang === 'es' ? 'Tema' : 'Theme'}
+        </Button>
+
+        {/* Filters */}
+        <Button
+          variant={showFilterManager ? 'default' : 'outline'}
+          size="sm"
+          className="gap-1.5"
+          onClick={() => {
+            setShowFilterManager((v) => !v);
+            if (!showFilterManager) {
+              setShowThemeEditor(false);
+              setEditingWidget(null);
+            }
+          }}
+        >
+          <Filter className="h-3.5 w-3.5" />
+          {lang === 'es' ? 'Filtros' : 'Filters'}
+          {dash.global_filters.length > 0 && (
+            <span className="text-[10px] bg-primary-foreground/20 rounded-full px-1">
+              {dash.global_filters.length}
+            </span>
+          )}
         </Button>
 
         {/* Export PDF */}
@@ -398,6 +437,7 @@ export default function DashboardBuilder() {
                         onClick={() => {
                           setEditingWidget(widget);
                           setShowThemeEditor(false);
+                          setShowFilterManager(false);
                         }}
                       >
                         <Settings2 className="h-3 w-3" />
@@ -423,7 +463,7 @@ export default function DashboardBuilder() {
         </div>
 
         {/* Config editor panel */}
-        {editingWidget && !showThemeEditor && (
+        {editingWidget && !showThemeEditor && !showFilterManager && (
           <div className="w-72 shrink-0">
             <WidgetConfigEditor
               widget={editingWidget}
@@ -435,12 +475,24 @@ export default function DashboardBuilder() {
         )}
 
         {/* Theme editor panel */}
-        {showThemeEditor && (
+        {showThemeEditor && !showFilterManager && (
           <div className="w-72 shrink-0">
             <ThemeEditor
               theme={(dash.theme as DashboardTheme) || null}
               onSave={handleSaveTheme}
               onClose={() => setShowThemeEditor(false)}
+            />
+          </div>
+        )}
+
+        {/* Filter manager panel */}
+        {showFilterManager && (
+          <div className="w-72 shrink-0">
+            <FilterManager
+              projectId={projectId}
+              filters={dash.global_filters as GlobalFilterConfig[]}
+              onSave={handleSaveFilters}
+              onClose={() => setShowFilterManager(false)}
             />
           </div>
         )}

@@ -24,8 +24,9 @@ import {
   Type,
   Hash,
 } from "lucide-react";
-import type { PublicDashboardResponse, DashboardWidget, DashboardTheme } from "@/types/dashboard";
+import type { PublicDashboardResponse, DashboardWidget, DashboardTheme, GlobalFilterConfig } from "@/types/dashboard";
 import { WIDGET_TYPE_LABELS } from "@/types/dashboard";
+import { DashboardFilterBar } from "@/components/dashboards/DashboardFilterBar";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
@@ -167,6 +168,8 @@ export default function PublicDashboardView() {
   const [state, setState] = useState<ViewState>({ kind: "loading" });
   const [password, setPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [savedPassword, setSavedPassword] = useState<string | undefined>();
 
   const fetchDashboard = useCallback(
     async (pwd?: string) => {
@@ -208,6 +211,7 @@ export default function PublicDashboardView() {
 
         const data: PublicDashboardResponse = await res.json();
         setState({ kind: "success", data });
+        if (pwd) setSavedPassword(pwd);
       } catch (err: unknown) {
         setState({
           kind: "error",
@@ -232,6 +236,54 @@ export default function PublicDashboardView() {
     await fetchDashboard(password.trim());
     setPasswordLoading(false);
   };
+
+  // Apply filters
+  const handleFilterChange = useCallback(
+    async (activeFilters: Array<{ variable: string; values: unknown[] }>) => {
+      if (!token || state.kind !== "success") return;
+
+      if (activeFilters.length === 0) {
+        // No filters — reload original
+        fetchDashboard(savedPassword);
+        return;
+      }
+
+      setIsFiltering(true);
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/api/v1/public/dashboards/${token}/filter`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              filters: activeFilters,
+              password: savedPassword || null,
+            }),
+          },
+        );
+        if (res.ok) {
+          const data: PublicDashboardResponse = await res.json();
+          // Preserve filter_options from original load
+          setState((prev) => {
+            const origOptions =
+              prev.kind === "success" ? prev.data.filter_options : {};
+            return {
+              kind: "success",
+              data: {
+                ...data,
+                filter_options: data.filter_options || origOptions,
+              },
+            };
+          });
+        }
+      } catch (err) {
+        // Silently fail — keep current data
+      } finally {
+        setIsFiltering(false);
+      }
+    },
+    [token, state.kind, savedPassword, fetchDashboard],
+  );
 
   // ---------------------------------------------------------------------------
   // Render per state
@@ -341,6 +393,16 @@ export default function PublicDashboardView() {
 
             {data.description && (
               <p className="text-muted-foreground">{data.description}</p>
+            )}
+
+            {/* Global filters */}
+            {data.global_filters && data.global_filters.length > 0 && (
+              <DashboardFilterBar
+                filters={data.global_filters as GlobalFilterConfig[]}
+                filterOptions={data.filter_options || {}}
+                onFilterChange={handleFilterChange}
+                isLoading={isFiltering}
+              />
             )}
 
             {/* Widgets grid */}

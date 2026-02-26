@@ -144,6 +144,7 @@ export interface PublicDashboardResponse {
   description: string | null;
   layout: WidgetLayoutItem[];
   global_filters: GlobalFilterConfig[];
+  filter_options: Record<string, Array<{ value: unknown; label: string }>>;
   theme: DashboardTheme | null;
   widgets: DashboardWidget[];
 }
