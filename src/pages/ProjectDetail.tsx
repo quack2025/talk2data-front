@@ -80,6 +80,7 @@ import {
   PanelRightOpen,
   PanelRightClose,
   Presentation,
+  Merge,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
@@ -98,6 +99,7 @@ import { VariableGroupsManager } from '@/components/grouping';
 import { DataPrepManager } from '@/components/data-prep';
 import { VariableMetadataManager } from '@/components/dataprep/VariableMetadataManager';
 import { SegmentManager } from '@/components/segments';
+import { MergeWizardDialog } from '@/components/merge';
 import { WaveManager } from '@/components/waves';
 import { useProjectVariables } from '@/hooks/useProjectVariables';
 import {
@@ -129,6 +131,7 @@ export default function ProjectDetail() {
   const { setLastProjectId } = useLastProject();
   const { toast } = useToast();
   const [aggfileModalOpen, setAggfileModalOpen] = useState(false);
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [exploreSubTab, setExploreSubTab] = useState<'table' | 'analysis'>('table');
@@ -504,7 +507,7 @@ export default function ProjectDetail() {
           {/* === TAB: PROJECT OVERVIEW === */}
           <TabsContent value="overview" className="space-y-6 mt-0">
             {/* Quick action cards */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               <Card
                 className="cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={() => navigate(`/projects/${projectId}/upload`)}
@@ -576,6 +579,31 @@ export default function ProjectDetail() {
                   <CardDescription>
                     {hasReadyFiles
                       ? t.aggfile?.generateTablesCardDescription || 'Excel con tablas cruzadas'
+                      : t.projectDetail.chatCardDisabled}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`cursor-pointer transition-colors ${
+                  hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
+                }`}
+                onClick={() => hasReadyFiles && setMergeDialogOpen(true)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Merge className="h-5 w-5 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <CardTitle className="text-base">
+                    {language === 'es' ? 'Combinar Datos' : 'Merge Data'}
+                  </CardTitle>
+                  <CardDescription>
+                    {hasReadyFiles
+                      ? language === 'es'
+                        ? 'Combina múltiples datasets'
+                        : 'Combine multiple datasets'
                       : t.projectDetail.chatCardDisabled}
                   </CardDescription>
                 </CardContent>
@@ -1103,6 +1131,14 @@ export default function ProjectDetail() {
         open={aggfileModalOpen}
         onOpenChange={setAggfileModalOpen}
         projectId={projectId!}
+      />
+
+      {/* Merge Wizard Dialog */}
+      <MergeWizardDialog
+        open={mergeDialogOpen}
+        onOpenChange={setMergeDialogOpen}
+        projectId={projectId!}
+        projectName={project?.name || 'Project'}
       />
 
       {/* Report Generator Dialog */}
