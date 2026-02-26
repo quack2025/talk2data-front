@@ -41,6 +41,8 @@ App.tsx (Router + Auth guards)
        ├── ProjectDetail → Data prep, groups, waves, segments
        ├── ProjectChat → AI chat with backend
        ├── ProjectExplore → Interactive analysis
+       ├── ProjectSettings → Project settings + team assignment
+       ├── Teams → TeamsManager (CRUD, member management)
        ├── ProjectUpload → SPSS file upload
        └── ...
 ```
@@ -131,6 +133,26 @@ SegmentSelector (compact dropdown in Explore/Chat/Tables)
   → Backend resolves segment → FilterCondition[] → prepends to filters
 ```
 
+### Report Generation
+```
+User opens ReportGeneratorDialog
+  → useReportGenerator.generate(options)
+  → api.post(`/projects/${id}/reports/generate`, options)
+  → Backend: background task with progress tracking
+  → Frontend polls: api.get(`/projects/${id}/reports/status/${exportId}`)
+  → Stuck detection: 40 consecutive identical polls → timeout error
+  → On complete: download URL available
+```
+
+### Team Assignment
+```
+ProjectSettings page → team selector (Select component)
+  → useAssignProjectToTeam().mutate({ projectId, teamId })
+  → api.patch(`/projects/${projectId}`, { team_id: teamId })
+  → Backend: validates team membership, sets owner_type=TEAM
+  → Query invalidation: ['projects'] cache refreshed
+```
+
 ---
 
 ## Folder System
@@ -169,6 +191,7 @@ All charts rendered via Recharts with consistent color palette from `lib/chartCo
 | NPS gauge | NpsGauge | Net Promoter Score |
 | Donut | DonutChart | Proportions |
 | Line | LineChart | Wave comparison trends |
+| Dendrogram | SegmentationDendrogram | Hierarchical clustering tree (SVG) |
 
 The `ChartWithTable` component is the main dispatcher — it reads `chart_type` from the backend response and renders the appropriate visualization.
 

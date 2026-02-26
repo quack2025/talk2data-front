@@ -330,3 +330,47 @@ Chart types: `bar`, `horizontal_bar`, `line`, `pie`, `donut`, `nps_gauge`, `cros
 4. **useCallback dependencies** — Always include `projectId` in CRUD hook callbacks
 5. **gen_random_uuid()** — Use this in Supabase migrations, not `uuid_generate_v4()`
 6. **Toast after async** — Always toast success/error after API calls complete
+
+---
+
+## Accessibility Patterns
+
+### DialogDescription Required
+Every `DialogContent` MUST include a `DialogDescription` for `aria-describedby`. Use sr-only for visual hiding:
+
+```tsx
+import { DialogDescription } from '@/components/ui/dialog';
+
+<DialogContent>
+  <DialogHeader>
+    <DialogTitle>Wizard Title</DialogTitle>
+    <DialogDescription className="sr-only">Wizard description for screen readers</DialogDescription>
+  </DialogHeader>
+  {/* ... */}
+</DialogContent>
+```
+
+### Timeout Safety Pattern
+For long-running operations, add client-side timeout guards:
+
+```typescript
+const timeoutId = setTimeout(() => {
+  setIsLoading(false);
+  toast.error(language === 'es' ? 'Tiempo agotado' : 'Request timed out');
+}, 30_000);
+
+try {
+  await api.post(...);
+} finally {
+  clearTimeout(timeoutId);
+}
+```
+
+### Context Value Memoization
+Always `useMemo` on React Context values to prevent unnecessary re-renders:
+
+```typescript
+const value = useMemo(() => ({
+  language, setLanguage, t: translations[language],
+}), [language]);
+```
