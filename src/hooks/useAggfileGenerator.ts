@@ -50,6 +50,7 @@ const initialState: AggfileState = {
   isLoadingPreview: false,
   isGenerating: false,
   progress: 0,
+  lastExportUrl: null,
 };
 
 interface BannerVariablesResponse {
@@ -449,6 +450,14 @@ export function useAggfileGenerator(projectId: string) {
 
   // --- Export to Excel (async with real progress polling) ---
   const exportToExcel = useCallback(async () => {
+    // If we already have a cached export URL, download directly (no re-generation)
+    const cachedUrl = stateRef.current.lastExportUrl;
+    if (cachedUrl) {
+      const filename = `tables_${projectId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      downloadFile(cachedUrl, filename);
+      return;
+    }
+
     setState((prev) => ({
       ...prev,
       step: 'generating',
@@ -510,6 +519,7 @@ export function useAggfileGenerator(projectId: string) {
         },
         isGenerating: false,
         progress: 100,
+        lastExportUrl: result.download_url || null,
       }));
     } catch (error) {
       setState((prev) => ({

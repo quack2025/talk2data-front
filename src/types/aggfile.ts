@@ -182,6 +182,7 @@ export interface AggfileState {
   isLoadingPreview: boolean;
   isGenerating: boolean;
   progress: number;
+  lastExportUrl: string | null;
 }
 
 // Constants

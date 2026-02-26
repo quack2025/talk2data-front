@@ -90,7 +90,7 @@ import { useProject, useUpdateProject, useDeleteProject } from '@/hooks/useProje
 import { useProjectFiles } from '@/hooks/useProjectFiles';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useLastProject } from '@/hooks/useLastProject';
-import { useExecutiveSummary } from '@/hooks/useExecutiveSummary';
+import { useExecutiveSummary, useRegenerateSummary } from '@/hooks/useExecutiveSummary';
 import { useExplore } from '@/hooks/useExplore';
 import { useToast } from '@/hooks/use-toast';
 import { AggfileGeneratorModal } from '@/components/aggfile';
@@ -169,6 +169,7 @@ export default function ProjectDetail() {
   const { files, isLoading: filesLoading } = useProjectFiles(projectId!);
   const { conversations } = useChat(projectId!);
   const { data: summary } = useExecutiveSummary(projectId!);
+  const regenerateSummary = useRegenerateSummary(projectId!);
   const { data: variableNames = [], isLoading: variablesLoading } = useProjectVariables(projectId, project?.status);
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
@@ -697,7 +698,7 @@ export default function ProjectDetail() {
             )}
 
             {/* Executive Summary */}
-            {hasSummary && (
+            {hasSummary ? (
               <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
                 <CardHeader className="flex flex-row items-start justify-between">
                   <div className="flex items-start gap-3">
@@ -725,6 +726,36 @@ export default function ProjectDetail() {
                   <div className="prose prose-sm dark:prose-invert max-w-none line-clamp-3">
                     <ReactMarkdown>{summary.content}</ReactMarkdown>
                   </div>
+                </CardContent>
+              </Card>
+            ) : hasReadyFiles && (
+              <Card className="border-dashed border-primary/30">
+                <CardContent className="flex items-center justify-between py-5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{t.summary?.title || 'Resumen Ejecutivo'}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t.summary?.noSummary || 'Genera un resumen ejecutivo con IA'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => regenerateSummary.mutate()}
+                    disabled={regenerateSummary.isPending}
+                    className="gap-2"
+                  >
+                    {regenerateSummary.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    {t.summary?.generate || 'Generar resumen'}
+                  </Button>
                 </CardContent>
               </Card>
             )}
