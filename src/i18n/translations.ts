@@ -79,6 +79,7 @@ export const translations = {
       proPlan: 'Plan Profesional',
       user: 'Usuario',
       selectLanguage: 'Seleccionar idioma',
+      noNotifications: 'Sin notificaciones',
     },
     // Sidebar
     sidebar: {
@@ -1237,6 +1238,7 @@ export const translations = {
       proPlan: 'Pro Plan',
       user: 'User',
       selectLanguage: 'Select language',
+      noNotifications: 'No notifications',
     },
     // Sidebar
     sidebar: {

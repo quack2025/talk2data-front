@@ -6,6 +6,8 @@ interface NpsGaugeProps {
     values: number[];
     percentages?: number[];
     colors?: string[];
+    nps_score?: number;
+    interpretation?: string;
   };
   title?: string;
 }
@@ -19,15 +21,21 @@ export function NpsGauge({ data, title }: NpsGaugeProps) {
   let passives = 0;
   let promoters = 0;
   
-  if (data.labels.length >= 3) {
-    // Calculate NPS from segments
+  if (data.percentages && data.percentages.length >= 3) {
+    // Use pre-computed percentages from backend
+    detractors = data.percentages[0] ?? 0;
+    passives = data.percentages[1] ?? 0;
+    promoters = data.percentages[2] ?? 0;
+    npsScore = data.nps_score != null ? Math.round(data.nps_score) : Math.round(promoters - detractors);
+  } else if (data.labels.length >= 3) {
+    // Fallback: calculate NPS from count values
     const total = data.values.reduce((a, b) => a + b, 0);
     if (total > 0) {
       detractors = (data.values[0] / total) * 100;
       passives = (data.values[1] / total) * 100;
       promoters = (data.values[2] / total) * 100;
     }
-    npsScore = Math.round(promoters - detractors);
+    npsScore = data.nps_score != null ? Math.round(data.nps_score) : Math.round(promoters - detractors);
   } else {
     // NPS score provided directly
     npsScore = data.values[0];
@@ -140,7 +148,7 @@ export function NpsGauge({ data, title }: NpsGaugeProps) {
                 className="text-2xl font-bold"
                 style={{ color: segment.color }}
               >
-                {segment.value.toFixed(1)}%
+                {(isNaN(segment.value) ? 0 : segment.value).toFixed(1)}%
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {segment.name}

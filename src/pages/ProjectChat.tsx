@@ -160,6 +160,8 @@ export default function ProjectChat() {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+            {/* Generate Report hidden — pipeline broken, re-enable when backend is fixed */}
+            {false && (
             <Button
               variant="ghost"
               size="sm"
@@ -169,6 +171,7 @@ export default function ProjectChat() {
               <Presentation className="h-3.5 w-3.5" />
               {t.reports?.generateReport ?? 'Generate Report'}
             </Button>
+            )}
           </div>
           {/* Transparency banner */}
           <div className="bg-blue-50 dark:bg-blue-950/30 border-b border-blue-100 dark:border-blue-900/50 px-4 py-2 flex items-center gap-2">

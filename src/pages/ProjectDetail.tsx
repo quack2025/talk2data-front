@@ -425,6 +425,8 @@ export default function ProjectDetail() {
               <Table2 className="h-4 w-4 mr-2" />
               {t.aggfile?.generateTables || 'Generar Tablas'}
             </Button>
+            {/* Generate Report hidden — pipeline broken, re-enable when backend is fixed */}
+            {false && (
             <Button
               variant="outline"
               size="sm"
@@ -434,6 +436,7 @@ export default function ProjectDetail() {
               <Presentation className="h-4 w-4 mr-2" />
               {t.reports?.generateReport ?? 'Generate Report'}
             </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

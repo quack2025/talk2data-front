@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import type { Project, ProjectUpdateData } from '@/types/database';
 
@@ -12,7 +12,6 @@ interface ToastMessages {
 }
 
 export function useProjects(toastMessages?: ToastMessages) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Listar proyectos
@@ -23,8 +22,8 @@ export function useProjects(toastMessages?: ToastMessages) {
 
   // Crear proyecto
   const createProject = useMutation({
-    mutationFn: (data: { 
-      name: string; 
+    mutationFn: (data: {
+      name: string;
       description?: string;
       study_objective?: string;
       country?: string;
@@ -41,16 +40,13 @@ export function useProjects(toastMessages?: ToastMessages) {
       api.post<Project>('/projects', { ...data, owner_type: 'user' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast({
-        title: toastMessages?.projectCreated ?? 'Project created',
+      toast.success(toastMessages?.projectCreated ?? 'Project created', {
         description: toastMessages?.projectCreatedDesc ?? 'The project has been created successfully.',
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: toastMessages?.error ?? 'Error',
+      toast.error(toastMessages?.error ?? 'Error', {
         description: error.message,
-        variant: 'destructive',
       });
     },
   });
@@ -61,9 +57,7 @@ export function useProjects(toastMessages?: ToastMessages) {
       api.patch<Project>(`/projects/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast({
-        title: toastMessages?.projectUpdated ?? 'Project updated',
-      });
+      toast.success(toastMessages?.projectUpdated ?? 'Project updated');
     },
   });
 
@@ -72,9 +66,7 @@ export function useProjects(toastMessages?: ToastMessages) {
     mutationFn: (id: string) => api.delete(`/projects/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast({
-        title: toastMessages?.projectDeleted ?? 'Project deleted',
-      });
+      toast.success(toastMessages?.projectDeleted ?? 'Project deleted');
     },
   });
 
@@ -103,7 +95,6 @@ interface UpdateProjectParams {
 }
 
 export function useUpdateProject() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -112,15 +103,11 @@ export function useUpdateProject() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['project', variables.projectId] });
-      toast({
-        title: variables.toastMessages?.success ?? 'Project updated',
-      });
+      toast.success(variables.toastMessages?.success ?? 'Project updated');
     },
     onError: (error: Error, variables) => {
-      toast({
-        title: variables.toastMessages?.error ?? 'Error',
+      toast.error(variables.toastMessages?.error ?? 'Error', {
         description: error.message,
-        variant: 'destructive',
       });
     },
   });
@@ -132,7 +119,6 @@ interface DeleteProjectParams {
 }
 
 export function useDeleteProject() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -140,15 +126,11 @@ export function useDeleteProject() {
       api.delete(`/projects/${projectId}`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast({
-        title: variables.toastMessages?.success ?? 'Project deleted',
-      });
+      toast.success(variables.toastMessages?.success ?? 'Project deleted');
     },
     onError: (error: Error, variables) => {
-      toast({
-        title: variables.toastMessages?.error ?? 'Error',
+      toast.error(variables.toastMessages?.error ?? 'Error', {
         description: error.message,
-        variant: 'destructive',
       });
     },
   });
