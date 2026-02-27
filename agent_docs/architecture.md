@@ -153,6 +153,25 @@ ProjectSettings page → team selector (Select component)
   → Query invalidation: ['projects'] cache refreshed
 ```
 
+### Error Recovery
+```
+ProjectDetail shows error banner when project.status === 'error'
+  → Displays project.error_message (from backend)
+  → User clicks "Retry Upload"
+  → api.post(`/projects/${projectId}/reprocess`, {})
+  → Backend resets status → PROCESSING, clears error_message
+  → navigate to /projects/${projectId}/upload for re-upload
+```
+
+### Conversation Export
+```
+ProjectChat toolbar → Export dropdown (PDF/Excel/PPTX)
+  → useExports().createExport.mutate({ format, conversationId })
+  → api.post(`/projects/${projectId}/exports`, { export_type, conversation_id })
+  → Backend generates file → returns download_url
+  → Auto-download via downloadFile()
+```
+
 ---
 
 ## Folder System

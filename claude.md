@@ -15,6 +15,15 @@ Part of the **Genius Labs AI Suite** (4 products sharing a unified design system
 **Deployment:** Lovable (auto-deploy from `main` branch)
 **Domain:** talk2data.survey-genius.ai
 
+### Local Paths & Infrastructure
+
+| Resource | Location |
+|----------|----------|
+| This repo (frontend) | `C:\Users\jorge\proyectos_python\talk2data-front` |
+| Backend repo | `C:\Users\jorge\proyectos_python\talk2data` |
+| Supabase project | `icxsetsaxifssotcodul` |
+| Backend API (prod) | talk2data-production-1698.up.railway.app |
+
 ---
 
 ## Quick Reference
@@ -185,7 +194,7 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 
 ---
 
-## QA Audit — 3 Rounds (Feb 26, 2026)
+## QA Audit — 4 Rounds (Feb 26-27, 2026)
 
 ### Round 1 (commit `9ce6bbb`)
 | Bug | Fix |
@@ -209,6 +218,14 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | B18 | 30-second safety timeout on NL rule creation |
 | A1 | `DialogDescription` (sr-only) on Segmentation, Merge, Share, Report dialogs |
 | B19 | Team assignment selector in ProjectSettings |
+
+### Round 4 (commit `26f4590`)
+| Bug | Fix |
+|-----|-----|
+| B2 | Error recovery banner in ProjectDetail with retry button (calls `POST /reprocess`) |
+| B3 | "No valid data" empty state in ResultDisplay when `sample_size === 0` |
+| B16 | Wave selector dedup: filter to `spss_data` + unique `original_name` |
+| B20 | Conversation export dropdown in ProjectChat toolbar (PDF/Excel/PPTX via useExports) |
 
 ---
 

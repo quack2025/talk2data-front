@@ -57,10 +57,11 @@ Logo + Product Name
 - Talk2Data: "API Docs" translated; all fallback operators standardized to `??` with English defaults
 - Commits: SC `d9b6482`, VC `dfb9eae`, AF `4ed1dbc`, T2D `b6ab6dd`
 
-### Phase 4: Talk2Data Product QA (Feb 26, 2026)
+### Phase 4: Talk2Data Product QA (Feb 26-27, 2026)
 - Dedicated QA audit of Talk2Data identified 23 bugs across 10 sections
-- 15 bugs fixed in 3 rounds (5 CRITICAL, 5 BUG, 5 UX)
+- 20 bugs fixed in 4 rounds
 - Round 1: Null guards, NPS gauge, lock icons, notifications (commit `9ce6bbb`)
 - Round 2: Missing %, context memo, export cache, summary CTA (backend `04e5492`, frontend `d8593bf`)
 - Round 3: Report timeouts, auto-naming, team sharing, a11y (backend `a0d2bb9`, frontend `5843f96`)
-- 8 items deferred (data issues, unimplemented features)
+- Round 4: Error recovery, missing warning, wave dedup, chat export (backend `f25bba4`, frontend `26f4590`)
+- 3 items deferred (B23 usage/billing requires Stripe, plus 2 wont-fix)

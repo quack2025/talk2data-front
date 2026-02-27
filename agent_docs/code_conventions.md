@@ -374,3 +374,31 @@ const value = useMemo(() => ({
   language, setLanguage, t: translations[language],
 }), [language]);
 ```
+
+### Empty State for Invalid Data
+When analysis returns `sample_size === 0`, show a dedicated empty state instead of a broken table:
+
+```tsx
+{result.sample_size === 0 ? (
+  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+    <AlertTriangle className="h-8 w-8 text-amber-500" />
+    <p className="text-sm font-medium">
+      {language === 'es' ? 'No hay datos válidos' : 'No valid data to analyze'}
+    </p>
+  </div>
+) : (
+  <ResultTable ... />
+)}
+```
+
+### Error Recovery Banner Pattern
+When a project is in error state, show a destructive banner with the error message and a retry action:
+
+```tsx
+{project.status === 'error' && (
+  <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+    {(project as any).error_message && <p className="text-xs">{(project as any).error_message}</p>}
+    <Button onClick={() => api.post(`/projects/${projectId}/reprocess`, {})}>Retry</Button>
+  </div>
+)}
+```
