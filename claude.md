@@ -227,6 +227,19 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | B16 | Wave selector dedup: filter to `spss_data` + unique `original_name` |
 | B20 | Conversation export dropdown in ProjectChat toolbar (PDF/Excel/PPTX via useExports) |
 
+### NL Chat Sprint 21 (commit `6be8cdb`)
+| Feature | Description |
+|---------|-------------|
+| Per-message results | Click assistant message → ResultsPanel shows that message's charts/tables |
+| Smart suggestions | ChatSuggestions shows dataset-specific example questions |
+| Weight toast | Auto-detect weight variable → info toast with Data Prep link |
+| Segment selector in chat | SegmentSelector in chat toolbar for global filter |
+
+### NL Chat QA (commit `fcb66f5`)
+| Bug | Fix |
+|-----|-----|
+| TC-19 | Per-message nav reads `attachments` from historical messages (charts/tables persisted in DB) |
+
 ---
 
 ## Backend API Endpoints Available (Not Yet Integrated in Frontend)

@@ -111,9 +111,11 @@ Hooks encapsulate:
 User types question in ChatInput
   → useChat.sendMessage(question, { segment_id })
   → api.post(`/projects/${id}/conversations/${convId}/query`, { question, segment_id })
-  → Backend: AI interpretation → real statistics → response
+  → Backend: AI interpretation (13 analysis types) → real statistics → response
   → QueryResponse { answer, charts, tables, variables, python_code }
-  → ChatMessage renders answer + charts + results panel
+  → ChatMessage renders answer + inline charts
+  → Assistant message saved with attachments JSON (charts, tables, variables, python_code)
+  → Per-message navigation: click message → ResultsPanel reads from attachments
 ```
 
 ### Explore Mode Analysis
@@ -205,14 +207,15 @@ All charts rendered via Recharts with consistent color palette from `lib/chartCo
 | Chart Type | Component | Used For |
 |-----------|-----------|----------|
 | Vertical bar | ChartWithTable | Frequency, general distributions |
-| Horizontal bar | CompareMeansChart | Compare means with error bars |
-| Crosstab table | CrosstabTable | Cross-tabulation with significance letters |
+| Horizontal bar | ChartWithTable | Net score (T2B/B2B), MRS, regression coefficients, mean |
+| Horizontal bar (means) | CompareMeansChart | Compare means with error bars |
+| Crosstab table | CrosstabTable | Cross-tabulation with significance letters, factor analysis loadings |
 | NPS gauge | NpsGauge | Net Promoter Score |
 | Donut | DonutChart | Proportions |
 | Line | LineChart | Wave comparison trends |
 | Dendrogram | SegmentationDendrogram | Hierarchical clustering tree (SVG) |
 
-The `ChartWithTable` component is the main dispatcher — it reads `chart_type` from the backend response and renders the appropriate visualization.
+The `ChartWithTable` component is the main dispatcher — it reads `chart_type` from the backend response and renders the appropriate visualization. All 13 analysis types from the backend are mapped to one of these chart types.
 
 ---
 
@@ -264,3 +267,31 @@ These Sprint 12 backend endpoints are available but lack frontend integration:
 - **Templates:** `GET .../data-prep/templates`, `POST .../data-prep/apply-template`
 
 These would integrate into `DataPrepManager` (new tabs or sub-panels) using the existing hook pattern.
+
+---
+
+## Per-Message Results Navigation (Sprint 21 + QA fix)
+
+### How It Works
+
+1. Each assistant message from the query/refine pipeline stores `attachments` JSON in the DB:
+   ```json
+   { "charts": [...], "tables": [...], "variables_analyzed": [...], "python_code": "..." }
+   ```
+
+2. In `ProjectChat.tsx`, a `selectedMessageId` state tracks which message is focused.
+
+3. The ResultsPanel data extraction reads from `message.attachments` for historical messages:
+   ```typescript
+   const att = selectedMsg?.attachments;
+   const charts = selectedMsg?.charts ?? att?.charts ?? lastAnalysis?.charts ?? [];
+   ```
+
+4. Click on an assistant message with `analysis_executed` → updates `selectedMessageId` → ResultsPanel shows that message's data.
+
+5. Sending a new message clears `selectedMessageId` so the latest results show.
+
+### Components Involved
+- `ChatMessage.tsx`: `onSelect` prop, visual highlight (ring-2), cursor pointer for analysis messages
+- `ProjectChat.tsx`: `selectedMessageId` state, IIFE extraction of charts/tables/variables from attachments
+- `ResultsPanel.tsx`: renders whatever data is passed to it (no awareness of selection logic)
