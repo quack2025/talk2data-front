@@ -17,9 +17,11 @@ interface ChatMessageProps {
   message: Message;
   onRefine?: (messageId: string, action: RefinementAction, params: Record<string, unknown>) => void;
   isRefining?: boolean;
+  onSelect?: (messageId: string) => void;
+  isSelected?: boolean;
 }
 
-export function ChatMessage({ message, onRefine, isRefining = false }: ChatMessageProps) {
+export function ChatMessage({ message, onRefine, isRefining = false, onSelect, isSelected }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -64,9 +66,12 @@ export function ChatMessage({ message, onRefine, isRefining = false }: ChatMessa
   return (
     <div
       className={cn(
-        'flex gap-3 p-4',
-        isUser ? 'flex-row-reverse' : 'flex-row'
+        'flex gap-3 p-4 transition-colors',
+        isUser ? 'flex-row-reverse' : 'flex-row',
+        !isUser && hasAnalysis && 'cursor-pointer hover:bg-muted/50',
+        isSelected && 'bg-muted/60 ring-1 ring-primary/20 rounded-lg',
       )}
+      onClick={!isUser && hasAnalysis && onSelect ? () => onSelect(message.id) : undefined}
     >
       <Avatar className={cn('h-8 w-8 flex-shrink-0', isUser && 'bg-primary')}>
         <AvatarFallback className={cn(isUser && 'bg-primary text-primary-foreground')}>

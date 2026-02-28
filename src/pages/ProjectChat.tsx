@@ -32,6 +32,7 @@ export default function ProjectChat() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
   const { dataPrepStatus, skipDataPrep } = useDataPrep(projectId!);
@@ -93,6 +94,7 @@ export default function ProjectChat() {
 
   const handleSendMessage = async (content: string) => {
     if (!projectId) return;
+    setSelectedMessageId(null); // Clear selection so latest result shows
 
     // Si no hay conversación activa, crear una primero
     if (!activeConversationId && conversations.length === 0) {
@@ -223,6 +225,8 @@ export default function ProjectChat() {
                     message={message}
                     onRefine={handleRefine}
                     isRefining={isThinking}
+                    onSelect={setSelectedMessageId}
+                    isSelected={selectedMessageId === message.id}
                   />
                 ))}
                 {isThinking && (
@@ -305,14 +309,27 @@ export default function ProjectChat() {
           />
         </div>
 
-        {/* Results Panel */}
-        <ResultsPanel
-          hasResults={hasMessages}
-          charts={lastAnalysis?.charts ?? []}
-          tables={lastAnalysis?.tables ?? []}
-          variablesAnalyzed={lastAnalysis?.variables_analyzed ?? []}
-          analysisPerformed={Array.isArray(lastAnalysis?.analysis_performed) ? lastAnalysis.analysis_performed : []}
-        />
+        {/* Results Panel — show selected message data or last analysis */}
+        {(() => {
+          const selectedMsg = selectedMessageId
+            ? messages.find((m) => m.id === selectedMessageId)
+            : null;
+          const charts = selectedMsg?.charts ?? lastAnalysis?.charts ?? [];
+          const tables = selectedMsg?.tables ?? lastAnalysis?.tables ?? [];
+          const varsAnalyzed = selectedMsg?.variables_analyzed ?? lastAnalysis?.variables_analyzed ?? [];
+          const analysisDone = selectedMsg?.analysis_executed
+            ? (Array.isArray(selectedMsg.analysis_executed) ? selectedMsg.analysis_executed : [selectedMsg.analysis_executed])
+            : (Array.isArray(lastAnalysis?.analysis_performed) ? lastAnalysis.analysis_performed : []);
+          return (
+            <ResultsPanel
+              hasResults={hasMessages}
+              charts={charts}
+              tables={tables}
+              variablesAnalyzed={varsAnalyzed}
+              analysisPerformed={analysisDone as Record<string, unknown>[]}
+            />
+          );
+        })()}
       </div>
 
       {/* Report Generator Dialog */}
