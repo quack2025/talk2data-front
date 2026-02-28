@@ -2,11 +2,12 @@ import { Button } from '@/components/ui/button';
 import {
   BarChart3,
   GitCompare,
-  Filter,
   ArrowRightLeft,
   TableIcon,
+  Columns,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { FilterPopover } from './FilterPopover';
 import type { Message, RefinementAction } from '@/types/database';
 
 interface RefineActionsProps {
@@ -73,16 +74,19 @@ export function RefineActions({ message, onRefine, disabled = false }: RefineAct
       params: { new_analysis_type: 'crosstab' },
     },
     {
-      action: 'add_filter',
-      label: refineT?.addFilter || 'Filtrar datos',
-      icon: <Filter className="h-3 w-3" />,
-      show: hasAnyAnalysis,
+      action: 'change_banner',
+      label: refineT?.changeBanner || 'Cambiar banner',
+      icon: <Columns className="h-3 w-3" />,
+      show: hasCrosstab,
     },
   ];
 
   const visibleButtons = buttons.filter((b) => b.show);
 
-  if (visibleButtons.length === 0) return null;
+  // Always show filter popover if there's any analysis
+  const showFilter = hasAnyAnalysis;
+
+  if (visibleButtons.length === 0 && !showFilter) return null;
 
   return (
     <div className="flex flex-wrap gap-1.5 mt-1">
@@ -99,6 +103,9 @@ export function RefineActions({ message, onRefine, disabled = false }: RefineAct
           {btn.label}
         </Button>
       ))}
+      {showFilter && (
+        <FilterPopover onRefine={onRefine} disabled={disabled} />
+      )}
     </div>
   );
 }

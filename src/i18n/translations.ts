@@ -622,6 +622,7 @@ export const translations = {
       addCrosstab: 'Cruzar con otra variable',
       changeToFrequency: 'Ver frecuencias',
       changeToCrosstab: 'Ver tabla cruzada',
+      changeBanner: 'Cambiar banner',
       addFilter: 'Filtrar datos',
     },
     // Waves / Tracking
@@ -1781,6 +1782,7 @@ export const translations = {
       addCrosstab: 'Cross with another variable',
       changeToFrequency: 'View frequencies',
       changeToCrosstab: 'View crosstab',
+      changeBanner: 'Change banner',
       addFilter: 'Filter data',
     },
     // Waves / Tracking

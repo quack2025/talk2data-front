@@ -84,7 +84,7 @@ export interface RetryState {
 const MAX_AUTO_RETRIES = 2;
 
 // Hook para manejar mensajes y queries
-export function useChatMessages(projectId: string, conversationId: string | null, toastMessages?: ToastMessages) {
+export function useChatMessages(projectId: string, conversationId: string | null, toastMessages?: ToastMessages, segmentId?: string | null) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isThinking, setIsThinking] = useState(false);
@@ -114,12 +114,16 @@ export function useChatMessages(projectId: string, conversationId: string | null
     }
 
     try {
-      const response = await api.post<QueryResponse>(
-        `/conversations/projects/${projectId}/query`,
-        {
+      const body: Record<string, unknown> = {
           question,
           conversation_id: conversationId ?? undefined,
-        },
+      };
+      if (segmentId) {
+        body.segment_id = segmentId;
+      }
+      const response = await api.post<QueryResponse>(
+        `/conversations/projects/${projectId}/query`,
+        body,
         undefined,
         0, // no retries at API level — we handle retries here for UI feedback
       );
@@ -149,7 +153,7 @@ export function useChatMessages(projectId: string, conversationId: string | null
     } finally {
       setIsThinking(false);
     }
-  }, [projectId, conversationId]);
+  }, [projectId, conversationId, segmentId]);
 
   // Enviar mensaje/pregunta
   const sendMessage = useMutation({

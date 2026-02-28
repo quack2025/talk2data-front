@@ -20,6 +20,8 @@ import {
 import { useDataPrep } from '@/hooks/useDataPrep';
 import { useProject } from '@/hooks/useProjects';
 import { useExports } from '@/hooks/useExports';
+import { useSegments } from '@/hooks/useSegments';
+import { SegmentSelector } from '@/components/segments/SegmentSelector';
 import { ReportGeneratorDialog } from '@/components/reports';
 import { toast } from 'sonner';
 
@@ -29,11 +31,18 @@ export default function ProjectChat() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
   const { dataPrepStatus, skipDataPrep } = useDataPrep(projectId!);
   const { data: project } = useProject(projectId!);
   const { createExport } = useExports(projectId!);
+  const { segments, fetchSegments } = useSegments(projectId!);
+
+  // Fetch segments on mount
+  useEffect(() => {
+    fetchSegments();
+  }, [fetchSegments]);
 
   // Guard: auto-skip data prep gate if project is ready
   useEffect(() => {
@@ -59,7 +68,7 @@ export default function ProjectChat() {
   };
 
   const { conversations, isLoading: conversationsLoading, createConversation, error: conversationsError } = useChat(projectId!, toastMessages);
-  const { messages, isLoading: messagesLoading, isThinking, sendMessage, refineMessage, lastAnalysis, queryError, retryState, retryLastQuery, clearError } = useChatMessages(projectId!, activeConversationId, toastMessages);
+  const { messages, isLoading: messagesLoading, isThinking, sendMessage, refineMessage, lastAnalysis, queryError, retryState, retryLastQuery, clearError } = useChatMessages(projectId!, activeConversationId, toastMessages, selectedSegmentId);
 
   // Auto-select first conversation or create new one
   useEffect(() => {
@@ -125,7 +134,13 @@ export default function ProjectChat() {
         {/* Chat Panel */}
         <div className="w-[400px] flex flex-col border-r bg-background">
           {/* Chat toolbar */}
-          <div className="flex items-center justify-end gap-1 px-3 py-2 border-b">
+          <div className="flex items-center justify-between gap-1 px-3 py-2 border-b">
+            <SegmentSelector
+              segments={segments}
+              value={selectedSegmentId}
+              onChange={setSelectedSegmentId}
+              compact
+            />
             {activeConversationId && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
