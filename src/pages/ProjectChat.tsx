@@ -314,9 +314,12 @@ export default function ProjectChat() {
           const selectedMsg = selectedMessageId
             ? messages.find((m) => m.id === selectedMessageId)
             : null;
-          const charts = selectedMsg?.charts ?? lastAnalysis?.charts ?? [];
-          const tables = selectedMsg?.tables ?? lastAnalysis?.tables ?? [];
-          const varsAnalyzed = selectedMsg?.variables_analyzed ?? lastAnalysis?.variables_analyzed ?? [];
+          // Charts/tables live on the QueryResponse for the latest message,
+          // but for historical messages they're persisted in attachments.
+          const att = (selectedMsg as Record<string, unknown>)?.attachments as Record<string, unknown> | undefined;
+          const charts = selectedMsg?.charts ?? (att?.charts as typeof lastAnalysis.charts) ?? lastAnalysis?.charts ?? [];
+          const tables = selectedMsg?.tables ?? (att?.tables as typeof lastAnalysis.tables) ?? lastAnalysis?.tables ?? [];
+          const varsAnalyzed = selectedMsg?.variables_analyzed ?? (att?.variables_analyzed as typeof lastAnalysis.variables_analyzed) ?? lastAnalysis?.variables_analyzed ?? [];
           const analysisDone = selectedMsg?.analysis_executed
             ? (Array.isArray(selectedMsg.analysis_executed) ? selectedMsg.analysis_executed : [selectedMsg.analysis_executed])
             : (Array.isArray(lastAnalysis?.analysis_performed) ? lastAnalysis.analysis_performed : []);
