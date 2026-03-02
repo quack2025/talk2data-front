@@ -22,6 +22,8 @@ export const translations = {
       no: 'No',
       confirmDelete: '¿Eliminar este elemento?',
       confirmDeleteDesc: 'Esta acción no se puede deshacer.',
+      apply: 'Aplicar',
+      exporting: 'Exportando...',
     },
     // Auth page
     auth: {
@@ -280,6 +282,7 @@ export const translations = {
       sendQuestion: 'Envía una pregunta para ver análisis, gráficos y tablas.',
       conversations: 'Conversaciones',
       newConversation: 'Nueva conversación',
+      exportConversation: 'Exportar',
       startNewConversation: 'Iniciar nueva conversación',
       errorLoadingConversations: 'Error al cargar conversaciones',
       analysisExecuted: 'Análisis ejecutado',
@@ -580,6 +583,10 @@ export const translations = {
       minBaseSize: 'Tamaño mínimo de base',
       minBaseSizeHelp: 'Las columnas por debajo de este umbral muestran ** en lugar de datos',
       savedToExports: 'Guardado en la sección de Exportaciones',
+      nestedBannersTitle: 'Banners anidados (opcional)',
+      nestedBannersDescription: 'Combina dos banners en un producto cruzado (ej: Género × Edad → Hombre 18-34, Hombre 35-54, ...)',
+      nestedSelectFirst: 'Primera variable',
+      nestedSelectSecond: 'Segunda variable',
     },
     // Variable Grouping
     grouping: {
@@ -1182,6 +1189,8 @@ export const translations = {
       no: 'No',
       confirmDelete: 'Delete this item?',
       confirmDeleteDesc: 'This action cannot be undone.',
+      apply: 'Apply',
+      exporting: 'Exporting...',
     },
     // Auth page
     auth: {
@@ -1440,6 +1449,7 @@ export const translations = {
       sendQuestion: 'Send a question to see analysis, charts, and tables.',
       conversations: 'Conversations',
       newConversation: 'New conversation',
+      exportConversation: 'Export',
       startNewConversation: 'Start new conversation',
       errorLoadingConversations: 'Error loading conversations',
       analysisExecuted: 'Analysis executed',
@@ -1740,6 +1750,10 @@ export const translations = {
       minBaseSize: 'Minimum base size',
       minBaseSizeHelp: 'Columns below this threshold show ** instead of data',
       savedToExports: 'Saved to the Exports section',
+      nestedBannersTitle: 'Nested banners (optional)',
+      nestedBannersDescription: 'Combine two banners into a cross-product (e.g., Gender × Age → Male 18-34, Male 35-54, ...)',
+      nestedSelectFirst: 'First variable',
+      nestedSelectSecond: 'Second variable',
     },
     // Variable Grouping
     grouping: {

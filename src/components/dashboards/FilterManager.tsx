@@ -65,7 +65,7 @@ export function FilterManager({ projectId, filters, onSave, onClose }: FilterMan
         updated[idx] = { ...updated[idx], [field]: value };
         // Auto-fill label from variable metadata
         if (field === 'variable' && value) {
-          const varInfo = explore.variables.find((v) => v.name === value);
+          const varInfo = (explore.variables?.variables ?? []).find((v) => v.name === value);
           if (varInfo?.label && !updated[idx].label) {
             updated[idx].label = varInfo.label;
           }
@@ -83,7 +83,7 @@ export function FilterManager({ projectId, filters, onSave, onClose }: FilterMan
   }, [local, onSave]);
 
   // Variables not yet used as filters
-  const availableVars = explore.variables.filter(
+  const availableVars = (explore.variables?.variables ?? []).filter(
     (v) => v.type === 'categorical' || v.type === 'numeric',
   );
 

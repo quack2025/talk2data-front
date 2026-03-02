@@ -157,7 +157,7 @@ export function WidgetConfigEditor({
                   />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
-                  {(variables || []).map((v) => (
+                  {((variables as any)?.variables || variables || []).map((v: any) => (
                     <SelectItem key={v.name} value={v.name} className="text-xs">
                       {v.label || v.name}
                       <span className="ml-1 text-muted-foreground">({v.type})</span>
@@ -183,7 +183,7 @@ export function WidgetConfigEditor({
                   />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
-                  {(variables || []).map((v) => (
+                  {((variables as any)?.variables || variables || []).map((v: any) => (
                     <SelectItem key={v.name} value={v.name} className="text-xs">
                       {v.label || v.name}
                     </SelectItem>
