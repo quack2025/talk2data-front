@@ -154,7 +154,7 @@ export default function ProjectChat() {
                   >
                     <Download className="h-3.5 w-3.5" />
                     {createExport.isPending
-                      ? (t.common?.exporting ?? 'Exporting...')
+                      ? (t.common.exporting ?? 'Exporting...')
                       : (t.chat?.exportConversation ?? 'Export')}
                   </Button>
                 </DropdownMenuTrigger>
