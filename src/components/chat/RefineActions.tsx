@@ -4,10 +4,10 @@ import {
   GitCompare,
   ArrowRightLeft,
   TableIcon,
-  Columns,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { FilterPopover } from './FilterPopover';
+import { BannerPickerPopover } from './BannerPickerPopover';
 import type { Message, RefinementAction } from '@/types/database';
 
 interface RefineActionsProps {
@@ -73,12 +73,6 @@ export function RefineActions({ message, onRefine, disabled = false }: RefineAct
       show: hasFrequency && !hasCrosstab,
       params: { new_analysis_type: 'crosstab' },
     },
-    {
-      action: 'change_banner',
-      label: refineT?.changeBanner || 'Cambiar banner',
-      icon: <Columns className="h-3 w-3" />,
-      show: hasCrosstab,
-    },
   ];
 
   const visibleButtons = buttons.filter((b) => b.show);
@@ -103,6 +97,9 @@ export function RefineActions({ message, onRefine, disabled = false }: RefineAct
           {btn.label}
         </Button>
       ))}
+      {hasCrosstab && (
+        <BannerPickerPopover onRefine={onRefine} disabled={disabled} />
+      )}
       {showFilter && (
         <FilterPopover onRefine={onRefine} disabled={disabled} />
       )}
