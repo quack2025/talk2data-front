@@ -60,7 +60,7 @@ src/
 │   └── ...
 ├── components/
 │   ├── ui/                 # shadcn/ui primitives (50+ components)
-│   ├── charts/             # Recharts wrappers (bar, crosstab, compare means, NPS, donut, line)
+│   ├── charts/             # Recharts wrappers (bar, crosstab, compare means, NPS, donut, line, scatter, stacked bar, wave comparison)
 │   ├── chat/               # Chat UI (messages, input, sidebar, results, refine actions, banner picker)
 │   ├── aggfile/            # Generate Tables wizard (4 steps)
 │   ├── folders/            # Folder system (FolderSection, DroppableFolderItem) — drag-and-drop
@@ -73,7 +73,7 @@ src/
 │   ├── merge/              # Merge wizard dialog
 │   ├── segmentation/       # Segmentation clustering wizard
 │   ├── share/              # Share link dialog + management
-│   ├── reports/            # Report generator dialog + progress
+│   ├── reports/            # Report generator components (disabled — Gamma export pivot planned)
 │   ├── teams/              # Team management (TeamsManager, TeamCard, InviteMemberDialog)
 │   ├── dataprep/           # Data prep AI input + rule management
 │   ├── layout/             # AppSidebar (Core Zone + Folders + Account Zone), AppHeader
@@ -159,15 +159,15 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | Explore Mode | ProjectExplore | AnalysisPanel, SegmentSelector | useExplore |
 | Generate Tables | (modal) | BannerVariablesStep, AnalysisVariablesStep, ConfigureStep, PreviewStep | useAggfileGenerator |
 | Segments | ProjectDetail | SegmentManager, SegmentFormDialog, SegmentSelector | useSegments |
-| Data Prep | ProjectDetail | DataPrepManager, RuleFormDialog | useDataPrep |
+| Data Prep | ProjectDetail | DataPrepManager (V2: QC Report, Variable Profiles, AI Suggestions panels), RuleFormDialog | useDataPrep |
 | Variable Groups | ProjectDetail | VariableGroupsManager, AutoDetectPanel, ManualGrouper | useVariableGroups |
 | Waves | ProjectDetail | WaveManager, WaveComparisonChart | useWaves |
 | Help Chat | (floating) | HelpChatDialog | useHelpChat |
-| Charts | (embedded) | ChartWithTable, CrosstabTable, CompareMeansChart, NpsGauge | — |
+| Charts | (embedded) | ChartWithTable, CrosstabTable, CompareMeansChart, NpsGauge, ScatterQuadrantChart, StackedBarChart, WaveComparisonChartEmbed | — |
 | Merge Wizard | (modal) | MergeWizardDialog | -- |
 | Segmentation | (modal) | SegmentationWizardDialog | -- |
 | Share Links | (modal) | ShareDialog | useShareLinks |
-| Report Gen | (modal) | ReportGeneratorDialog | useReportGenerator |
+| Report Gen | (disabled) | ReportGeneratorDialog (dead code removed from pages) | useReportGenerator |
 | Teams | /teams | TeamsManager, TeamCard, InviteMemberDialog, CreateTeamDialog | useTeams |
 | Team Assignment | ProjectSettings | Select (team selector) | useAssignProjectToTeam |
 | Data Prep AI | ProjectDetail | DataPrepAIInput | -- |
@@ -247,9 +247,24 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | Pre-launch P0 fixes | Dashboard crash, suggestions endpoint, segments filter, share links, crosstab sig |
 | Detailed Report (backend) | New `detailed_report` analysis type — runs 6-8 analyses automatically with unified narrative. No frontend changes needed (renders as normal chat message with charts). |
 
+### Sprint 22 — Post-Launch Quick Wins (commits `0a1a9db`, `d2b1e6e`)
+| Feature/Fix | Description |
+|-------------|-------------|
+| Remove Report Generator | Removed dead `{false && (...)}` blocks and imports from ProjectChat + ProjectDetail. Component files kept for future Gamma export pivot. |
+| Data Prep V2 Panels | Three collapsible panels in DataPrepManager: QC Report (quality badges), Variable Profiles (type detection, confidence), AI Suggestions (checkbox + apply). Uses existing `useDataPrep` hook methods. |
+| Wave Comparison Chart | `WaveComparisonChartEmbed` — Recharts LineChart for wave trends in NL chat results. Registered in ChartWithTable dispatcher. |
+| Data Prep Export | Already existed in `DataTableView` — verified working. |
+
+### Sprint 23 — Charts & Visualization (commit `0c04ee3`)
+| Feature | Description |
+|---------|-------------|
+| ScatterQuadrantChart | Importance vs Satisfaction scatter with quadrant reference lines (gap analysis). Points colored by quadrant: red (concentrate), green (maintain), gray (low priority), amber (overkill). |
+| StackedBarChart | Stacked bar chart for crosstab/funnel visualizations. Uses Recharts Bar with `stackId`. |
+| ChartType updated | Added `scatter`, `stacked_bar`, `wave_comparison` to ChartType union in `database.ts`. |
+
 ---
 
-## Backend API Endpoints Available (Not Yet Integrated in Frontend)
+## Backend API Endpoints (Partial Frontend Integration)
 
 The following backend endpoints were added in Sprint 12 (Feb 2026) and are available for frontend integration:
 
@@ -261,7 +276,7 @@ The following backend endpoints were added in Sprint 12 (Feb 2026) and are avail
 
 **Flow:** Upload `.xlsx` → backend parses + validates variables → returns rule preview → user reviews → apply.
 
-### Data Prep V2 Intelligence
+### Data Prep V2 Intelligence (Frontend panels added Sprint 22)
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/projects/{id}/data-prep/variable-profiles` | Auto-profile all variables |
