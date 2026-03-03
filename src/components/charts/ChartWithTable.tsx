@@ -9,6 +9,7 @@ import { NpsGauge } from './NpsGauge';
 import { CompareMeansChart } from './CompareMeansChart';
 import { DataTableWithProgress } from './DataTableWithProgress';
 import { CrosstabTable } from './CrosstabTable';
+import { WaveComparisonChartEmbed } from './WaveComparisonChartEmbed';
 import type { ChartData } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -67,6 +68,8 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         return <NpsGauge data={chart.data!} title={chart.title} />;
       case 'compare_means':
         return <CompareMeansChart data={chart.data!} title={chart.title} />;
+      case 'wave_comparison':
+        return <WaveComparisonChartEmbed data={chart.data} />;
       case 'crosstab':
         // Crosstab renders as a table, not a chart
         return null;
@@ -87,6 +90,8 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         return <Gauge className="h-5 w-5 text-primary" />;
       case 'compare_means':
         return <BarChart3 className="h-5 w-5 text-primary" />;
+      case 'wave_comparison':
+        return <TrendingUp className="h-5 w-5 text-primary" />;
       case 'crosstab':
         return <TableIcon className="h-5 w-5 text-primary" />;
       default:

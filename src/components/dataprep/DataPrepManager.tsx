@@ -33,6 +33,11 @@ import {
   SkipForward,
   RotateCcw,
   EyeOff,
+  Activity,
+  BarChart3,
+  Sparkles,
+  AlertTriangle,
+  XCircle,
 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { useDataPrep } from '@/hooks/useDataPrep';
@@ -40,7 +45,9 @@ import { DataPrepRuleDialog } from './DataPrepRuleDialog';
 import type { RulePrefill } from './DataPrepRuleDialog';
 import { DataPrepPreview } from './DataPrepPreview';
 import { DataPrepAIInput } from './DataPrepAIInput';
-import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType, DataPrepPreviewResponse } from '@/types/dataPrep';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
+import type { DataPrepRule, DataPrepRuleCreate, DataPrepRuleType, DataPrepPreviewResponse, QCReportResponse, VariableProfilesResponse, PrepSuggestionsResponse } from '@/types/dataPrep';
 import type { VariableLabelMap } from '@/hooks/useProjectVariables';
 import { toast } from 'sonner';
 
@@ -82,6 +89,10 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
     confirmDataReady,
     skipDataPrep,
     reopenDataPrep,
+    getQCReport,
+    getVariableProfiles,
+    getSuggestions,
+    applySuggestions,
   } = useDataPrep(projectId);
 
   const [showDialog, setShowDialog] = useState(false);
@@ -89,6 +100,19 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
   const [deletingRule, setDeletingRule] = useState<DataPrepRule | null>(null);
   const [rulePrefill, setRulePrefill] = useState<RulePrefill | null>(null);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+
+  // V2 panel state
+  const [qcReport, setQcReport] = useState<QCReportResponse | null>(null);
+  const [qcLoading, setQcLoading] = useState(false);
+  const [qcOpen, setQcOpen] = useState(false);
+  const [profiles, setProfiles] = useState<VariableProfilesResponse | null>(null);
+  const [profilesLoading, setProfilesLoading] = useState(false);
+  const [profilesOpen, setProfilesOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<PrepSuggestionsResponse | null>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<Set<string>>(new Set());
+  const [applyingLoading, setApplyingLoading] = useState(false);
 
   // Consume external prefill (e.g., from Data Explorer tab context menu)
   useEffect(() => {
@@ -182,6 +206,72 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
     return labels[type];
   };
 
+  // V2 panel handlers
+  const handleRunQC = async () => {
+    setQcLoading(true);
+    try {
+      const res = await getQCReport();
+      setQcReport(res);
+      setQcOpen(true);
+    } catch {
+      toast.error('Error running QC check');
+    } finally {
+      setQcLoading(false);
+    }
+  };
+
+  const handleProfileVars = async () => {
+    setProfilesLoading(true);
+    try {
+      const res = await getVariableProfiles();
+      setProfiles(res);
+      setProfilesOpen(true);
+    } catch {
+      toast.error('Error profiling variables');
+    } finally {
+      setProfilesLoading(false);
+    }
+  };
+
+  const handleGetSuggestions = async () => {
+    setSuggestionsLoading(true);
+    try {
+      const res = await getSuggestions();
+      setSuggestions(res);
+      setSelectedSuggestionIds(new Set());
+      setSuggestionsOpen(true);
+    } catch {
+      toast.error('Error loading suggestions');
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  };
+
+  const handleApplySelected = async () => {
+    if (selectedSuggestionIds.size === 0) return;
+    setApplyingLoading(true);
+    try {
+      const res = await applySuggestions(Array.from(selectedSuggestionIds));
+      toast.success(`${res.rules_created} ${dp?.v2SuggestionsApplied || 'suggestions applied as rules'}`);
+      setSuggestions(null);
+      setSuggestionsOpen(false);
+      setSelectedSuggestionIds(new Set());
+    } catch {
+      toast.error('Error applying suggestions');
+    } finally {
+      setApplyingLoading(false);
+    }
+  };
+
+  const toggleSuggestionId = (id: string) => {
+    setSelectedSuggestionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const activeCount = rules.filter((r) => r.is_active).length;
 
   const dt = (dp as Record<string, unknown>).dataTab as Record<string, string> | undefined;
@@ -228,6 +318,211 @@ export function DataPrepManager({ projectId, availableVariables = [], variableLa
       <div className="space-y-4 mt-3">
           {/* AI Input */}
           <DataPrepAIInput projectId={projectId} onRuleCreated={fetchRules} availableVariables={availableVariables} variableLabels={variableLabels} />
+
+          {/* V2 Panels */}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={handleRunQC} disabled={qcLoading}>
+              {qcLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Activity className="mr-2 h-4 w-4" />}
+              {dp?.v2RunQC || 'Run quality check'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleProfileVars} disabled={profilesLoading}>
+              {profilesLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BarChart3 className="mr-2 h-4 w-4" />}
+              {dp?.v2ProfileVars || 'Profile variables'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleGetSuggestions} disabled={suggestionsLoading}>
+              {suggestionsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+              {dp?.v2GetSuggestions || 'Get suggestions'}
+            </Button>
+          </div>
+
+          {/* Panel A: Data Quality (QC Report) */}
+          {qcReport && (
+            <Collapsible open={qcOpen} onOpenChange={setQcOpen}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <button className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold">{dp?.v2QCTitle || 'Quality Control'}</span>
+                      <Badge
+                        variant={qcReport.overall_quality === 'good' ? 'default' : 'secondary'}
+                        className={
+                          qcReport.overall_quality === 'good' ? 'bg-green-600 hover:bg-green-700' :
+                          qcReport.overall_quality === 'acceptable' ? 'bg-amber-500 hover:bg-amber-600' :
+                          'bg-red-600 hover:bg-red-700'
+                        }
+                      >
+                        {qcReport.overall_quality === 'good' ? (dp?.v2OverallGood || 'Good quality') :
+                         qcReport.overall_quality === 'acceptable' ? (dp?.v2OverallAcceptable || 'Acceptable quality') :
+                         (dp?.v2OverallPoor || 'Poor quality')}
+                      </Badge>
+                    </div>
+                    {qcOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 pb-3 px-4 space-y-2">
+                    <p className="text-sm text-muted-foreground">{qcReport.recommendation}</p>
+                    <div className="space-y-1.5">
+                      {qcReport.checks.map((check, i) => (
+                        <div key={i} className="flex items-start gap-2 text-sm border rounded-md px-3 py-2">
+                          {check.status === 'ok' ? <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5 shrink-0" /> :
+                           check.status === 'warning' ? <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" /> :
+                           <XCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium">{check.check_type}</span>
+                              <span className="text-muted-foreground">{check.description}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                              <span>{check.flagged_count}/{check.total_cases} {dp?.v2FlaggedCases || 'flagged cases'} ({check.pct_flagged}%)</span>
+                            </div>
+                            {check.suggested_action && (
+                              <p className="text-xs text-muted-foreground mt-0.5 italic">{check.suggested_action}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+
+          {/* Panel B: Variable Profiles */}
+          {profiles && (
+            <Collapsible open={profilesOpen} onOpenChange={setProfilesOpen}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <button className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold">{dp?.v2ProfilesTitle || 'Variable Profiles'}</span>
+                      <Badge variant="secondary">{profiles.summary.total_variables}</Badge>
+                    </div>
+                    {profilesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 pb-3 px-4 space-y-3">
+                    {/* Summary badges */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {profiles.summary.likert_scales > 0 && <Badge variant="outline">{profiles.summary.likert_scales} Likert</Badge>}
+                      {profiles.summary.nps_variables > 0 && <Badge variant="outline">{profiles.summary.nps_variables} NPS</Badge>}
+                      {profiles.summary.demographics > 0 && <Badge variant="outline">{profiles.summary.demographics} Demo</Badge>}
+                      {profiles.summary.open_ended > 0 && <Badge variant="outline">{profiles.summary.open_ended} Open</Badge>}
+                      {profiles.summary.binary > 0 && <Badge variant="outline">{profiles.summary.binary} Binary</Badge>}
+                      {profiles.summary.multi_response_groups > 0 && <Badge variant="outline">{profiles.summary.multi_response_groups} MRS</Badge>}
+                      {profiles.summary.grids > 0 && <Badge variant="outline">{profiles.summary.grids} Grid</Badge>}
+                      {profiles.summary.categorical_nominal > 0 && <Badge variant="outline">{profiles.summary.categorical_nominal} Categ.</Badge>}
+                      {profiles.summary.continuous_scale > 0 && <Badge variant="outline">{profiles.summary.continuous_scale} Cont.</Badge>}
+                      {profiles.summary.id_metadata > 0 && <Badge variant="outline">{profiles.summary.id_metadata} ID/Meta</Badge>}
+                    </div>
+                    {/* Profile list */}
+                    <div className="max-h-64 overflow-y-auto space-y-1">
+                      {profiles.profiles.map((p) => (
+                        <div key={p.name} className="flex items-center gap-2 text-sm border rounded-md px-3 py-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium truncate">{p.name}</span>
+                              {p.label && <span className="text-muted-foreground text-xs truncate">{p.label}</span>}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-xs shrink-0">{p.detected_type}</Badge>
+                          <span className={`text-xs shrink-0 ${p.pct_missing > 10 ? 'text-red-600' : p.pct_missing > 5 ? 'text-amber-500' : 'text-muted-foreground'}`}>
+                            {p.pct_missing.toFixed(1)}% {dp?.v2Missing || 'missing'}
+                          </span>
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {dp?.v2Confidence || 'Confidence'}: {(p.confidence * 100).toFixed(0)}%
+                          </span>
+                          {p.suggested_actions.length > 0 && (
+                            <div className="flex gap-1 shrink-0">
+                              {p.suggested_actions.map((a, i) => (
+                                <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0">{a}</Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
+
+          {/* Panel C: AI Suggestions */}
+          {suggestions && (
+            <Collapsible open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
+              <Card>
+                <CollapsibleTrigger asChild>
+                  <button className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-semibold">{dp?.v2SuggestionsTitle || 'Prep Suggestions'}</span>
+                      <Badge variant="secondary">{suggestions.total_suggestions}</Badge>
+                    </div>
+                    {suggestionsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 pb-3 px-4 space-y-3">
+                    {suggestions.suggestions.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">{dp?.v2NoSuggestions || 'No suggestions available'}</p>
+                    ) : (
+                      <>
+                        <div className="space-y-2">
+                          {suggestions.suggestions.map((s) => (
+                            <div key={s.id} className="border rounded-md px-3 py-2 space-y-1">
+                              <div className="flex items-start gap-2">
+                                <Checkbox
+                                  checked={selectedSuggestionIds.has(s.id)}
+                                  onCheckedChange={() => toggleSuggestionId(s.id)}
+                                  className="mt-0.5"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge
+                                      variant="secondary"
+                                      className={
+                                        s.priority === 'high' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                        s.priority === 'medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                        'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                      }
+                                    >
+                                      {s.priority}
+                                    </Badge>
+                                    <span className="text-sm font-medium">{s.title}</span>
+                                    <Badge variant="outline" className="text-xs">{s.category}</Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mt-0.5">{s.description}</p>
+                                  <details className="mt-1">
+                                    <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                                      Reasoning
+                                    </summary>
+                                    <p className="text-xs text-muted-foreground mt-1 pl-2 border-l-2">{s.reasoning}</p>
+                                  </details>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={handleApplySelected}
+                          disabled={selectedSuggestionIds.size === 0 || applyingLoading}
+                        >
+                          {applyingLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                          {dp?.v2ApplySelected || 'Apply selected'} ({selectedSuggestionIds.size})
+                        </Button>
+                      </>
+                    )}
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
 
           {error && (
             <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
