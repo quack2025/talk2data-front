@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { ChartTableData } from '@/types/database';
+import type { ChartTableData, SpanningHeader } from '@/types/database';
 
 interface CrosstabTableProps {
   table: ChartTableData;
@@ -13,6 +13,7 @@ interface CrosstabTableProps {
  */
 export function CrosstabTable({ table, title }: CrosstabTableProps) {
   const { columns, rows } = table;
+  const spanning_headers = table.spanning_headers as SpanningHeader[] | undefined;
 
   const parseCell = (cell: string | number) => {
     if (typeof cell === 'number') {
@@ -35,6 +36,20 @@ export function CrosstabTable({ table, title }: CrosstabTableProps) {
       <ScrollArea className="max-h-[400px]">
         <Table>
           <TableHeader>
+            {spanning_headers && (
+              <TableRow className="border-b-2">
+                <TableHead className="text-left" style={{ width: '30%' }} />
+                {spanning_headers.map((sh, i) => (
+                  <TableHead
+                    key={i}
+                    colSpan={sh.colspan}
+                    className="text-center font-bold border-l border-border"
+                  >
+                    {sh.label}
+                  </TableHead>
+                ))}
+              </TableRow>
+            )}
             <TableRow>
               {columns.map((col, i) => (
                 <TableHead

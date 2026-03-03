@@ -71,7 +71,7 @@ export interface Conversation {
   messages?: Message[];
 }
 
-export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab' | 'compare_means' | 'scatter' | 'stacked_bar' | 'wave_comparison';
+export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab' | 'compare_means' | 'scatter' | 'stacked_bar' | 'wave_comparison' | 'batch_progress' | 'tabspec_upload';
 
 export interface ChartDataStructured {
   labels: string[];
@@ -81,9 +81,15 @@ export interface ChartDataStructured {
   error_bars?: number[];
 }
 
+export interface SpanningHeader {
+  label: string;
+  colspan: number;
+}
+
 export interface ChartTableData {
   columns: string[];
   rows: (string | number)[][];
+  spanning_headers?: SpanningHeader[];  // For nested crosstabs
 }
 
 export interface ChartData {
