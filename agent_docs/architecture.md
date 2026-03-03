@@ -111,7 +111,7 @@ Hooks encapsulate:
 User types question in ChatInput
   → useChat.sendMessage(question, { segment_id })
   → api.post(`/projects/${id}/conversations/${convId}/query`, { question, segment_id })
-  → Backend: AI interpretation (13 analysis types) → real statistics → response
+  → Backend: AI interpretation (14 analysis types incl. detailed_report) → real statistics → response
   → QueryResponse { answer, charts, tables, variables, python_code }
   → ChatMessage renders answer + inline charts
   → Assistant message saved with attachments JSON (charts, tables, variables, python_code)
@@ -215,7 +215,7 @@ All charts rendered via Recharts with consistent color palette from `lib/chartCo
 | Line | LineChart | Wave comparison trends |
 | Dendrogram | SegmentationDendrogram | Hierarchical clustering tree (SVG) |
 
-The `ChartWithTable` component is the main dispatcher — it reads `chart_type` from the backend response and renders the appropriate visualization. All 13 analysis types from the backend are mapped to one of these chart types.
+The `ChartWithTable` component is the main dispatcher — it reads `chart_type` from the backend response and renders the appropriate visualization. All 14 analysis types from the backend are mapped to one of these chart types (detailed_report returns multiple charts, one per sub-analysis).
 
 ---
 
