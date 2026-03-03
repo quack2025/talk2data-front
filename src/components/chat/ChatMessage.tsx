@@ -38,7 +38,7 @@ export function ChatMessage({ message, onRefine, isRefining = false, onSelect, i
   const handleExportExcel = async () => {
     setExporting(true);
     try {
-      const blob = await api.downloadBlob(`/messages/${message.id}/export/excel`, 'POST');
+      const blob = await api.downloadBlob(`/conversations/messages/${message.id}/export/excel`, 'POST');
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
