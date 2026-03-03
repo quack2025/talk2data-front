@@ -79,7 +79,6 @@ import {
   CalendarIcon,
   PanelRightOpen,
   PanelRightClose,
-  Presentation,
   Merge,
   LayoutDashboard,
 } from 'lucide-react';
@@ -95,7 +94,6 @@ import { useExecutiveSummary, useRegenerateSummary } from '@/hooks/useExecutiveS
 import { useExplore } from '@/hooks/useExplore';
 import { useToast } from '@/hooks/use-toast';
 import { AggfileGeneratorModal } from '@/components/aggfile';
-import { ReportGeneratorDialog } from '@/components/reports';
 import { useChat } from '@/hooks/useChat';
 import { VariableGroupsManager } from '@/components/grouping';
 import { DataPrepManager } from '@/components/data-prep';
@@ -138,7 +136,6 @@ export default function ProjectDetail() {
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [segmentationDialogOpen, setSegmentationDialogOpen] = useState(false);
   const [dashboardDialogOpen, setDashboardDialogOpen] = useState(false);
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [exploreSubTab, setExploreSubTab] = useState<'table' | 'analysis'>('table');
   const [showBookmarks, setShowBookmarks] = useState(true);
@@ -425,18 +422,6 @@ export default function ProjectDetail() {
               <Table2 className="h-4 w-4 mr-2" />
               {t.aggfile?.generateTables || 'Generar Tablas'}
             </Button>
-            {/* Generate Report hidden — pipeline broken, re-enable when backend is fixed */}
-            {false && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setReportDialogOpen(true)}
-              disabled={!hasReadyFiles}
-            >
-              <Presentation className="h-4 w-4 mr-2" />
-              {t.reports?.generateReport ?? 'Generate Report'}
-            </Button>
-            )}
             <Button
               variant="outline"
               size="sm"
@@ -1292,14 +1277,6 @@ export default function ProjectDetail() {
         projectId={projectId!}
       />
 
-      {/* Report Generator Dialog */}
-      <ReportGeneratorDialog
-        projectId={projectId!}
-        open={reportDialogOpen}
-        onOpenChange={setReportDialogOpen}
-        studyObjective={project?.study_objective || undefined}
-        conversationCount={conversations?.length ?? 0}
-      />
     </AppLayout>
   );
 }

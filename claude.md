@@ -61,7 +61,7 @@ src/
 ├── components/
 │   ├── ui/                 # shadcn/ui primitives (50+ components)
 │   ├── charts/             # Recharts wrappers (bar, crosstab, compare means, NPS, donut, line)
-│   ├── chat/               # Chat UI (messages, input, sidebar, results, refine actions)
+│   ├── chat/               # Chat UI (messages, input, sidebar, results, refine actions, banner picker)
 │   ├── aggfile/            # Generate Tables wizard (4 steps)
 │   ├── folders/            # Folder system (FolderSection, DroppableFolderItem) — drag-and-drop
 │   ├── dashboard/          # DraggableProjectCard — @dnd-kit useDraggable
@@ -155,7 +155,7 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | Feature | Page | Components | Hook |
 |---------|------|------------|------|
 | Folders | AppSidebar | FolderSection, DroppableFolderItem, DraggableProjectCard | -- |
-| AI Chat | ProjectChat | ChatMessage, ResultsPanel, RefineActions, ChatInput | useChat |
+| AI Chat | ProjectChat | ChatMessage, ResultsPanel, RefineActions, BannerPickerPopover, ChatInput | useChat |
 | Explore Mode | ProjectExplore | AnalysisPanel, SegmentSelector | useExplore |
 | Generate Tables | (modal) | BannerVariablesStep, AnalysisVariablesStep, ConfigureStep, PreviewStep | useAggfileGenerator |
 | Segments | ProjectDetail | SegmentManager, SegmentFormDialog, SegmentSelector | useSegments |
@@ -239,6 +239,13 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | Bug | Fix |
 |-----|-----|
 | TC-19 | Per-message nav reads `attachments` from historical messages (charts/tables persisted in DB) |
+
+### Pre-Launch QA + Sprint 22 (commits `654053a`, `69a978c`, `eb7de59`, `c176ac8`)
+| Feature/Fix | Description |
+|-------------|-------------|
+| Change Banner | `BannerPickerPopover` — searchable variable picker for changing crosstab banner via `RefineActions` |
+| Pre-launch P0 fixes | Dashboard crash, suggestions endpoint, segments filter, share links, crosstab sig |
+| Detailed Report (backend) | New `detailed_report` analysis type — runs 6-8 analyses automatically with unified narrative. No frontend changes needed (renders as normal chat message with charts). |
 
 ---
 

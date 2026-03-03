@@ -7,7 +7,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
-import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, Presentation, CheckCircle2, Download } from 'lucide-react';
+import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, CheckCircle2, Download } from 'lucide-react';
 import type { RefinementAction } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,6 @@ import { useProject } from '@/hooks/useProjects';
 import { useExports } from '@/hooks/useExports';
 import { useSegments } from '@/hooks/useSegments';
 import { SegmentSelector } from '@/components/segments/SegmentSelector';
-import { ReportGeneratorDialog } from '@/components/reports';
 import { toast } from 'sonner';
 
 export default function ProjectChat() {
@@ -30,7 +29,6 @@ export default function ProjectChat() {
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -176,18 +174,6 @@ export default function ProjectChat() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
-            {/* Generate Report hidden — pipeline broken, re-enable when backend is fixed */}
-            {false && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setReportDialogOpen(true)}
-              className="gap-1.5 text-xs"
-            >
-              <Presentation className="h-3.5 w-3.5" />
-              {t.reports?.generateReport ?? 'Generate Report'}
-            </Button>
             )}
           </div>
           {/* Transparency banner */}
@@ -335,14 +321,6 @@ export default function ProjectChat() {
         })()}
       </div>
 
-      {/* Report Generator Dialog */}
-      <ReportGeneratorDialog
-        projectId={projectId!}
-        open={reportDialogOpen}
-        onOpenChange={setReportDialogOpen}
-        conversationIds={activeConversationId ? [activeConversationId] : undefined}
-        conversationCount={conversations.length}
-      />
     </AppLayout>
   );
 }
