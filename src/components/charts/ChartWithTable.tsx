@@ -1,12 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart3, ZoomIn, PieChart, TrendingUp, Gauge, TableIcon } from 'lucide-react';
+import { BarChart3, ZoomIn, PieChart, TrendingUp, Gauge, TableIcon, Crosshair } from 'lucide-react';
 import { DonutChart } from './DonutChart';
 import { HorizontalBarChart } from './HorizontalBarChart';
 import { VerticalBarChart } from './VerticalBarChart';
 import { LineChart } from './LineChart';
 import { NpsGauge } from './NpsGauge';
 import { CompareMeansChart } from './CompareMeansChart';
+import { ScatterQuadrantChart } from './ScatterQuadrantChart';
+import { StackedBarChart } from './StackedBarChart';
 import { DataTableWithProgress } from './DataTableWithProgress';
 import { CrosstabTable } from './CrosstabTable';
 import { WaveComparisonChartEmbed } from './WaveComparisonChartEmbed';
@@ -68,6 +70,10 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         return <NpsGauge data={chart.data!} title={chart.title} />;
       case 'compare_means':
         return <CompareMeansChart data={chart.data!} title={chart.title} />;
+      case 'scatter':
+        return <ScatterQuadrantChart data={chart.data as any} title={chart.title} />;
+      case 'stacked_bar':
+        return <StackedBarChart data={chart.data as any} title={chart.title} />;
       case 'wave_comparison':
         return <WaveComparisonChartEmbed data={chart.data} />;
       case 'crosstab':
@@ -89,6 +95,10 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
       case 'nps_gauge':
         return <Gauge className="h-5 w-5 text-primary" />;
       case 'compare_means':
+        return <BarChart3 className="h-5 w-5 text-primary" />;
+      case 'scatter':
+        return <Crosshair className="h-5 w-5 text-primary" />;
+      case 'stacked_bar':
         return <BarChart3 className="h-5 w-5 text-primary" />;
       case 'wave_comparison':
         return <TrendingUp className="h-5 w-5 text-primary" />;

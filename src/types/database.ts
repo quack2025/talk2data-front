@@ -71,7 +71,7 @@ export interface Conversation {
   messages?: Message[];
 }
 
-export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab' | 'compare_means';
+export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab' | 'compare_means' | 'scatter' | 'stacked_bar' | 'wave_comparison';
 
 export interface ChartDataStructured {
   labels: string[];
