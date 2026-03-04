@@ -1,7 +1,8 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { api, ApiError } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import type { Conversation, QueryResponse, Message, ChartData, TableData, VariableInfo, RefinementAction } from '@/types/database';
 
 interface ToastMessages {
@@ -92,6 +93,14 @@ export function useChatMessages(projectId: string, conversationId: string | null
   const [queryError, setQueryError] = useState<QueryErrorState | null>(null);
   const [retryState, setRetryState] = useState<RetryState>({ attempt: 0, maxAttempts: MAX_AUTO_RETRIES, isRetrying: false });
 
+  // S25-2: SSE streaming thinking stage
+  const [thinkingStage, setThinkingStage] = useState<string>('');
+
+  // S25-3: Pagination state
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [prependedMessages, setPrependedMessages] = useState<Message[]>([]);
+
   // Cache de datos por message_id (persistente entre renders)
   const chartsCache = useRef<Record<string, ChartData[]>>({});
   const pythonCodeCache = useRef<Record<string, string>>({});
@@ -104,6 +113,19 @@ export function useChatMessages(projectId: string, conversationId: string | null
     queryFn: () => api.get<Conversation>(`/conversations/${conversationId}`),
     enabled: !!conversationId,
   });
+
+  // S25-3: Read has_more from conversation response
+  useEffect(() => {
+    if (conversationQuery.data?.has_more !== undefined) {
+      setHasMore(conversationQuery.data.has_more);
+    }
+  }, [conversationQuery.data?.has_more]);
+
+  // S25-3: Reset prepended messages on conversation change
+  useEffect(() => {
+    setPrependedMessages([]);
+    setHasMore(false);
+  }, [conversationId]);
 
   const executeQuery = useCallback(async (question: string, attempt: number): Promise<QueryResponse> => {
     setIsThinking(true);
@@ -155,9 +177,96 @@ export function useChatMessages(projectId: string, conversationId: string | null
     }
   }, [projectId, conversationId, segmentId]);
 
-  // Enviar mensaje/pregunta
+  // S25-2: SSE streaming query
+  const executeQueryStream = useCallback(async (question: string): Promise<QueryResponse | null> => {
+    setIsThinking(true);
+    setThinkingStage('');
+
+    const params = new URLSearchParams({ question });
+    if (conversationId) params.set('conversation_id', conversationId);
+    if (segmentId) params.set('segment_id', segmentId);
+
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      setIsThinking(false);
+      setThinkingStage('');
+      return null;
+    }
+
+    try {
+      const response = await fetch(
+        `${baseUrl}/conversations/projects/${projectId}/query-stream?${params}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'text/event-stream',
+          },
+        }
+      );
+
+      if (!response.ok || !response.body) {
+        // Fallback to regular query
+        setThinkingStage('');
+        return executeQuery(question, 0);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let result: QueryResponse | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            // Event type marker — handled via data parsing
+            continue;
+          }
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            try {
+              const data = JSON.parse(dataStr);
+              if (data.step) {
+                setThinkingStage(data.label || data.step);
+              }
+              if (data.answer !== undefined) {
+                // This is the final result
+                result = data as QueryResponse;
+              }
+            } catch {
+              // Skip malformed JSON
+            }
+          }
+        }
+      }
+
+      setIsThinking(false);
+      setThinkingStage('');
+      return result;
+    } catch (error) {
+      console.error('SSE stream error, falling back:', error);
+      setThinkingStage('');
+      return executeQuery(question, 0);
+    }
+  }, [projectId, conversationId, segmentId, executeQuery]);
+
+  // Enviar mensaje/pregunta (try SSE stream first, fallback to regular)
   const sendMessage = useMutation({
-    mutationFn: (question: string) => executeQuery(question, 0),
+    mutationFn: async (question: string) => {
+      const streamResult = await executeQueryStream(question);
+      if (streamResult) return streamResult;
+      // Fallback to regular query if stream returned null
+      return executeQuery(question, 0);
+    },
     onSuccess: (data) => {
       setLastAnalysis(data);
 
@@ -259,22 +368,46 @@ export function useChatMessages(projectId: string, conversationId: string | null
   // Obtener mensajes base del backend
   const baseMessages: Message[] = conversationQuery.data?.messages ?? [];
 
-  // Enriquecer mensajes con datos del cache
+  // S25-3: Load earlier messages for pagination
+  const loadEarlierMessages = useCallback(async () => {
+    if (!conversationId || !hasMore || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const allMsgs = [...prependedMessages, ...baseMessages];
+      const oldestTimestamp = allMsgs[0]?.created_at;
+      if (!oldestTimestamp) return;
+      const older = await api.get<Message[]>(
+        `/conversations/${conversationId}/messages?before=${oldestTimestamp}&limit=50`
+      );
+      if (older.length < 50) {
+        setHasMore(false);
+      }
+      setPrependedMessages(prev => [...older, ...prev]);
+    } catch (error) {
+      console.error('Error loading earlier messages:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [conversationId, hasMore, isLoadingMore, prependedMessages, baseMessages]);
+
+  // Enriquecer mensajes con datos del cache (S25-3: merge prepended + base)
   const messages = useMemo(() => {
-    return baseMessages.map(msg => ({
+    const allBase = [...prependedMessages, ...baseMessages];
+    return allBase.map(msg => ({
       ...msg,
       charts: msg.charts || chartsCache.current[msg.id] || undefined,
       python_code: msg.python_code || pythonCodeCache.current[msg.id] || undefined,
       tables: msg.tables || tablesCache.current[msg.id] || undefined,
       variables_analyzed: msg.variables_analyzed || variablesCache.current[msg.id] || undefined,
     }));
-  }, [baseMessages]);
+  }, [baseMessages, prependedMessages]);
 
   return {
     conversation: conversationQuery.data,
     messages,
     isLoading: conversationQuery.isLoading,
     isThinking,
+    thinkingStage,
     sendMessage,
     refineMessage,
     lastAnalysis,
@@ -283,5 +416,8 @@ export function useChatMessages(projectId: string, conversationId: string | null
     retryLastQuery,
     clearError: () => setQueryError(null),
     refetch: conversationQuery.refetch,
+    hasMore,
+    isLoadingMore,
+    loadEarlierMessages,
   };
 }

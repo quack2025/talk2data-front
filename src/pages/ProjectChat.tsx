@@ -7,7 +7,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
-import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, CheckCircle2, Download } from 'lucide-react';
+import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, CheckCircle2, Download, ChevronUp } from 'lucide-react';
 import type { RefinementAction } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -67,7 +67,7 @@ export default function ProjectChat() {
   };
 
   const { conversations, isLoading: conversationsLoading, createConversation, error: conversationsError } = useChat(projectId!, toastMessages);
-  const { messages, isLoading: messagesLoading, isThinking, sendMessage, refineMessage, lastAnalysis, queryError, retryState, retryLastQuery, clearError } = useChatMessages(projectId!, activeConversationId, toastMessages, selectedSegmentId);
+  const { messages, isLoading: messagesLoading, isThinking, thinkingStage, sendMessage, refineMessage, lastAnalysis, queryError, retryState, retryLastQuery, clearError, hasMore, isLoadingMore, loadEarlierMessages } = useChatMessages(projectId!, activeConversationId, toastMessages, selectedSegmentId);
 
   // Auto-select first conversation or create new one
   useEffect(() => {
@@ -205,6 +205,19 @@ export default function ProjectChat() {
               </div>
             ) : hasMessages ? (
               <div className="py-4">
+                {/* S25-3: Load earlier messages button */}
+                {hasMore && (
+                  <div className="flex justify-center py-2">
+                    <Button variant="ghost" size="sm" onClick={loadEarlierMessages} disabled={isLoadingMore}>
+                      {isLoadingMore ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <ChevronUp className="h-4 w-4 mr-2" />
+                      )}
+                      {isLoadingMore ? (t.chat?.loadingEarlier ?? 'Loading...') : (t.chat?.loadEarlier ?? 'Load earlier messages')}
+                    </Button>
+                  </div>
+                )}
                 {messages.map((message) => (
                   <ChatMessage
                     key={message.id}
@@ -231,7 +244,7 @@ export default function ProjectChat() {
                           <span className="text-xs text-muted-foreground ml-1">
                             {retryState.isRetrying
                               ? `${t.chat.retrying} (${retryState.attempt + 1}/${retryState.maxAttempts + 1})... ${t.chat.retryWait}`
-                              : t.chat.analyzingData}
+                              : thinkingStage || t.chat.analyzingData}
                           </span>
                         </div>
                       </div>

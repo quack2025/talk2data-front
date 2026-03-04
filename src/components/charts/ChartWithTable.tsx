@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BarChart3, ZoomIn, PieChart, TrendingUp, Gauge, TableIcon, Crosshair, FileSpreadsheet } from 'lucide-react';
+import { BarChart3, ZoomIn, PieChart, TrendingUp, Gauge, TableIcon, Crosshair, FileSpreadsheet, Users } from 'lucide-react';
 import { DonutChart } from './DonutChart';
 import { HorizontalBarChart } from './HorizontalBarChart';
 import { VerticalBarChart } from './VerticalBarChart';
@@ -14,6 +14,7 @@ import { CrosstabTable } from './CrosstabTable';
 import { WaveComparisonChartEmbed } from './WaveComparisonChartEmbed';
 import { BatchTabPlanProgress } from '../chat/BatchTabPlanProgress';
 import { TabSpecUploadWidget } from '../chat/TabSpecUploadWidget';
+import { SegmentProfileChart } from '../chat/SegmentProfileChart';
 import type { ChartData } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -85,6 +86,8 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         return <BatchTabPlanProgress data={chart.data as any} />;
       case 'tabspec_upload':
         return <TabSpecUploadWidget data={chart.data as any} />;
+      case 'segment_profile':
+        return <SegmentProfileChart data={chart.data as any} title={chart.title} />;
       default:
         // Default to horizontal bar for unknown types
         return <HorizontalBarChart data={chart.data!} title={chart.title} />;
@@ -114,6 +117,8 @@ export function ChartWithTable({ chart, index, onZoom }: ChartWithTableProps) {
         return <TableIcon className="h-5 w-5 text-primary" />;
       case 'tabspec_upload':
         return <FileSpreadsheet className="h-5 w-5 text-primary" />;
+      case 'segment_profile':
+        return <Users className="h-5 w-5 text-primary" />;
       default:
         return <BarChart3 className="h-5 w-5 text-primary" />;
     }

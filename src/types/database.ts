@@ -68,10 +68,11 @@ export interface Conversation {
   created_at: string;
   last_activity: string;
   message_count?: number;
+  has_more?: boolean;
   messages?: Message[];
 }
 
-export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab' | 'compare_means' | 'scatter' | 'stacked_bar' | 'wave_comparison' | 'batch_progress' | 'tabspec_upload';
+export type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab' | 'compare_means' | 'scatter' | 'stacked_bar' | 'wave_comparison' | 'batch_progress' | 'tabspec_upload' | 'segment_profile';
 
 export interface ChartDataStructured {
   labels: string[];

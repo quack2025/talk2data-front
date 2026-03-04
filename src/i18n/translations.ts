@@ -331,6 +331,13 @@ export const translations = {
       codeCopied: 'Código copiado',
       // Variables
       analysisType: 'Tipo de análisis',
+      // Pagination (S25-3)
+      loadEarlier: 'Cargar mensajes anteriores',
+      loadingEarlier: 'Cargando...',
+      // SSE streaming stages (S25-2)
+      interpreting: 'Interpretando tu pregunta...',
+      buildingCharts: 'Construyendo gráficos...',
+      generatingNarrative: 'Generando narrativa...',
     },
     // Exports
     exports: {
@@ -1514,6 +1521,13 @@ export const translations = {
       codeCopied: 'Code copied',
       // Variables
       analysisType: 'Analysis type',
+      // Pagination (S25-3)
+      loadEarlier: 'Load earlier messages',
+      loadingEarlier: 'Loading...',
+      // SSE streaming stages (S25-2)
+      interpreting: 'Interpreting your question...',
+      buildingCharts: 'Building charts...',
+      generatingNarrative: 'Generating narrative...',
     },
     // Exports
     exports: {
