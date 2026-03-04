@@ -7,7 +7,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { ChatSuggestions } from '@/components/chat/ChatSuggestions';
 import { ResultsPanel } from '@/components/chat/ResultsPanel';
 import { useChat, useChatMessages } from '@/hooks/useChat';
-import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, CheckCircle2, Download, ChevronUp } from 'lucide-react';
+import { Loader2, MessageSquare, AlertTriangle, WifiOff, RefreshCw, CheckCircle2, Download, ChevronUp, FileText } from 'lucide-react';
 import type { RefinementAction } from '@/types/database';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import { useProject } from '@/hooks/useProjects';
 import { useExports } from '@/hooks/useExports';
 import { useSegments } from '@/hooks/useSegments';
 import { SegmentSelector } from '@/components/segments/SegmentSelector';
+import { ReportPromptDialog } from '@/components/reports/ReportPromptDialog';
 import { toast } from 'sonner';
 
 export default function ProjectChat() {
@@ -31,6 +32,7 @@ export default function ProjectChat() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [showReportPrompt, setShowReportPrompt] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
   const { dataPrepStatus, skipDataPrep } = useDataPrep(projectId!);
@@ -142,6 +144,16 @@ export default function ProjectChat() {
               compact
             />
             {activeConversationId && (
+              <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => setShowReportPrompt(true)}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                {t.chat?.reportPrompt ?? 'AI Report'}
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -174,6 +186,7 @@ export default function ProjectChat() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>
             )}
           </div>
           {/* Transparency banner */}
@@ -334,6 +347,12 @@ export default function ProjectChat() {
         })()}
       </div>
 
+      <ReportPromptDialog
+        open={showReportPrompt}
+        onOpenChange={setShowReportPrompt}
+        projectId={projectId!}
+        conversationId={activeConversationId}
+      />
     </AppLayout>
   );
 }
