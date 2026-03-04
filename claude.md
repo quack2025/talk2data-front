@@ -73,7 +73,7 @@ src/
 │   ├── merge/              # Merge wizard dialog
 │   ├── segmentation/       # Segmentation clustering wizard
 │   ├── share/              # Share link dialog + management
-│   ├── reports/            # Report generator components (disabled — Gamma export pivot planned)
+│   ├── reports/            # AI Report Prompt (ReportPromptDialog — structured markdown for Gamma/ChatGPT/Tome)
 │   ├── teams/              # Team management (TeamsManager, TeamCard, InviteMemberDialog)
 │   ├── dataprep/           # Data prep AI input + rule management
 │   ├── layout/             # AppSidebar (Core Zone + Folders + Account Zone), AppHeader
@@ -167,7 +167,7 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | Merge Wizard | (modal) | MergeWizardDialog | -- |
 | Segmentation | (modal) | SegmentationWizardDialog | -- |
 | Share Links | (modal) | ShareDialog | useShareLinks |
-| Report Gen | (disabled) | ReportGeneratorDialog (dead code removed from pages) | useReportGenerator |
+| AI Report Prompt | ProjectChat toolbar + Exports page | ReportPromptDialog (depth selector, copy/download markdown) | useReportPrompt |
 | Teams | /teams | TeamsManager, TeamCard, InviteMemberDialog, CreateTeamDialog | useTeams |
 | Team Assignment | ProjectSettings | Select (team selector) | useAssignProjectToTeam |
 | Data Prep AI | ProjectDetail | DataPrepAIInput | -- |
@@ -187,7 +187,7 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | `/projects/:projectId/settings` | Project settings |
 | `/projects/:projectId/summary` | Executive summary |
 | `/dashboard` | Main dashboard |
-| `/exports` | Export management |
+| `/exports` | AI Report Prompt (replaced old PDF/Excel export) |
 | `/settings` | User settings |
 | `/teams` | Team management |
 | `/api-keys` | API key management |
@@ -280,6 +280,16 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | i18n additions | 5 new keys in both es/en: `loadEarlier`, `loadingEarlier`, `interpreting`, `buildingCharts`, `generatingNarrative`. |
 | ChartType updated | Added `segment_profile` to ChartType union in `database.ts`. |
 
+### Sprint 26 — AI Report Prompt + QA Fixes (commits `ab0cf59`, `314f006`, `a7b73b9`, `502d925`)
+| Feature/Fix | Description |
+|-------------|-------------|
+| ReportPromptDialog | New dialog: depth selector (compact/standard/detailed), source selector (current/all conversations — hidden when no conversationId), Claude-generated structured markdown, copy to clipboard + download .md. New file: `src/components/reports/ReportPromptDialog.tsx`. Hook: `useReportPrompt`. |
+| AI Report in chat toolbar | Button in ProjectChat toolbar opens ReportPromptDialog with conversationId for source selection. |
+| AI Report on Exports page | Replaced `CreateExportDialog` with `ReportPromptDialog` on `/exports` page. No conversationId passed — generates report purely from project data (variable profiles, exec summary, study context). Button: "Reporte IA" / "AI Report" with Sparkles icon. |
+| Bilingual chat suggestions | `ChatSuggestions` now passes `?lang=${language}` to backend. Weight-detected toast is bilingual. |
+| SPA deep link fix | Created `public/_redirects` with `/* /index.html 200` for Netlify/Lovable catch-all routing. |
+| i18n additions | `exports.aiReport` key (ES/EN), updated `exports.subtitle` and `exports.noExportsDescription`, `reportPromptDialog` section with all dialog labels. |
+
 ### Chart Types Rendered
 
 Full `ChartType` union in `src/types/database.ts`:
@@ -313,7 +323,7 @@ type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | '
 5. No drag-and-drop reordering of data prep rules
 6. No bulk variable selection in Explore mode
 7. No chart annotation or custom labels
-8. No PDF export from chat (conversation export is Excel/PPTX only)
+8. ~~No PDF export from chat~~ **Replaced with AI Report Prompt (Sprint 26)** — generates structured markdown for Gamma/ChatGPT/Tome
 9. No dark mode
 10. ~~Conversation history limited to 50 messages~~ **DONE (Sprint 25 pagination)**
 
