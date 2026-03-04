@@ -368,10 +368,11 @@ export const translations = {
     // Exports
     exports: {
       title: 'Exportaciones',
-      subtitle: 'Gestiona y descarga tus reportes generados',
+      subtitle: 'Genera reportes AI a partir de los datos del proyecto',
+      aiReport: 'Reporte IA',
       newExport: 'Nueva exportación',
-      noExports: 'No hay exportaciones',
-      noExportsDescription: 'Genera tu primer reporte para comenzar.',
+      noExports: 'No hay reportes',
+      noExportsDescription: 'Genera tu primer reporte IA para comenzar.',
       download: 'Descargar',
       preview: 'Previsualizar',
       delete: 'Eliminar',
@@ -1584,10 +1585,11 @@ export const translations = {
     // Exports
     exports: {
       title: 'Exports',
-      subtitle: 'Manage and download your generated reports',
+      subtitle: 'Generate AI reports from your project data',
+      aiReport: 'AI Report',
       newExport: 'New export',
-      noExports: 'No exports',
-      noExportsDescription: 'Generate your first report to get started.',
+      noExports: 'No reports',
+      noExportsDescription: 'Generate your first AI report to get started.',
       download: 'Download',
       preview: 'Preview',
       delete: 'Delete',

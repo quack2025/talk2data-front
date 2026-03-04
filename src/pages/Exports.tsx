@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Plus, FileText } from 'lucide-react';
+import { FileText, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppLayout } from '@/components/layout';
 import { ExportCard } from '@/components/exports/ExportCard';
-import { CreateExportDialog } from '@/components/exports/CreateExportDialog';
+import { ReportPromptDialog } from '@/components/reports/ReportPromptDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useExports } from '@/hooks/useExports';
 import type { Export } from '@/types/database';
@@ -49,13 +49,13 @@ export default function Exports() {
               {t.exports.subtitle}
             </p>
           </div>
-          <Button 
-            onClick={() => setCreateDialogOpen(true)} 
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
             className="gap-2"
             disabled={!projectId}
           >
-            <Plus className="h-4 w-4" />
-            {t.exports.newExport}
+            <Sparkles className="h-4 w-4" />
+            {t.exports.aiReport}
           </Button>
         </div>
 
@@ -98,8 +98,8 @@ export default function Exports() {
                 className="mt-6 gap-2"
                 disabled={!projectId}
               >
-                <Plus className="h-4 w-4" />
-                {t.exports.newExport}
+                <Sparkles className="h-4 w-4" />
+                {t.exports.aiReport}
               </Button>
             </div>
           </div>
@@ -117,10 +117,10 @@ export default function Exports() {
         )}
       </div>
 
-      <CreateExportDialog
+      <ReportPromptDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
-        defaultProjectId={projectId}
+        projectId={projectId}
       />
     </AppLayout>
   );
