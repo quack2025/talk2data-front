@@ -60,7 +60,7 @@ src/
 │   └── ...
 ├── components/
 │   ├── ui/                 # shadcn/ui primitives (50+ components)
-│   ├── charts/             # Recharts wrappers (bar, crosstab, compare means, NPS, donut, line, scatter, stacked bar, wave comparison)
+│   ├── charts/             # Recharts wrappers (bar, crosstab, compare means, NPS, donut, line, scatter, stacked bar, wave comparison, segment profile, batch progress, tabspec upload)
 │   ├── chat/               # Chat UI (messages, input, sidebar, results, refine actions, banner picker)
 │   ├── aggfile/            # Generate Tables wizard (4 steps)
 │   ├── folders/            # Folder system (FolderSection, DroppableFolderItem) — drag-and-drop
@@ -79,7 +79,7 @@ src/
 │   ├── layout/             # AppSidebar (Core Zone + Folders + Account Zone), AppHeader
 │   └── ...
 ├── hooks/                  # Custom hooks (28+ hooks)
-│   ├── useChat.ts          # Chat with retry, cache, refine
+│   ├── useChat.ts          # Chat with retry, cache, refine, SSE streaming, pagination
 │   ├── useExplore.ts       # Explore mode analysis
 │   ├── useSegments.ts      # Segment CRUD + preview
 │   ├── useDataPrep.ts      # Data prep rules CRUD
@@ -163,7 +163,7 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | Variable Groups | ProjectDetail | VariableGroupsManager, AutoDetectPanel, ManualGrouper | useVariableGroups |
 | Waves | ProjectDetail | WaveManager, WaveComparisonChart | useWaves |
 | Help Chat | (floating) | HelpChatDialog | useHelpChat |
-| Charts | (embedded) | ChartWithTable, CrosstabTable, CompareMeansChart, NpsGauge, ScatterQuadrantChart, StackedBarChart, WaveComparisonChartEmbed | — |
+| Charts | (embedded) | ChartWithTable, CrosstabTable, CompareMeansChart, NpsGauge, ScatterQuadrantChart, StackedBarChart, WaveComparisonChartEmbed, SegmentProfileChart, BatchTabPlanProgress, TabSpecUploadWidget | — |
 | Merge Wizard | (modal) | MergeWizardDialog | -- |
 | Segmentation | (modal) | SegmentationWizardDialog | -- |
 | Share Links | (modal) | ShareDialog | useShareLinks |
@@ -261,6 +261,61 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | ScatterQuadrantChart | Importance vs Satisfaction scatter with quadrant reference lines (gap analysis). Points colored by quadrant: red (concentrate), green (maintain), gray (low priority), amber (overkill). |
 | StackedBarChart | Stacked bar chart for crosstab/funnel visualizations. Uses Recharts Bar with `stackId`. |
 | ChartType updated | Added `scatter`, `stacked_bar`, `wave_comparison` to ChartType union in `database.ts`. |
+
+### Sprint 24 — Batch Tab Plan & TabSpec Upload (commit `bb0c969`)
+| Feature | Description |
+|---------|-------------|
+| BatchTabPlanProgress | Async polling widget for batch tab plan exports. Polls `GET /generate-tables/export-status/{taskId}` every 3s. Shows progress bar, stage label, tables_done/tables_total, download button on completion. New file: `src/components/chat/BatchTabPlanProgress.tsx`. |
+| TabSpecUploadWidget | 3-phase upload widget in chat: Phase 1 FileDropZone (.xlsx/.xls), Phase 2 rule preview table with checkboxes, Phase 3 apply confirmation. New file: `src/components/chat/TabSpecUploadWidget.tsx`. |
+| CrosstabTable spanning headers | Two-level column headers for nested crosstabs. Conditional parent header row when `spanning_headers` present, using `<TableHead colSpan={sh.colspan}>`. |
+| ChartType + types | Added `SpanningHeader` interface `{ label: string; colspan: number }`, extended `ChartTableData` with `spanning_headers?: SpanningHeader[]`, added `batch_progress` and `tabspec_upload` to ChartType union. |
+
+### Sprint 25 — SSE Streaming, Pagination & Segment Profile (commit `b1fb366`)
+| Feature | Description |
+|---------|-------------|
+| SegmentProfileChart | Recharts horizontal bar comparison chart. Dual bars (Segment colored by index, Total gray). Index coloring: green (>=120), red (<=80), gray (neutral). Custom tooltip with segment %, total %, index, significance flag. Legend at bottom. New file: `src/components/chat/SegmentProfileChart.tsx`. |
+| SSE streaming (useChat) | `executeQueryStream` using `fetch()` with ReadableStream parsing SSE events. `thinkingStage` state for real-time stage display. `sendMessage` tries stream first with POST fallback. (+148 lines in `useChat.ts`). |
+| Message pagination (useChat) | `hasMore`, `isLoadingMore`, `prependedMessages` state. `loadEarlierMessages` callback using cursor-based `before` param. Reset on conversation change. |
+| ProjectChat UI updates | "Load earlier messages" button with ChevronUp icon at top of message list. Thinking indicator shows `thinkingStage` instead of static "Analyzing data...". |
+| i18n additions | 5 new keys in both es/en: `loadEarlier`, `loadingEarlier`, `interpreting`, `buildingCharts`, `generatingNarrative`. |
+| ChartType updated | Added `segment_profile` to ChartType union in `database.ts`. |
+
+### Chart Types Rendered
+
+Full `ChartType` union in `src/types/database.ts`:
+```ts
+type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | 'line' | 'nps_gauge' | 'crosstab' | 'compare_means' | 'scatter' | 'stacked_bar' | 'wave_comparison' | 'batch_progress' | 'tabspec_upload' | 'segment_profile';
+```
+
+| ChartType | Component | Description |
+|-----------|-----------|-------------|
+| `bar` / `horizontal_bar` / `vertical_bar` | (Recharts BarChart) | Standard bar charts |
+| `pie` / `donut` | (Recharts PieChart) | Pie and donut charts |
+| `line` | (Recharts LineChart) | Line chart |
+| `nps_gauge` | NpsGauge | NPS score gauge |
+| `crosstab` | CrosstabTable | Crosstab table with significance letters |
+| `compare_means` | CompareMeansChart | Compare means bar chart |
+| `scatter` | ScatterQuadrantChart | Scatter with quadrant reference lines |
+| `stacked_bar` | StackedBarChart | Stacked bar chart |
+| `wave_comparison` | WaveComparisonChartEmbed | Wave trend line chart |
+| `batch_progress` | BatchTabPlanProgress | Batch tab plan async export |
+| `tabspec_upload` | TabSpecUploadWidget | TabSpec import from chat |
+| `segment_profile` | SegmentProfileChart | Segment profiling (segment vs total bars) |
+
+---
+
+## Remaining Limitations
+
+1. No offline mode — all data requires backend connection
+2. No real-time collaboration — single-user edits only
+3. ~~No streaming — chat responses arrive as a single block~~ **DONE (Sprint 25 SSE)**
+4. No undo/redo in data prep rule editing
+5. No drag-and-drop reordering of data prep rules
+6. No bulk variable selection in Explore mode
+7. No chart annotation or custom labels
+8. No PDF export from chat (conversation export is Excel/PPTX only)
+9. No dark mode
+10. ~~Conversation history limited to 50 messages~~ **DONE (Sprint 25 pagination)**
 
 ---
 
