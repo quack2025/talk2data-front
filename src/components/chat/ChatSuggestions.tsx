@@ -16,7 +16,7 @@ interface ChatSuggestionsProps {
 }
 
 export function ChatSuggestions({ onSelect }: ChatSuggestionsProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { projectId } = useParams<{ projectId: string }>();
   const [smartSuggestions, setSmartSuggestions] = useState<string[] | null>(null);
 
@@ -25,7 +25,7 @@ export function ChatSuggestions({ onSelect }: ChatSuggestionsProps) {
     let cancelled = false;
     api
       .get<SuggestionsResponse>(
-        `/conversations/projects/${projectId}/suggestions`
+        `/conversations/projects/${projectId}/suggestions?lang=${language}`
       )
       .then((data) => {
         if (cancelled) return;
@@ -33,10 +33,10 @@ export function ChatSuggestions({ onSelect }: ChatSuggestionsProps) {
           setSmartSuggestions(data.suggestions);
         }
         if (data.detected_weight_variable) {
-          toast.info(
-            `Weight variable detected: ${data.detected_weight_variable}. Go to Data Prep to apply it.`,
-            { icon: <Scale className="h-4 w-4" />, duration: 8000 },
-          );
+          const msg = language === 'en'
+            ? `Weight variable detected: ${data.detected_weight_variable}. Go to Data Prep to apply it.`
+            : `Variable de peso detectada: ${data.detected_weight_variable}. Ve a Preparación de Datos para aplicarla.`;
+          toast.info(msg, { icon: <Scale className="h-4 w-4" />, duration: 8000 });
         }
       })
       .catch(() => {
@@ -45,7 +45,7 @@ export function ChatSuggestions({ onSelect }: ChatSuggestionsProps) {
     return () => {
       cancelled = true;
     };
-  }, [projectId]);
+  }, [projectId, language]);
 
   const suggestions = smartSuggestions ?? t.chat.suggestions;
 
