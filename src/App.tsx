@@ -157,6 +157,15 @@ const App = () => (
             />
 
             <Route
+              path="/projects/:projectId/:tab"
+              element={
+                <ProtectedRoute>
+                  <ProjectDetail />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/projects/:projectId/upload"
               element={
                 <ProtectedRoute>

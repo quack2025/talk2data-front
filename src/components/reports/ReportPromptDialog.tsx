@@ -44,10 +44,12 @@ export function ReportPromptDialog({
   const [source, setSource] = useState<'current' | 'all'>('current');
   const [promptText, setPromptText] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const labels = t.reportPromptDialog;
 
   const handleGenerate = async () => {
+    setError(null);
     try {
       const result = await generatePrompt.mutateAsync({
         depth,
@@ -58,7 +60,9 @@ export function ReportPromptDialog({
       });
       setPromptText(result.prompt_text);
     } catch {
-      toast.error(labels?.error ?? 'Error generating prompt');
+      const msg = labels?.error ?? 'Error generating prompt. Please try again.';
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -87,6 +91,7 @@ export function ReportPromptDialog({
     setTimeout(() => {
       setPromptText(null);
       setCopied(false);
+      setError(null);
     }, 300);
   };
 
@@ -242,6 +247,10 @@ export function ReportPromptDialog({
             </div>
           )}
         </div>
+
+        {error && (
+          <p className="text-sm text-destructive px-1">{error}</p>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose}>

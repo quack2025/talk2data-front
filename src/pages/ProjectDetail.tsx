@@ -126,7 +126,7 @@ const METHODOLOGIES = [
 ];
 
 export default function ProjectDetail() {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { projectId, tab } = useParams<{ projectId: string; tab?: string }>();
   const navigate = useNavigate();
   const { t, language } = useLanguage();
   const dateLocale = language === 'es' ? es : enUS;
@@ -136,7 +136,18 @@ export default function ProjectDetail() {
   const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   const [segmentationDialogOpen, setSegmentationDialogOpen] = useState(false);
   const [dashboardDialogOpen, setDashboardDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+
+  // Map URL tab slugs to internal tab values
+  const tabMap: Record<string, string> = {
+    'data-preparation': 'dataprep',
+    'dataprep': 'dataprep',
+    'overview': 'overview',
+    'context': 'context',
+    'files': 'files',
+    'explore': 'explore',
+  };
+  const initialTab = (tab && tabMap[tab]) || 'overview';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [exploreSubTab, setExploreSubTab] = useState<'table' | 'analysis'>('table');
   const [showBookmarks, setShowBookmarks] = useState(true);
   const [pendingRulePrefill, setPendingRulePrefill] = useState<RulePrefill | null>(null);
