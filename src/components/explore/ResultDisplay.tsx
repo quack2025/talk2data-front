@@ -392,8 +392,26 @@ function ResultTable({
   // Multiple Response Sets
   if (analysisType === 'multiple_response' && data.items) {
     const items = data.items as Record<string, any>[];
+    const chartData = items.slice(0, 20).map((item) => ({
+      name: String(item.label ?? item.variable ?? '').slice(0, 30),
+      value: (item.pct_respondents ?? 0) as number,
+    }));
     return (
-      <div className="space-y-2">
+      <div className="space-y-4">
+        {chartData.length > 1 && (
+          <ResponsiveContainer width="100%" height={Math.max(chartData.length * 28, 120)}>
+            <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 30 }}>
+              <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} fontSize={11} />
+              <YAxis type="category" dataKey="name" width={160} fontSize={10} tick={{ fill: 'currentColor' }} />
+              <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
+              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                {chartData.map((_, i) => (
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b">
@@ -408,7 +426,7 @@ function ResultTable({
           <tbody>
             {items.map((item, i) => (
               <tr key={i} className="border-b last:border-0 hover:bg-muted/50">
-                <td className="py-1.5 px-3 text-xs">{item.label}</td>
+                <td className="py-1.5 px-3 text-xs max-w-[300px] truncate" title={item.label}>{item.label}</td>
                 <td className="text-right py-1.5 px-3 tabular-nums">{item.count}</td>
                 <td className="text-right py-1.5 px-3 tabular-nums">{item.pct_respondents?.toFixed(1)}%</td>
                 <td className="text-right py-1.5 px-3 tabular-nums">{item.pct_mentions?.toFixed(1)}%</td>

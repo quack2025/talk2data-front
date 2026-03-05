@@ -42,6 +42,7 @@ interface AnalysisTypeDef {
   label: { es: string; en: string };
   description: { es: string; en: string };
   needsCross?: boolean;
+  optionalCross?: boolean;
   needsSignificance?: boolean;
   needsMultipleVars?: boolean;
 }
@@ -98,6 +99,7 @@ const ANALYSIS_TYPES: AnalysisTypeDef[] = [
     icon: CheckSquare,
     label: { es: 'Resp. Multiple', en: 'Multiple Response' },
     description: { es: 'Frecuencia de menciones', en: 'Mention frequency' },
+    optionalCross: true,
   },
   {
     id: 'regression',
@@ -160,6 +162,8 @@ export function AnalysisPanel({
 
   const currentTypeDef = ANALYSIS_TYPES.find((a) => a.id === analysisType);
   const needsCross = currentTypeDef?.needsCross ?? false;
+  const optionalCross = currentTypeDef?.optionalCross ?? false;
+  const showCross = needsCross || optionalCross;
   const needsSignificance = currentTypeDef?.needsSignificance ?? false;
   const needsMultipleVars = currentTypeDef?.needsMultipleVars ?? false;
 
@@ -175,7 +179,7 @@ export function AnalysisPanel({
       analysis_type: analysisType,
       variable: selectedVariable.name,
     };
-    if (needsCross && crossVariable) {
+    if ((needsCross || optionalCross) && crossVariable) {
       request.cross_variable = crossVariable;
     }
     if (needsSignificance) {
@@ -264,7 +268,7 @@ export function AnalysisPanel({
                       <button
                         onClick={() => {
                           setAnalysisType(typeDef.id);
-                          if (!typeDef.needsCross) setCrossVariable('');
+                          if (!typeDef.needsCross && !typeDef.optionalCross) setCrossVariable('');
                         }}
                         className={cn(
                           'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-left transition-all w-full',
@@ -297,7 +301,7 @@ export function AnalysisPanel({
         </div>
 
         {/* ── Cross variable selector ── */}
-        {needsCross && (
+        {showCross && (
           <div className="space-y-1.5 rounded-md border border-primary/20 bg-primary/5 p-3">
             <Label className="text-xs font-medium">
               {t.explore?.crossVariable || 'Variable de cruce (banner)'}
