@@ -590,19 +590,17 @@ export default function ProjectDetail() {
                 </CardContent>
               </Card>
 
-              <Card
-                className={`cursor-pointer transition-colors ${
-                  hasReadyFiles ? 'hover:border-primary/50' : 'opacity-50 cursor-not-allowed'
-                }`}
-                onClick={() => hasReadyFiles && navigate('/exports')}
-              >
+              <Card className="opacity-60 cursor-not-allowed relative">
+                <div className="absolute top-2 right-2 bg-amber-100 text-amber-800 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                  Coming Soon
+                </div>
                 <CardHeader className="pb-2">
-                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-primary" />
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-muted-foreground" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <CardTitle className="text-base">{t.projectDetail.exportCard}</CardTitle>
+                  <CardTitle className="text-base text-muted-foreground">{t.projectDetail.exportCard}</CardTitle>
                   <CardDescription>{t.projectDetail.exportCardDescription}</CardDescription>
                 </CardContent>
               </Card>
