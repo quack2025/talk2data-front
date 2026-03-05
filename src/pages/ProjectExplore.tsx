@@ -53,6 +53,26 @@ export default function ProjectExplore() {
     explore.clearResult();
   }, [explore.clearResult]);
 
+  const handleAnalyzeGroup = useCallback(
+    (groupName: string, groupVariables: string[]) => {
+      if (groupVariables.length === 0) return;
+      const request: ExploreRunRequest = {
+        analysis_type: 'multiple_response',
+        variable: groupVariables[0],
+        mrs_variables: groupVariables,
+        group_key: groupName,
+      };
+      // Select the first variable so AnalysisPanel shows context
+      if (vars) {
+        const firstVar = vars.variables.find((v) => v.name === groupVariables[0]);
+        if (firstVar) setSelectedVariable(firstVar);
+      }
+      setCurrentRequest(request);
+      explore.runAnalysis(request);
+    },
+    [vars, explore.runAnalysis]
+  );
+
   const handleRun = useCallback(
     async (request: ExploreRunRequest) => {
       setCurrentRequest(request);
@@ -208,6 +228,7 @@ export default function ProjectExplore() {
                 banners={vars.banners}
                 selectedVariable={selectedVariable?.name || null}
                 onSelectVariable={handleSelectVariable}
+                onAnalyzeGroup={handleAnalyzeGroup}
               />
             )}
           </div>

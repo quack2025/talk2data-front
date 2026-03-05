@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -9,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Star } from 'lucide-react';
+import { Search, Star, BarChart2 } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { ExploreVariable, ExploreVariableGroup } from '@/types/explore';
 
@@ -19,6 +20,7 @@ interface VariableBrowserProps {
   banners: string[];
   selectedVariable: string | null;
   onSelectVariable: (variable: ExploreVariable) => void;
+  onAnalyzeGroup?: (groupName: string, variables: string[]) => void;
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -34,8 +36,9 @@ export function VariableBrowser({
   banners,
   selectedVariable,
   onSelectVariable,
+  onAnalyzeGroup,
 }: VariableBrowserProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [search, setSearch] = useState('');
   const [groupFilter, setGroupFilter] = useState<string>('all');
 
@@ -82,19 +85,37 @@ export function VariableBrowser({
         </div>
 
         {groups.length > 0 && (
-          <Select value={groupFilter} onValueChange={setGroupFilter}>
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder={t.explore?.allGroups || 'Todos los grupos'} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t.explore?.allGroups || 'Todos los grupos'}</SelectItem>
-              {groups.map((g) => (
-                <SelectItem key={g.name} value={g.name}>
-                  {g.name} ({g.variables.length})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-1.5">
+            <Select value={groupFilter} onValueChange={setGroupFilter}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue placeholder={t.explore?.allGroups || 'Todos los grupos'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t.explore?.allGroups || 'Todos los grupos'}</SelectItem>
+                {groups.map((g) => (
+                  <SelectItem key={g.name} value={g.name}>
+                    {g.name} ({g.variables.length})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {groupFilter !== 'all' && onAnalyzeGroup && (() => {
+              const group = groups.find((g) => g.name === groupFilter);
+              return group && group.variables.length > 1 ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-7 text-xs gap-1.5"
+                  onClick={() => onAnalyzeGroup(group.name, group.variables)}
+                >
+                  <BarChart2 className="h-3 w-3" />
+                  {language === 'es'
+                    ? `Analizar grupo (${group.variables.length} vars)`
+                    : `Analyze group (${group.variables.length} vars)`}
+                </Button>
+              ) : null;
+            })()}
+          </div>
         )}
       </div>
 
