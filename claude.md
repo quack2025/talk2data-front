@@ -156,7 +156,7 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 |---------|------|------------|------|
 | Folders | AppSidebar | FolderSection, DroppableFolderItem, DraggableProjectCard | -- |
 | AI Chat | ProjectChat | ChatMessage, ResultsPanel, RefineActions, BannerPickerPopover, ChatInput | useChat |
-| Explore Mode | ProjectExplore | AnalysisPanel, SegmentSelector | useExplore |
+| Explore Mode | ProjectExplore | VariableBrowser (with Analyze as Group for MRS), AnalysisPanel, SegmentSelector | useExplore |
 | Generate Tables | (modal) | BannerVariablesStep, AnalysisVariablesStep, ConfigureStep, PreviewStep | useAggfileGenerator |
 | Segments | ProjectDetail | SegmentManager, SegmentFormDialog, SegmentSelector | useSegments |
 | Data Prep | ProjectDetail | DataPrepManager (V2: QC Report, Variable Profiles, AI Suggestions panels), RuleFormDialog | useDataPrep |
@@ -181,13 +181,14 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | `/auth` | Login/registration |
 | `/projects` | Project listing |
 | `/projects/:projectId` | Project detail (groups, data prep, waves, segments) |
+| `/projects/:projectId/:tab` | Deep link to specific tab (overview, dataprep, data-preparation, context, files, explore) |
 | `/projects/:projectId/upload` | File upload |
 | `/projects/:projectId/chat` | AI chat interface |
 | `/projects/:projectId/explore` | Interactive explore mode |
 | `/projects/:projectId/settings` | Project settings |
 | `/projects/:projectId/summary` | Executive summary |
 | `/dashboard` | Main dashboard |
-| `/exports` | AI Report Prompt (replaced old PDF/Excel export) |
+| `/exports` | AI Report Prompt (replaced old PDF/Excel/PPTX export dropdown) |
 | `/settings` | User settings |
 | `/teams` | Team management |
 | `/api-keys` | API key management |
@@ -290,6 +291,16 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | SPA deep link fix | Created `public/_redirects` with `/* /index.html 200` for Netlify/Lovable catch-all routing. |
 | i18n additions | `exports.aiReport` key (ES/EN), updated `exports.subtitle` and `exports.noExportsDescription`, `reportPromptDialog` section with all dialog labels. |
 
+### QA Regression Rounds 1-3 (5 March 2026, commits `60518e2`, `9e0af3d`, `172e109`, `acd85f7`)
+
+| Fix | Description |
+|-----|-------------|
+| BUG-2: SPA deep link 404 | Created `vercel.json` with SPA rewrites (deleted Netlify `_redirects`). Added `/projects/:projectId/:tab` route in App.tsx. `ProjectDetail` reads `:tab` param with slug→internal mapping (`data-preparation`→`dataprep`, etc.). |
+| BUG-6: AI Report modal freeze | Added `error` state + inline error display in `ReportPromptDialog`. Reset on close. Toast on failure. |
+| Remove Export dropdown | Removed `DropdownMenu` with PDF/Excel/PPTX options from `ProjectChat` toolbar. Only "AI Report" button remains. Removed `useExports` hook usage and `Download` icon import. |
+| Coming Soon badges | Merge Data and Segmentation cards in `ProjectDetail` disabled with `opacity-60 cursor-not-allowed` + amber "Coming Soon" badge. Cards no longer clickable for client demos. |
+| Analyze as Group (MRS) | `VariableBrowser` now accepts `onAnalyzeGroup` prop. When a group is selected in the dropdown, an "Analyze group (N vars)" button appears. Click triggers `multiple_response` analysis with all group variables via `ProjectExplore.handleAnalyzeGroup`. No backend changes needed. |
+
 ### Chart Types Rendered
 
 Full `ChartType` union in `src/types/database.ts`:
@@ -323,8 +334,9 @@ type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | '
 5. No drag-and-drop reordering of data prep rules
 6. No bulk variable selection in Explore mode
 7. No chart annotation or custom labels
-8. ~~No PDF export from chat~~ **Replaced with AI Report Prompt (Sprint 26)** — generates structured markdown for Gamma/ChatGPT/Tome
+8. ~~No PDF export from chat~~ **Replaced with AI Report Prompt (Sprint 26)** — generates structured markdown for Gamma/ChatGPT/Tome. PDF/Excel/PPTX export dropdown removed from chat toolbar (QA Regression).
 9. No dark mode
+11. **Merge Data and Segmentation cards disabled** (Coming Soon badges) for client demos — backend functionality exists but frontend entry points are temporarily blocked
 10. ~~Conversation history limited to 50 messages~~ **DONE (Sprint 25 pagination)**
 
 ---
