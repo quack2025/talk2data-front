@@ -13,6 +13,7 @@ export interface ExploreVariable {
   suggested_analyses: string[];
   group_key: string | null;
   question_text: string | null;
+  hidden_by_group?: string | null;
 }
 
 export interface ExploreVariableGroup {

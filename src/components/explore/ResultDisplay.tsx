@@ -213,6 +213,13 @@ function ResultTable({
           </tfoot>
         )}
       </table>
+      {data.pct_missing > 0 && (
+        <p className="text-xs text-muted-foreground mt-1">
+          {language === 'es'
+            ? `${data.total_missing ?? 0} casos sin respuesta (${(data.pct_missing as number).toFixed(1)}% missing)`
+            : `${data.total_missing ?? 0} missing cases (${(data.pct_missing as number).toFixed(1)}%)`}
+        </p>
+      )}
       </div>
     );
   }
