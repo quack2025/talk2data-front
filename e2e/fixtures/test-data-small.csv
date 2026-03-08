@@ -1,0 +1,31 @@
+respondent_id,gender,age_group,brand_awareness,satisfaction,nps_score,purchase_intent
+1,Male,18-24,Yes,4,9,Definitely
+2,Female,25-34,Yes,5,10,Definitely
+3,Male,35-44,No,2,3,Probably not
+4,Female,18-24,Yes,4,8,Probably
+5,Male,25-34,Yes,3,7,Probably
+6,Female,35-44,Yes,5,10,Definitely
+7,Male,45-54,No,1,2,Definitely not
+8,Female,25-34,Yes,4,8,Probably
+9,Male,18-24,Yes,3,6,Maybe
+10,Female,45-54,Yes,4,7,Probably
+11,Male,35-44,Yes,5,9,Definitely
+12,Female,18-24,No,2,4,Probably not
+13,Male,25-34,Yes,4,8,Probably
+14,Female,35-44,Yes,3,5,Maybe
+15,Male,45-54,Yes,4,7,Probably
+16,Female,18-24,Yes,5,10,Definitely
+17,Male,25-34,Yes,4,9,Definitely
+18,Female,35-44,No,2,3,Probably not
+19,Male,45-54,Yes,3,6,Maybe
+20,Female,25-34,Yes,4,8,Probably
+21,Male,18-24,Yes,5,9,Definitely
+22,Female,35-44,Yes,4,7,Probably
+23,Male,25-34,No,2,4,Probably not
+24,Female,45-54,Yes,3,6,Maybe
+25,Male,18-24,Yes,4,8,Probably
+26,Female,25-34,Yes,5,10,Definitely
+27,Male,35-44,Yes,3,5,Maybe
+28,Female,45-54,Yes,4,7,Probably
+29,Male,18-24,Yes,4,9,Definitely
+30,Female,25-34,Yes,5,10,Definitely
