@@ -89,7 +89,7 @@ src/
 │   ├── useShareLinks.ts      # Share link CRUD
 │   └── ...
 ├── types/                  # TypeScript type definitions
-│   ├── explore.ts          # Explore types (ExploreRunRequest, ExploreVariable, etc.)
+│   ├── explore.ts          # Explore types (ExploreRunRequest, ExploreVariable with hidden_by_group, etc.)
 │   ├── segments.ts         # Segment types + OPERATOR_LABELS
 │   ├── dataPrep.ts         # Data prep rule types
 │   ├── database.ts         # Database types (Project interface with folder_id)
@@ -301,6 +301,15 @@ Unified HSL-based CSS variables across all Genius Labs products. Primary color: 
 | Coming Soon badges | Merge Data and Segmentation cards in `ProjectDetail` disabled with `opacity-60 cursor-not-allowed` + amber "Coming Soon" badge. Cards no longer clickable for client demos. |
 | Analyze as Group (MRS) | `VariableBrowser` now accepts `onAnalyzeGroup` prop. When a group is selected in the dropdown, an "Analyze group (N vars)" button appears. Click triggers `multiple_response` analysis with all group variables via `ProjectExplore.handleAnalyzeGroup`. No backend changes needed. |
 
+### MRS QA + Variable Visibility (10 March 2026, commits `76c294a`, `e6a888e`)
+| Feature/Fix | Description |
+|-------------|-------------|
+| MRS horizontal bar chart | `ResultDisplay` now renders a Recharts horizontal bar chart for MRS results (top 20 items by % respondents) above the table. Truncated labels (max 30 chars). |
+| Optional cross for MRS | `AnalysisPanel`: new `optionalCross` property on MRS analysis type — shows banner selector without requiring it (`showCross = needsCross \|\| optionalCross`). |
+| Coming Soon: Export PDF | `ProjectDetail`: Export/Generate PDF card disabled with amber "Coming Soon" badge. |
+| Hidden variables (backend-driven) | Backend now filters out variables that belong to a Variable Group from `GET /explore/variables` response. `ExploreVariable` type has new `hidden_by_group?: string \| null` field. Frontend receives only visible variables — no client-side filtering needed. |
+| Frequency missing fix | `ResultDisplay`: frequency charts no longer show "MISSING" as the largest bar. Backend excludes missing from `frequencies[]` list. New `total_missing`/`pct_missing` fields displayed as a discrete note below the frequency table (e.g. "42 missing cases (65.2%)"). |
+
 ### Chart Types Rendered
 
 Full `ChartType` union in `src/types/database.ts`:
@@ -332,7 +341,7 @@ type ChartType = 'bar' | 'horizontal_bar' | 'vertical_bar' | 'pie' | 'donut' | '
 3. ~~No streaming — chat responses arrive as a single block~~ **DONE (Sprint 25 SSE)**
 4. No undo/redo in data prep rule editing
 5. No drag-and-drop reordering of data prep rules
-6. No bulk variable selection in Explore mode
+6. ~~No bulk variable selection in Explore mode~~ **Partially done:** Analyze as Group button for MRS variable groups (QA Regression). Individual variable multi-select still pending.
 7. No chart annotation or custom labels
 8. ~~No PDF export from chat~~ **Replaced with AI Report Prompt (Sprint 26)** — generates structured markdown for Gamma/ChatGPT/Tome. PDF/Excel/PPTX export dropdown removed from chat toolbar (QA Regression).
 9. No dark mode
