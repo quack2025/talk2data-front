@@ -2,6 +2,10 @@ import { test, expect } from '@playwright/test';
 import { ensureAuthenticated } from '../helpers/auth.helper';
 
 test.describe('Chat & Analysis', () => {
+  const hasCredentials = !!(process.env.TEST_USER_EMAIL && process.env.TEST_USER_PASSWORD);
+
+  test.skip(!hasCredentials, 'Skipped: no test credentials configured');
+
   test.beforeEach(async ({ page }) => {
     await ensureAuthenticated(page);
   });

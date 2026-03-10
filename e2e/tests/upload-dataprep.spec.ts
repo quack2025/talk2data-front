@@ -3,6 +3,10 @@ import { ensureAuthenticated } from '../helpers/auth.helper';
 import path from 'path';
 
 test.describe('Upload & Data Prep', () => {
+  const hasCredentials = !!(process.env.TEST_USER_EMAIL && process.env.TEST_USER_PASSWORD);
+
+  test.skip(!hasCredentials, 'Skipped: no test credentials configured');
+
   test.beforeEach(async ({ page }) => {
     await ensureAuthenticated(page);
   });
