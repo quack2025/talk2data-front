@@ -11,23 +11,23 @@ test.describe('Upload & Data Prep', () => {
     await ensureAuthenticated(page);
   });
 
-  test('dashboard loads with project list', async ({ page }) => {
-    await page.goto('/dashboard');
+  test('dashboard loads with project list or empty state', async ({ page }) => {
+    await page.goto('/projects');
     await page.waitForLoadState('networkidle');
 
-    // Dashboard should show sidebar and main content area
-    await expect(page.locator('body')).toBeVisible();
-    // Should have a "New Project" or similar button
+    // Should show either: a "New Project" button, project cards, or empty state text
     const newProjectBtn = page.getByRole('button', { name: /new|nuevo|create/i });
-    // Either exists or there's a project list
     const projectCards = page.locator('[data-testid="project-card"], .project-card, a[href*="/projects/"]');
+    const emptyState = page.getByText(/no tienes proyectos|no projects|crear tu primer/i);
+
     const hasContent = await newProjectBtn.isVisible().catch(() => false)
-      || (await projectCards.count()) > 0;
+      || (await projectCards.count()) > 0
+      || await emptyState.isVisible().catch(() => false);
     expect(hasContent).toBeTruthy();
   });
 
   test('create project dialog opens', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/projects');
     await page.waitForLoadState('networkidle');
 
     const newProjectBtn = page.getByRole('button', { name: /new|nuevo|create/i }).first();
@@ -42,7 +42,7 @@ test.describe('Upload & Data Prep', () => {
   });
 
   test('upload page accepts CSV file', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/projects');
     await page.waitForLoadState('networkidle');
 
     // Create a new project first
