@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   BarChart,
   Bar,
@@ -43,8 +44,10 @@ const getIndexColor = (index: number | null): string => {
 };
 
 export const SegmentProfileChart: React.FC<Props> = ({ data, title }) => {
+  const { t } = useLanguage();
+
   if (!data?.items?.length) {
-    return <p className="text-sm text-muted-foreground">No significant differentiators found.</p>;
+    return <p className="text-sm text-muted-foreground">{t.chat?.segmentProfile?.noSignificant ?? 'No significant differentiators found.'}</p>;
   }
 
   const chartData = data.items.map(item => ({
@@ -64,14 +67,14 @@ export const SegmentProfileChart: React.FC<Props> = ({ data, title }) => {
     return (
       <div className="bg-background border rounded-lg shadow-lg p-3 text-sm">
         <p className="font-semibold mb-1">{d.fullName}</p>
-        <p className="text-blue-600">Segment: {d.segment?.toFixed(1)}%</p>
-        <p className="text-gray-500">Total: {d.total?.toFixed(1)}%</p>
+        <p className="text-blue-600">{t.chat?.segmentProfile?.segment ?? 'Segment'}: {d.segment?.toFixed(1)}%</p>
+        <p className="text-gray-500">{t.chat?.segmentProfile?.total ?? 'Total'}: {d.total?.toFixed(1)}%</p>
         {d.index != null && (
           <p className={d.index >= 110 ? 'text-green-600' : d.index <= 90 ? 'text-red-600' : 'text-gray-600'}>
-            Index: {d.index}
+            {t.chat?.segmentProfile?.index ?? 'Index'}: {d.index}
           </p>
         )}
-        {d.significant && <p className="text-amber-600 font-medium mt-1">Statistically significant</p>}
+        {d.significant && <p className="text-amber-600 font-medium mt-1">{t.chat?.segmentProfile?.significant ?? 'Statistically significant'}</p>}
       </div>
     );
   };
@@ -80,7 +83,7 @@ export const SegmentProfileChart: React.FC<Props> = ({ data, title }) => {
     <div className="w-full space-y-3">
       {title && <h3 className="text-sm font-semibold">{title}</h3>}
       <p className="text-xs text-muted-foreground">
-        Segment: {data.segment_n} respondents ({data.segment_pct.toFixed(1)}% of total {data.total_n})
+        {t.chat?.segmentProfile?.segment ?? 'Segment'}: {data.segment_n} {t.chat?.segmentProfile?.respondents ?? 'respondents'} ({data.segment_pct.toFixed(1)}% {t.chat?.segmentProfile?.ofTotal ?? 'of total'} {data.total_n})
       </p>
       <ResponsiveContainer width="100%" height={Math.max(300, chartData.length * 40)}>
         <BarChart
@@ -98,25 +101,25 @@ export const SegmentProfileChart: React.FC<Props> = ({ data, title }) => {
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          <Bar dataKey="segment" name="Segment" fill="#3B82F6" barSize={14}>
+          <Bar dataKey="segment" name={t.chat?.segmentProfile?.segment ?? 'Segment'} fill="#3B82F6" barSize={14}>
             {chartData.map((entry, index) => (
               <Cell key={index} fill={getIndexColor(entry.index)} />
             ))}
           </Bar>
-          <Bar dataKey="total" name="Total" fill="#D1D5DB" barSize={14} />
+          <Bar dataKey="total" name={t.chat?.segmentProfile?.total ?? 'Total'} fill="#D1D5DB" barSize={14} />
         </BarChart>
       </ResponsiveContainer>
 
       {/* Index legend */}
       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded" style={{ backgroundColor: '#10B981' }} /> Over-index (&ge;120)
+          <span className="w-3 h-3 rounded" style={{ backgroundColor: '#10B981' }} /> {t.chat?.segmentProfile?.overIndex ?? 'Over-index'} (&ge;120)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded" style={{ backgroundColor: '#EF4444' }} /> Under-index (&le;80)
+          <span className="w-3 h-3 rounded" style={{ backgroundColor: '#EF4444' }} /> {t.chat?.segmentProfile?.underIndex ?? 'Under-index'} (&le;80)
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-3 rounded" style={{ backgroundColor: '#94A3B8' }} /> Neutral
+          <span className="w-3 h-3 rounded" style={{ backgroundColor: '#94A3B8' }} /> {t.chat?.segmentProfile?.neutral ?? 'Neutral'}
         </span>
       </div>
     </div>

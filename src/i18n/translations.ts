@@ -340,6 +340,61 @@ export const translations = {
       generatingNarrative: 'Generando narrativa...',
       // Report Prompt (S26-1)
       reportPrompt: 'Reporte IA',
+      // Batch Tab Plan (QA i18n)
+      batchTabPlan: {
+        exportComplete: 'Exportación completa',
+        tables: 'tablas',
+        downloadExcel: 'Descargar Excel',
+        exportFailed: 'Exportación fallida',
+        unexpectedError: 'Ocurrió un error inesperado.',
+        generating: 'Generando tablas...',
+        complete: 'completado',
+        timedOut: 'La exportación expiró. Intenta de nuevo.',
+      },
+      // TabSpec Upload (QA i18n)
+      tabSpecUpload: {
+        title: 'Subir archivo TabSpec',
+        description: 'Sube un archivo Excel (.xlsx, .xls) con tus especificaciones de preparación de datos.',
+        chooseFile: 'Elegir archivo...',
+        upload: 'Subir',
+        parseFailed: 'Error al analizar el archivo TabSpec.',
+        applyFailed: 'Error al aplicar las reglas TabSpec.',
+        importedTitle: 'TabSpec importado',
+        rulesCreated: 'reglas creadas exitosamente.',
+        importedSuccess: 'TabSpec importado exitosamente',
+        rulesCreatedReview: 'reglas creadas. Ve a Preparación de Datos para revisar.',
+        applying: 'Aplicando reglas...',
+        rulesFound: 'reglas encontradas',
+        selectAll: 'Seleccionar todo',
+        of: 'de',
+        selected: 'seleccionadas',
+        applySelected: 'Aplicar seleccionadas',
+      },
+      // Segment Profile (QA i18n)
+      segmentProfile: {
+        noSignificant: 'No se encontraron diferenciadores significativos.',
+        segment: 'Segmento',
+        total: 'Total',
+        index: 'Índice',
+        significant: 'Estadísticamente significativo',
+        respondents: 'encuestados',
+        ofTotal: 'del total',
+        overIndex: 'Sobre-índice',
+        underIndex: 'Sub-índice',
+        neutral: 'Neutro',
+      },
+    },
+    // Charts (QA i18n)
+    charts: {
+      nps: {
+        excellent: 'Excelente',
+        veryGood: 'Muy bueno',
+        good: 'Bueno',
+        needsWork: 'Mejorable',
+        detractors: 'Detractores',
+        passives: 'Pasivos',
+        promoters: 'Promotores',
+      },
     },
     // Report Prompt
     reportPromptDialog: {
@@ -1557,6 +1612,61 @@ export const translations = {
       generatingNarrative: 'Generating narrative...',
       // Report Prompt (S26-1)
       reportPrompt: 'AI Report',
+      // Batch Tab Plan (QA i18n)
+      batchTabPlan: {
+        exportComplete: 'Export complete',
+        tables: 'tables',
+        downloadExcel: 'Download Excel',
+        exportFailed: 'Export failed',
+        unexpectedError: 'An unexpected error occurred.',
+        generating: 'Generating tables...',
+        complete: 'complete',
+        timedOut: 'Export timed out. Please try again.',
+      },
+      // TabSpec Upload (QA i18n)
+      tabSpecUpload: {
+        title: 'Upload TabSpec File',
+        description: 'Upload an Excel file (.xlsx, .xls) with your data preparation specifications.',
+        chooseFile: 'Choose file...',
+        upload: 'Upload',
+        parseFailed: 'Failed to parse TabSpec file.',
+        applyFailed: 'Failed to apply TabSpec rules.',
+        importedTitle: 'TabSpec imported',
+        rulesCreated: 'rules created successfully.',
+        importedSuccess: 'TabSpec imported successfully',
+        rulesCreatedReview: 'rules created. Go to Data Prep to review.',
+        applying: 'Applying rules...',
+        rulesFound: 'rules found',
+        selectAll: 'Select all',
+        of: 'of',
+        selected: 'selected',
+        applySelected: 'Apply Selected',
+      },
+      // Segment Profile (QA i18n)
+      segmentProfile: {
+        noSignificant: 'No significant differentiators found.',
+        segment: 'Segment',
+        total: 'Total',
+        index: 'Index',
+        significant: 'Statistically significant',
+        respondents: 'respondents',
+        ofTotal: 'of total',
+        overIndex: 'Over-index',
+        underIndex: 'Under-index',
+        neutral: 'Neutral',
+      },
+    },
+    // Charts (QA i18n)
+    charts: {
+      nps: {
+        excellent: 'Excellent',
+        veryGood: 'Very good',
+        good: 'Good',
+        needsWork: 'Needs work',
+        detractors: 'Detractors',
+        passives: 'Passives',
+        promoters: 'Promoters',
+      },
     },
     // Report Prompt
     reportPromptDialog: {

@@ -78,7 +78,7 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
       setSelectedRules(defaultSelected);
       setPhase('preview');
     } catch (err: any) {
-      setError(err.message || 'Failed to parse TabSpec file.');
+      setError(err.message || (t.chat?.tabSpecUpload?.parseFailed ?? 'Failed to parse TabSpec file.'));
     } finally {
       setIsUploading(false);
     }
@@ -96,11 +96,11 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
       setApplyResult(result);
       setPhase('applied');
       toast({
-        title: 'TabSpec imported',
-        description: `${result.rules_created} rules created successfully.`,
+        title: t.chat?.tabSpecUpload?.importedTitle ?? 'TabSpec imported',
+        description: `${result.rules_created} ${t.chat?.tabSpecUpload?.rulesCreated ?? 'rules created successfully.'}`,
       });
     } catch (err: any) {
-      setError(err.message || 'Failed to apply TabSpec rules.');
+      setError(err.message || (t.chat?.tabSpecUpload?.applyFailed ?? 'Failed to apply TabSpec rules.'));
       setPhase('preview');
     }
   }, [importResult, selectedRules, data.project_id, toast]);
@@ -130,11 +130,11 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
         <div className="flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-green-600" />
           <span className="font-medium text-green-700 dark:text-green-400">
-            TabSpec imported successfully
+            {t.chat?.tabSpecUpload?.importedSuccess ?? 'TabSpec imported successfully'}
           </span>
         </div>
         <p className="text-sm text-muted-foreground">
-          {applyResult.rules_created} rules created. Go to Data Prep to review.
+          {applyResult.rules_created} {t.chat?.tabSpecUpload?.rulesCreatedReview ?? 'rules created. Go to Data Prep to review.'}
         </p>
         {applyResult.warnings.length > 0 && (
           <div className="text-xs text-amber-600 space-y-1">
@@ -152,7 +152,7 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
     return (
       <div className="rounded-lg border p-4 flex items-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
-        <span className="text-sm">Applying rules...</span>
+        <span className="text-sm">{t.chat?.tabSpecUpload?.applying ?? 'Applying rules...'}</span>
       </div>
     );
   }
@@ -165,7 +165,7 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
           <div className="flex items-center gap-2">
             <FileSpreadsheet className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">
-              {importResult.rules.length} rules found
+              {importResult.rules.length} {t.chat?.tabSpecUpload?.rulesFound ?? 'rules found'}
             </span>
             <Badge variant="outline" className="text-xs">
               {importResult.format_detected}
@@ -191,7 +191,7 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
                 checked={selectedRules.size === importResult.rules.length}
                 onCheckedChange={toggleAll}
               />
-              <span className="text-xs font-medium text-muted-foreground">Select all</span>
+              <span className="text-xs font-medium text-muted-foreground">{t.chat?.tabSpecUpload?.selectAll ?? 'Select all'}</span>
             </div>
             {importResult.rules.map((rule, i) => (
               <div key={i} className="flex items-center gap-2 py-1">
@@ -213,10 +213,10 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
 
         <div className="flex items-center justify-between pt-2 border-t">
           <span className="text-xs text-muted-foreground">
-            {selectedRules.size} of {importResult.rules.length} selected
+            {selectedRules.size} {t.chat?.tabSpecUpload?.of ?? 'of'} {importResult.rules.length} {t.chat?.tabSpecUpload?.selected ?? 'selected'}
           </span>
           <Button size="sm" onClick={handleApply} disabled={selectedRules.size === 0}>
-            Apply Selected
+            {t.chat?.tabSpecUpload?.applySelected ?? 'Apply Selected'}
           </Button>
         </div>
       </div>
@@ -228,10 +228,10 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
     <div className="rounded-lg border border-dashed p-4 space-y-3">
       <div className="flex items-center gap-2">
         <Upload className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Upload TabSpec File</span>
+        <span className="text-sm font-medium">{t.chat?.tabSpecUpload?.title ?? 'Upload TabSpec File'}</span>
       </div>
       <p className="text-xs text-muted-foreground">
-        Upload an Excel file (.xlsx, .xls) with your data preparation specifications.
+        {t.chat?.tabSpecUpload?.description ?? 'Upload an Excel file (.xlsx, .xls) with your data preparation specifications.'}
       </p>
 
       {error && (
@@ -249,7 +249,7 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
           <div className="flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer hover:bg-muted/50 transition-colors">
             <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground truncate">
-              {file ? file.name : 'Choose file...'}
+              {file ? file.name : (t.chat?.tabSpecUpload?.chooseFile ?? 'Choose file...')}
             </span>
           </div>
         </label>
@@ -261,7 +261,7 @@ export function TabSpecUploadWidget({ data }: TabSpecUploadWidgetProps) {
           {isUploading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            'Upload'
+            t.chat?.tabSpecUpload?.upload ?? 'Upload'
           )}
         </Button>
       </div>

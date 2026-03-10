@@ -64,7 +64,7 @@ export function BatchTabPlanProgress({ data }: BatchTabPlanProgressProps) {
         setTaskStatus(prev => ({
           ...prev,
           status: 'failed',
-          error: 'Export timed out. Please try again.',
+          error: t.chat?.batchTabPlan?.timedOut ?? 'Export timed out. Please try again.',
         }));
       }
     } catch {
@@ -107,10 +107,10 @@ export function BatchTabPlanProgress({ data }: BatchTabPlanProgressProps) {
         <div className="flex items-center gap-2">
           <CheckCircle2 className="h-5 w-5 text-green-600" />
           <span className="font-medium text-green-700 dark:text-green-400">
-            Export complete
+            {t.chat?.batchTabPlan?.exportComplete ?? 'Export complete'}
           </span>
           <Badge variant="outline" className="text-xs">
-            {taskStatus.tables_total} tables
+            {taskStatus.tables_total} {t.chat?.batchTabPlan?.tables ?? 'tables'}
           </Badge>
         </div>
         <Button
@@ -124,7 +124,7 @@ export function BatchTabPlanProgress({ data }: BatchTabPlanProgressProps) {
           ) : (
             <Download className="h-4 w-4" />
           )}
-          Download Excel
+          {t.chat?.batchTabPlan?.downloadExcel ?? 'Download Excel'}
         </Button>
       </div>
     );
@@ -136,11 +136,11 @@ export function BatchTabPlanProgress({ data }: BatchTabPlanProgressProps) {
         <div className="flex items-center gap-2">
           <XCircle className="h-5 w-5 text-red-600" />
           <span className="font-medium text-red-700 dark:text-red-400">
-            Export failed
+            {t.chat?.batchTabPlan?.exportFailed ?? 'Export failed'}
           </span>
         </div>
         <p className="text-sm text-red-600 dark:text-red-400">
-          {taskStatus.error || 'An unexpected error occurred.'}
+          {taskStatus.error || (t.chat?.batchTabPlan?.unexpectedError ?? 'An unexpected error occurred.')}
         </p>
       </div>
     );
@@ -152,7 +152,7 @@ export function BatchTabPlanProgress({ data }: BatchTabPlanProgressProps) {
       <div className="flex items-center gap-2">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
         <span className="text-sm font-medium">
-          Generating tables...
+          {t.chat?.batchTabPlan?.generating ?? 'Generating tables...'}
         </span>
         {taskStatus.tables_total > 0 && (
           <Badge variant="outline" className="text-xs">
@@ -162,7 +162,7 @@ export function BatchTabPlanProgress({ data }: BatchTabPlanProgressProps) {
       </div>
       <Progress value={progressPercent} className="h-2" />
       <p className="text-xs text-muted-foreground">
-        {taskStatus.stage || `${progressPercent}% complete`}
+        {taskStatus.stage || `${progressPercent}% ${t.chat?.batchTabPlan?.complete ?? 'complete'}`}
       </p>
     </div>
   );

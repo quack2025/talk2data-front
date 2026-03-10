@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface NpsGaugeProps {
   data: {
@@ -13,6 +14,7 @@ interface NpsGaugeProps {
 }
 
 export function NpsGauge({ data, title }: NpsGaugeProps) {
+  const { t } = useLanguage();
   // NPS is typically calculated as: % Promoters - % Detractors
   // Data should come as: [Detractors, Passives, Promoters] or just NPS score in values[0]
   
@@ -60,19 +62,19 @@ export function NpsGauge({ data, title }: NpsGaugeProps) {
   };
 
   const getNpsLabel = (score: number) => {
-    if (score >= 50) return 'Excelente';
-    if (score >= 30) return 'Muy bueno';
-    if (score >= 0) return 'Bueno';
-    return 'Mejorable';
+    if (score >= 50) return t.charts?.nps?.excellent ?? 'Excellent';
+    if (score >= 30) return t.charts?.nps?.veryGood ?? 'Very good';
+    if (score >= 0) return t.charts?.nps?.good ?? 'Good';
+    return t.charts?.nps?.needsWork ?? 'Needs work';
   };
 
   const npsColor = getNpsColor(npsScore);
 
   // Segment breakdown data
   const segmentData = [
-    { name: 'Detractores', value: detractors, color: '#EF4444' },
-    { name: 'Pasivos', value: passives, color: '#F59E0B' },
-    { name: 'Promotores', value: promoters, color: '#10B981' },
+    { name: t.charts?.nps?.detractors ?? 'Detractors', value: detractors, color: '#EF4444' },
+    { name: t.charts?.nps?.passives ?? 'Passives', value: passives, color: '#F59E0B' },
+    { name: t.charts?.nps?.promoters ?? 'Promoters', value: promoters, color: '#10B981' },
   ];
 
   return (

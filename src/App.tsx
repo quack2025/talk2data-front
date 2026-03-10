@@ -3,35 +3,36 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { SummaryNotificationProvider } from "@/contexts/SummaryNotificationContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-// Pages
+// Pages — static (initial load)
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Projects from "./pages/Projects";
-import ProjectDetail from "./pages/ProjectDetail";
-import ProjectUpload from "./pages/ProjectUpload";
-import ProjectChat from "./pages/ProjectChat";
-import ProjectSettings from "./pages/ProjectSettings";
-import ProjectSummary from "./pages/ProjectSummary";
-import ProjectExplore from "./pages/ProjectExplore";
-import Exports from "./pages/Exports";
-import Upload from "./pages/Upload";
-import Chat from "./pages/Chat";
-import Settings from "./pages/Settings";
-import Teams from "./pages/Teams";
 import Landing from "./pages/Landing";
-import ApiKeys from "./pages/ApiKeys";
-import SharedView from "./pages/SharedView";
-import PublicDashboardView from "./pages/PublicDashboardView";
-import DashboardBuilder from "./pages/DashboardBuilder";
 import NotFound from "./pages/NotFound";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+// Pages — lazy loaded
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Projects = lazy(() => import("./pages/Projects"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
+const ProjectUpload = lazy(() => import("./pages/ProjectUpload"));
+const ProjectChat = lazy(() => import("./pages/ProjectChat"));
+const ProjectSettings = lazy(() => import("./pages/ProjectSettings"));
+const ProjectSummary = lazy(() => import("./pages/ProjectSummary"));
+const ProjectExplore = lazy(() => import("./pages/ProjectExplore"));
+const Exports = lazy(() => import("./pages/Exports"));
+const Upload = lazy(() => import("./pages/Upload"));
+const Chat = lazy(() => import("./pages/Chat"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Teams = lazy(() => import("./pages/Teams"));
+const ApiKeys = lazy(() => import("./pages/ApiKeys"));
+const SharedView = lazy(() => import("./pages/SharedView"));
+const PublicDashboardView = lazy(() => import("./pages/PublicDashboardView"));
+const DashboardBuilder = lazy(() => import("./pages/DashboardBuilder"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
@@ -110,6 +111,7 @@ const App = () => (
         <Sonner position="bottom-right" />
         <BrowserRouter>
           <SummaryNotificationProvider>
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>}>
           <Routes>
             {/* Landing page */}
             <Route path="/" element={
@@ -287,6 +289,7 @@ const App = () => (
             {/* Catch all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           </SummaryNotificationProvider>
         </BrowserRouter>
       </TooltipProvider>

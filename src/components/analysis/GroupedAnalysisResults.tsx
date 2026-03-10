@@ -84,7 +84,7 @@ function AwarenessCard({ data }: { data: AwarenessSummary }) {
           {data.display_name}
         </CardTitle>
         <CardDescription>
-          Base: {data.total_base} | Awareness promedio: {data.average_awareness.toFixed(1)}%
+          Base: {data.total_base} | Awareness promedio: {(data.average_awareness ?? 0).toFixed(1)}%
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -94,7 +94,7 @@ function AwarenessCard({ data }: { data: AwarenessSummary }) {
               <div className="flex justify-between text-sm">
                 <span className="truncate pr-2">{item.item}</span>
                 <span className="font-medium shrink-0">
-                  {item.awareness_pct.toFixed(1)}%
+                  {(item.awareness_pct ?? 0).toFixed(1)}%
                 </span>
               </div>
               <Progress value={item.awareness_pct} className="h-2" />
@@ -142,9 +142,9 @@ function GridCard({ data }: { data: GridSummary }) {
                 <tr key={item.item} className="border-b last:border-0">
                   <td className="py-2 pr-4 truncate max-w-[200px]">{item.item}</td>
                   <td className="text-right py-2 px-2 text-muted-foreground">{item.base}</td>
-                  <td className="text-right py-2 px-2 font-medium">{item.mean.toFixed(2)}</td>
+                  <td className="text-right py-2 px-2 font-medium">{(item.mean ?? 0).toFixed(2)}</td>
                   <td className="text-right py-2 px-2 text-muted-foreground">
-                    {item.std_dev.toFixed(2)}
+                    {(item.std_dev ?? 0).toFixed(2)}
                   </td>
                   {item.top2box !== undefined && (
                     <td className="text-right py-2 px-2">
@@ -193,7 +193,7 @@ function TopOfMindCard({ data }: { data: TopOfMindSummary }) {
                 <div className="flex justify-between text-sm">
                   <span className="truncate pr-2">{item.item}</span>
                   <span className="font-medium shrink-0">
-                    {item.pct.toFixed(1)}%
+                    {(item.pct ?? 0).toFixed(1)}%
                   </span>
                 </div>
                 <Progress value={item.pct} className="h-1.5 mt-1" />
