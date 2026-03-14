@@ -63,14 +63,14 @@ export default function ProjectExplore() {
         group_key: groupName,
       };
       // Select the first variable so AnalysisPanel shows context
-      if (vars) {
-        const firstVar = vars.variables.find((v) => v.name === groupVariables[0]);
+      if (explore.variables) {
+        const firstVar = explore.variables.variables.find((v) => v.name === groupVariables[0]);
         if (firstVar) setSelectedVariable(firstVar);
       }
       setCurrentRequest(request);
       explore.runAnalysis(request);
     },
-    [vars, explore.runAnalysis]
+    [explore.variables, explore.runAnalysis]
   );
 
   const handleRun = useCallback(
